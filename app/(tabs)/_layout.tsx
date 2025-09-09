@@ -1,31 +1,61 @@
-import { Link, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
+import {User, House} from "lucide-react-native"
+import { TouchableOpacity, View, Text  } from 'react-native';
 
-import { HeaderButton } from '../../components/HeaderButton';
-import { TabBarIcon } from '../../components/TabBarIcon';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: 'black',
+      headerShown: false,
+      tabBarStyle: {
+        display: "none"
+      }
+      }} tabBar={({state, descriptors, navigation}) => {
+        return (
+          <View className='flex-row justify-between gap-5 bg-white border-t px-4 border-gray-200'>
+            {
+              state.routes.map((route, index) => {
+                const {options} = descriptors[route.key]
+                const label = options.tabBarLabel !== undefined ? options.tabBarLabel : options.title !== undefined ? options.title : route.name
+                const isFocused = state.index === index
+                const Icon = options.tabBarIcon ? options.tabBarIcon({
+                  focused: isFocused,
+                  color: isFocused ? "#2563eb" : "#6d7280", size: 24
+                }) : null
+
+                return (
+                  <TouchableOpacity key={route.key} className={` flex items-center justify-center py-3 `} onPress={() => {
+                    const event = navigation.emit({
+                      type: "tabPress",
+                      target: route.key,
+                      canPreventDefault: true,
+                    });
+                    if (!isFocused && !event.defaultPrevented) {
+                      navigation.navigate(route.name)
+                    }
+                  }}>
+                    {Icon}
+                    <Text className={`${isFocused ? "font-bold" : ""}`}>{label}</Text>
+                  </TouchableOpacity>
+                )
+              })
+            }
+          </View>
+        )
       }}>
       <Tabs.Screen
-        name="index"
+        name="login"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <HeaderButton />
-            </Link>
-          ),
+          title: 'Login',
+          tabBarIcon: () => <User size={24}/>,
         }}
       />
-      <Tabs.Screen
-        name="two"
+       <Tabs.Screen
+        name="index"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Home',
+          tabBarIcon: () => <House  size={24} />,
         }}
       />
     </Tabs>
