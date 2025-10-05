@@ -1,0 +1,21 @@
+export default {
+  100: "Nunito_100Thin",
+  200: "Nunito_200ExtraLight",
+  300: "Nunito_300Light",
+  400: "Nunito_400Regular",
+  500: "Nunito_500Medium",
+  600: "Nunito_600SemiBold",
+  700: "Nunito_700Bold",
+  800: "Nunito_800ExtraBold",
+  900: "Nunito_900Black",
+
+  thin: "Nunito_100Thin",
+  extraLight: "Nunito_200ExtraLight",
+  light: "Nunito_300Light",
+  regular: "Nunito_400Regular",
+  medium: "Nunito_500Medium",
+  semiBold: "Nunito_600SemiBold",
+  bold: "Nunito_700Bold",
+  extraBold: "Nunito_800ExtraBold",
+  black: "Nunito_900Black",
+};
