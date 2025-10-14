@@ -88,8 +88,8 @@ export interface ShoppingItem {
 }
 
 export const authApi = {
-  register: (email: string, password: string, name: string) =>
-    api.post("/auth/register", { email, password, name }),
+  register: async (email: string, password: string, name: string) =>
+    await api.post("/auth/register", { email, password, name }),
   
   login: async (email: string, password: string) => {
     const response = await api.post<{ token: string, user: User }>("/auth/login", { email, password });
@@ -98,6 +98,16 @@ export const authApi = {
     }
     return response.data;
   },
+   verifyEmail: async (token: string) => {
+    return await api.get(`/auth/verify`, {
+      params: {
+        token
+      }
+    });
+  },
+  regenerateVerify: (email: string) =>
+  api.post("/auth/verify/regenerate?email=" + encodeURIComponent(email)),
+
   
   logout: async () => {
     await AsyncStorage.removeItem("auth_token");
