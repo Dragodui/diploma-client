@@ -1,53 +1,99 @@
-import colors from "@/constants/colors";
+import { FC, ReactNode } from "react";
+import { View, Text, StyleSheet, ViewStyle, Image, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
-import { FC } from "react";
-import { StyleSheet, View, Text, Dimensions } from "react-native";
 
 interface PageHeaderProps {
   title: string;
-  description: string;
+  description?: string;
+  style?: ViewStyle;
+  rightAction?: ReactNode;
+  avatar?: string;
+  onAvatarPress?: () => void;
+  dark?: boolean;
 }
 
-const { height: screenHeight } = Dimensions.get("window");
+const PageHeader: FC<PageHeaderProps> = ({
+  title,
+  description,
+  style,
+  rightAction,
+  avatar,
+  onAvatarPress,
+  dark = false,
+}) => {
+  const insets = useSafeAreaInsets();
 
-const PageHeader: FC<PageHeaderProps> = ({ title, description }) => {
   return (
-    <View style={styles.header}>
+    <View style={[styles.container, dark && styles.containerDark, { paddingTop: insets.top + 12 }, style]}>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{description}</Text>
+        {description && (
+          <Text style={[styles.description, dark && styles.descriptionDark]}>{description}</Text>
+        )}
+        <Text style={[styles.title, dark && styles.titleDark]}>{title}</Text>
+      </View>
+      <View style={styles.rightContainer}>
+        {rightAction}
+        {avatar && (
+          <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
+            <View style={styles.avatarContainer}>
+              <Image source={{ uri: avatar }} style={styles.avatar} />
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: colors.black,
-    height: screenHeight /3,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-    overflow: "hidden",
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     paddingHorizontal: 24,
-    justifyContent: "flex-end", // текст внизу
-    paddingBottom: 40, // отступ от нижнего края
+    paddingBottom: 16,
+    backgroundColor: Colors.white,
   },
-
+  containerDark: {
+    backgroundColor: Colors.primaryDark,
+  },
   textContainer: {
-    // чтобы текст не прилипал к краю
+    flex: 1,
   },
-
-  title: {
-    fontSize: 40,
-    fontWeight: "700" as const,
-    color: colors.white,
-    marginBottom: 8,
-    fontFamily: fonts[900],
-  },
-  subtitle: {
+  description: {
     fontSize: 16,
-    color: colors.white,
+    color: Colors.gray400,
     fontFamily: fonts[400],
+    marginBottom: 4,
+  },
+  descriptionDark: {
+    color: Colors.gray400,
+  },
+  title: {
+    fontSize: 32,
+    fontFamily: fonts[700],
+    color: Colors.black,
+  },
+  titleDark: {
+    color: Colors.white,
+  },
+  rightContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  avatarContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: "hidden",
+    backgroundColor: Colors.gray200,
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
   },
 });
 

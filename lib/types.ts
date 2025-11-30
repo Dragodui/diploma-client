@@ -1,0 +1,216 @@
+// User types
+export interface User {
+  id: number;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  avatar?: string;
+  created_at: string;
+}
+
+// Home/Household types
+export interface Home {
+  id: number;
+  name: string;
+  invite_code: string;
+  created_at: string;
+  memberships?: HomeMembership[];
+}
+
+export interface HomeMembership {
+  id: number;
+  home_id: number;
+  user_id: number;
+  role: "admin" | "member";
+  joined_at: string;
+  created_at: string;
+  user?: User;
+  home?: Home;
+}
+
+// Room types
+export interface Room {
+  id: number;
+  home_id: number;
+  name: string;
+  created_at: string;
+  tasks?: Task[];
+}
+
+// Task types
+export interface Task {
+  id: number;
+  home_id: number;
+  room_id?: number;
+  name: string;
+  description: string;
+  schedule_type: string;
+  created_at: string;
+  room?: Room;
+  assignments?: TaskAssignment[];
+}
+
+export interface TaskAssignment {
+  id: number;
+  task_id: number;
+  user_id: number;
+  status: "assigned" | "completed";
+  assigned_date: string;
+  complete_date?: string;
+  created_at: string;
+  task?: Task;
+  user?: User;
+}
+
+// Bill types
+export interface Bill {
+  id: number;
+  home_id: number;
+  type: string;
+  is_payed: boolean;
+  payment_date?: string;
+  total_amount: number;
+  period_start: string;
+  period_end: string;
+  uploaded_by: number;
+  ocr_data?: Record<string, any>;
+  created_at: string;
+  user?: User;
+}
+
+// Shopping types
+export interface ShoppingCategory {
+  id: number;
+  home_id: number;
+  name: string;
+  icon?: string;
+  created_at: string;
+  items?: ShoppingItem[];
+}
+
+export interface ShoppingItem {
+  id: number;
+  category_id: number;
+  name: string;
+  added_by: number;
+  is_bought: boolean;
+  image?: string;
+  link?: string;
+  bought_date?: string;
+  created_at: string;
+  user?: User;
+}
+
+// Poll types
+export interface Poll {
+  id: number;
+  home_id: number;
+  question: string;
+  type: "public" | "anonymous";
+  status: "open" | "closed";
+  created_at: string;
+  options?: PollOption[];
+}
+
+export interface PollOption {
+  id: number;
+  poll_id: number;
+  title: string;
+  created_at: string;
+  votes?: Vote[];
+  vote_count?: number;
+}
+
+export interface Vote {
+  id: number;
+  user_id: number;
+  option_id: number;
+  user?: User;
+}
+
+// Notification types
+export interface Notification {
+  id: number;
+  from?: number;
+  to: number;
+  description: string;
+  read: boolean;
+  created_at: string;
+  user_from?: User;
+}
+
+export interface HomeNotification {
+  id: number;
+  from?: number;
+  home_id: number;
+  description: string;
+  read: boolean;
+  created_at: string;
+  user_from?: User;
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// Form types
+export interface LoginForm {
+  email: string;
+  password: string;
+}
+
+export interface RegisterForm {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface CreateHomeForm {
+  name: string;
+}
+
+export interface JoinHomeForm {
+  code: string;
+}
+
+export interface CreateTaskForm {
+  name: string;
+  description: string;
+  schedule_type: string;
+  home_id: number;
+  room_id?: number;
+}
+
+export interface CreateBillForm {
+  type: string;
+  total_amount: number;
+  period_start: string;
+  period_end: string;
+  ocr_data?: Record<string, any>;
+}
+
+export interface CreatePollForm {
+  question: string;
+  type: "public" | "anonymous";
+  options: { title: string }[];
+}
+
+export interface CreateCategoryForm {
+  name: string;
+  icon?: string;
+}
+
+export interface CreateItemForm {
+  category_id: number;
+  name: string;
+  image?: string;
+  link?: string;
+}

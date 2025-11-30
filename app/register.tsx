@@ -6,17 +6,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
-import PageHeader from "@/components/page-header";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { register } = useAuth();
 
   const [name, setName] = useState("");
@@ -24,7 +26,6 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState(""); 
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
@@ -39,15 +40,12 @@ export default function RegisterScreen() {
 
     setIsLoading(true);
     setError("");
-    setSuccessMessage("");
 
     const result = await register(email, password, name);
     setIsLoading(false);
 
     if (result.success) {
-      setSuccessMessage(
-        "Registration successful! A verification link has been sent to your email."
-      );
+      router.push({ pathname: "/verify", params: { email } });
     } else {
       setError(result.error || "Registration failed");
     }
@@ -59,64 +57,69 @@ export default function RegisterScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 40 }]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <PageHeader title="Create Account" description="Sign up to get started" />
+        <View style={styles.header}>
+          <Text style={styles.title}>Join HOME</Text>
+          <Text style={styles.tagline}>Smart living starts here.</Text>
+        </View>
 
-        <View style={styles.content}>
-          <View style={styles.form}>
-            <Input
-              label="Full Name"
-              placeholder="Your name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
+        <View style={styles.form}>
+          <Input
+            label="Full Name"
+            placeholder="Alex Doe"
+            value={name}
+            onChangeText={(text) => {
+              setName(text);
+              setError("");
+            }}
+            autoCapitalize="words"
+            autoComplete="name"
+          />
 
-            <Input
-              label="Email"
-              placeholder="your@email.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
+          <Input
+            label="Email"
+            placeholder="hello@home.app"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError("");
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
 
-            <Input
-              label="Password"
-              placeholder="••••••••"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="password-new"
-              error={error || undefined}
-            />
+          <Input
+            label="Password"
+            placeholder="Create a password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError("");
+            }}
+            secureTextEntry
+            autoComplete="password-new"
+            error={error || undefined}
+          />
 
-            {successMessage ? (
-              <Text style={styles.success}>{successMessage}</Text>
-            ) : null}
+          <Button
+            title="Create Account"
+            onPress={handleRegister}
+            loading={isLoading}
+            disabled={isLoading}
+            variant="yellow"
+            style={styles.registerButton}
+          />
+        </View>
 
-            <Button
-              title="Sign Up"
-              onPress={handleRegister}
-              loading={isLoading}
-              disabled={isLoading}
-              style={{ marginTop: 8 }}
-            />
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <Text
-                style={styles.link}
-                onPress={() => router.replace("/login")}
-              >
-                Sign In
-              </Text>
-            </View>
-          </View>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
+          <Text style={styles.footerText}>Already a member? </Text>
+          <TouchableOpacity onPress={() => router.replace("/login")}>
+            <Text style={styles.link}>Log In</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -130,37 +133,45 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingHorizontal: 32,
+    justifyContent: "space-between",
   },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+  header: {
+    marginBottom: 48,
+  },
+  title: {
+    fontSize: 48,
+    fontFamily: fonts[900],
+    color: Colors.black,
+    marginBottom: 8,
+  },
+  tagline: {
+    fontSize: 18,
+    fontFamily: fonts[400],
+    color: Colors.gray400,
   },
   form: {
-    gap: 24,
+    flex: 1,
+    justifyContent: "center",
   },
-  success: {
-    fontSize: 14,
-    color: Colors.gray800,
-    marginTop: -8,
-    fontFamily: fonts[400],
+  registerButton: {
+    marginTop: 16,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8,
+    paddingTop: 24,
   },
   footerText: {
     fontSize: 14,
-    color: Colors.gray600,
+    color: Colors.gray400,
     fontFamily: fonts[400],
   },
   link: {
     fontSize: 14,
-    fontWeight: "600" as const,
+    fontFamily: fonts[700],
     color: Colors.black,
-    fontFamily: fonts[600],
+    textDecorationLine: "underline",
   },
 });

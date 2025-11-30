@@ -4,25 +4,27 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  TextInput,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
-import PageHeader from "@/components/page-header";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Button from "@/components/ui/button";
-import colors from "@/constants/colors";
+import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
-import { authApi } from "@/lib/api";
-import { CheckCircle, XCircle, Mail } from "lucide-react-native";
+import { useAuth } from "@/contexts/AuthContext";
+import { Mail, CheckCircle, XCircle, ArrowLeft } from "lucide-react-native";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  const { token } = useLocalSearchParams<{ token?: string }>();
+  const insets = useSafeAreaInsets();
+  const { token, email: paramEmail } = useLocalSearchParams<{ token?: string; email?: string }>();
+  const { verifyEmail, resendVerification } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const email = paramEmail || "";
 
   useEffect(() => {
     if (!token) return;
@@ -30,71 +32,71 @@ export default function VerifyEmailScreen() {
     const verify = async () => {
       setLoading(true);
       setError("");
-      try {
-        await authApi.verifyEmail(token);
+      const result = await verifyEmail(token);
+      setLoading(false);
+
+      if (result.success) {
         setVerified(true);
-      } catch (err: any) {
-        console.log(err);
-        setError(err?.response?.data?.error || "Verification failed");
-      } finally {
-        setLoading(false);
+      } else {
+        setError(result.error || "Verification failed");
       }
     };
 
     verify();
-  }, [token]);
+  }, [token, verifyEmail]);
 
-  const handleSendEmail = async () => {
-    if (!email.trim()) {
-      setError("Please enter your email");
+  const handleResend = async () => {
+    if (!email) {
+      setError("Email is required");
       return;
     }
+
     setError("");
     setLoading(true);
-    try {
-      await authApi.regenerateVerify(email);
+    const result = await resendVerification(email);
+    setLoading(false);
+
+    if (result.success) {
       setSent(true);
-    } catch (err: any) {
-      console.log(err);
-      setError(err?.response?.data?.error || "Failed to send verification email");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.error || "Failed to send verification email");
     }
   };
 
+  // Token-based verification result
   if (token) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.container}>
-          <PageHeader title="Verify Email" description="" />
+        <View style={[styles.container, { paddingTop: insets.top + 40 }]}>
           <View style={styles.content}>
             {loading ? (
-              <ActivityIndicator size="large" color={colors.black} />
+              <ActivityIndicator size="large" color={Colors.accentPurple} />
             ) : (
-              <View style={styles.resultRow}>
-                {verified ? (
-                  <CheckCircle size={28} color={colors.green500} />
-                ) : (
-                  <XCircle size={28} color={colors.red500} />
-                )}
-                <Text
-                  style={[
-                    styles.message,
-                    { color: verified ? colors.green500 : colors.red500 },
-                  ]}
-                >
-                  {verified
-                    ? "Email verified successfully!"
-                    : error || "Verification failed"}
+              <>
+                <View style={[styles.iconContainer, verified ? styles.successBg : styles.errorBg]}>
+                  {verified ? (
+                    <CheckCircle size={48} color={Colors.white} />
+                  ) : (
+                    <XCircle size={48} color={Colors.white} />
+                  )}
+                </View>
+                <Text style={styles.title}>
+                  {verified ? "Email Verified!" : "Verification Failed"}
                 </Text>
-              </View>
+                <Text style={styles.subtitle}>
+                  {verified
+                    ? "Your email has been successfully verified. You can now log in."
+                    : error || "The verification link may have expired."}
+                </Text>
+              </>
             )}
 
             <Button
-              title="Go to Login"
+              title={verified ? "Continue to Login" : "Try Again"}
               onPress={() => router.replace("/login")}
-              style={{ marginTop: 24, width: "100%" }}
+              variant={verified ? "purple" : "primary"}
+              style={styles.button}
             />
           </View>
         </View>
@@ -102,54 +104,46 @@ export default function VerifyEmailScreen() {
     );
   }
 
+  // Email verification pending screen
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.container}>
-        <PageHeader title="Resend Verification Email" description="" />
+      <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color={Colors.black} />
+        </TouchableOpacity>
 
         <View style={styles.content}>
-          {sent ? (
-            <>
-              <View style={styles.resultRow}>
-                <CheckCircle size={28} color={colors.green500} />
-                <Text style={[styles.message, { color: colors.green500 }]}>
-                  Verification email sent!
-                </Text>
-              </View>
+          <View style={[styles.iconContainer, styles.pendingBg]}>
+            <Mail size={48} color={Colors.black} />
+          </View>
 
-              <Button
-                title="Go to Login"
-                onPress={() => router.replace("/login")}
-                style={{ marginTop: 24, width: "100%" }}
-              />
-            </>
-          ) : (
-            <>
-              <View style={styles.inputContainer}>
-                <Mail size={20} color={colors.gray600} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.gray600}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+          <Text style={styles.title}>Verify Your Email</Text>
+          <Text style={styles.subtitle}>
+            {sent
+              ? `A new verification link has been sent to ${email}`
+              : `We've sent a verification link to ${email}. Check your inbox and click the link to verify.`}
+          </Text>
 
-              {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-              <Button
-                title="Send Verification Email"
-                onPress={handleSendEmail}
-                loading={loading}
-                disabled={loading}
-                style={{ marginTop: 24, width: "100%" }}
-              />
-            </>
+          {!sent && (
+            <Button
+              title="Resend Verification Email"
+              onPress={handleResend}
+              loading={loading}
+              disabled={loading}
+              variant="outline"
+              style={styles.button}
+            />
           )}
+
+          <Button
+            title="Back to Login"
+            onPress={() => router.replace("/login")}
+            variant="primary"
+            style={styles.button}
+          />
         </View>
       </View>
     </>
@@ -159,49 +153,65 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 32,
+  },
+  backButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.gray50,
+    justifyContent: "center",
+    alignItems: "center",
   },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
+    paddingBottom: 80,
   },
-  resultRow: {
-    flexDirection: "row",
+  iconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
+    marginBottom: 24,
   },
-  message: {
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
+  successBg: {
+    backgroundColor: Colors.green500,
+  },
+  errorBg: {
+    backgroundColor: Colors.red500,
+  },
+  pendingBg: {
+    backgroundColor: Colors.accentYellow,
+  },
+  title: {
+    fontSize: 28,
     fontFamily: fonts[700],
+    color: Colors.black,
+    marginBottom: 12,
+    textAlign: "center",
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    borderWidth: 1,
-    borderColor: colors.gray200,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
+  subtitle: {
     fontSize: 16,
     fontFamily: fonts[400],
-    color: colors.black,
+    color: Colors.gray500,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 16,
   },
   error: {
-    color: colors.red500,
+    color: Colors.red500,
     fontSize: 14,
-    marginTop: 8,
-    fontFamily: fonts[400],
+    fontFamily: fonts[500],
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  button: {
+    width: "100%",
+    marginTop: 12,
   },
 });

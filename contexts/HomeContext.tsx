@@ -1,70 +1,105 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import createContextHook from "@nkzw/create-context-hook";
-import { homeApi, Home } from "@/lib/api";
+import { homeApi, roomApi } from "@/lib/api";
+import { Home, Room, HomeMembership } from "@/lib/types";
 import { useAuth } from "./AuthContext";
 
+interface HomeResult {
+  success: boolean;
+  error?: string;
+}
+
 export const [HomeProvider, useHome] = createContextHook(() => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [home, setHome] = useState<Home | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const loadHome = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await homeApi.getUserHome();
-      setHome(response.data);
+      const homeData = await homeApi.getUserHome();
+      setHome(homeData);
+
+      // Check if current user is admin
+      if (homeData.memberships && user) {
+        const membership = homeData.memberships.find((m: HomeMembership) => m.user_id === user.id);
+        setIsAdmin(membership?.role === "admin");
+      }
+
+      // Load rooms
+      if (homeData.id) {
+        const roomsData = await roomApi.getByHomeId(homeData.id);
+        setRooms(roomsData || []);
+      }
     } catch (error: any) {
       console.error("Error loading home:", error);
       if (error.response?.status !== 404) {
         console.error("Unexpected error:", error);
       }
       setHome(null);
+      setRooms([]);
+      setIsAdmin(false);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadHome();
     } else {
       setHome(null);
+      setRooms([]);
+      setIsAdmin(false);
       setIsLoading(false);
     }
   }, [isAuthenticated, loadHome]);
 
-  const createHome = useCallback(async (name: string) => {
-    try {
-      await homeApi.createHome(name);
-      await loadHome();
-      return { success: true };
-    } catch (error: any) {
-      console.error("Error creating home:", error);
-      return {
-        success: false,
-        error: error.response?.data?.error || "Failed to create home",
-      };
-    }
-  }, [loadHome]);
+  const createHome = useCallback(
+    async (name: string): Promise<HomeResult> => {
+      try {
+        const newHome = await homeApi.create(name);
+        setHome(newHome);
+        setIsAdmin(true);
+        return { success: true };
+      } catch (error: any) {
+        console.error("Error creating home:", error);
+        return {
+          success: false,
+          error: error.response?.data?.error || "Failed to create home",
+        };
+      }
+    },
+    []
+  );
 
-  const joinHome = useCallback(async (code: string) => {
-    try {
-      await homeApi.joinHome(code);
-      await loadHome();
-      return { success: true };
-    } catch (error: any) {
-      console.error("Error joining home:", error);
-      return {
-        success: false,
-        error: error.response?.data?.error || "Failed to join home",
-      };
-    }
-  }, [loadHome]);
+  const joinHome = useCallback(
+    async (code: string): Promise<HomeResult> => {
+      try {
+        await homeApi.join(code);
+        await loadHome();
+        return { success: true };
+      } catch (error: any) {
+        console.error("Error joining home:", error);
+        return {
+          success: false,
+          error: error.response?.data?.error || "Failed to join home",
+        };
+      }
+    },
+    [loadHome]
+  );
 
-  const leaveHome = useCallback(async () => {
+  const leaveHome = useCallback(async (): Promise<HomeResult> => {
+    if (!home) return { success: false, error: "No home found" };
+
     try {
-      await homeApi.leaveHome();
+      await homeApi.leave(home.id);
       setHome(null);
+      setRooms([]);
+      setIsAdmin(false);
       return { success: true };
     } catch (error: any) {
       console.error("Error leaving home:", error);
@@ -73,14 +108,51 @@ export const [HomeProvider, useHome] = createContextHook(() => {
         error: error.response?.data?.error || "Failed to leave home",
       };
     }
-  }, []);
+  }, [home]);
 
-  const regenerateInviteCode = useCallback(async () => {
+  const deleteHome = useCallback(async (): Promise<HomeResult> => {
     if (!home) return { success: false, error: "No home found" };
-    
+
     try {
-      await homeApi.regenerateInviteCode(home.id);
-      await loadHome();
+      await homeApi.delete(home.id);
+      setHome(null);
+      setRooms([]);
+      setIsAdmin(false);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error deleting home:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || "Failed to delete home",
+      };
+    }
+  }, [home]);
+
+  const removeMember = useCallback(
+    async (userId: number): Promise<HomeResult> => {
+      if (!home) return { success: false, error: "No home found" };
+
+      try {
+        await homeApi.removeMember(home.id, userId);
+        await loadHome();
+        return { success: true };
+      } catch (error: any) {
+        console.error("Error removing member:", error);
+        return {
+          success: false,
+          error: error.response?.data?.error || "Failed to remove member",
+        };
+      }
+    },
+    [home, loadHome]
+  );
+
+  const regenerateInviteCode = useCallback(async (): Promise<HomeResult> => {
+    if (!home) return { success: false, error: "No home found" };
+
+    try {
+      const updatedHome = await homeApi.regenerateInviteCode(home.id);
+      setHome(updatedHome);
       return { success: true };
     } catch (error: any) {
       console.error("Error regenerating invite code:", error);
@@ -89,15 +161,90 @@ export const [HomeProvider, useHome] = createContextHook(() => {
         error: error.response?.data?.error || "Failed to regenerate invite code",
       };
     }
-  }, [home, loadHome]);
+  }, [home]);
 
-  return useMemo(() => ({
-    home,
-    isLoading,
-    loadHome,
-    createHome,
-    joinHome,
-    leaveHome,
-    regenerateInviteCode,
-  }), [home, isLoading, loadHome, createHome, joinHome, leaveHome, regenerateInviteCode]);
+  // Room operations
+  const createRoom = useCallback(
+    async (name: string): Promise<HomeResult> => {
+      if (!home) return { success: false, error: "No home found" };
+
+      try {
+        const newRoom = await roomApi.create(home.id, name);
+        setRooms((prev) => [...prev, newRoom]);
+        return { success: true };
+      } catch (error: any) {
+        console.error("Error creating room:", error);
+        return {
+          success: false,
+          error: error.response?.data?.error || "Failed to create room",
+        };
+      }
+    },
+    [home]
+  );
+
+  const deleteRoom = useCallback(
+    async (roomId: number): Promise<HomeResult> => {
+      if (!home) return { success: false, error: "No home found" };
+
+      try {
+        await roomApi.delete(home.id, roomId);
+        setRooms((prev) => prev.filter((r) => r.id !== roomId));
+        return { success: true };
+      } catch (error: any) {
+        console.error("Error deleting room:", error);
+        return {
+          success: false,
+          error: error.response?.data?.error || "Failed to delete room",
+        };
+      }
+    },
+    [home]
+  );
+
+  const refreshRooms = useCallback(async () => {
+    if (!home) return;
+
+    try {
+      const roomsData = await roomApi.getByHomeId(home.id);
+      setRooms(roomsData || []);
+    } catch (error) {
+      console.error("Error refreshing rooms:", error);
+    }
+  }, [home]);
+
+  return useMemo(
+    () => ({
+      home,
+      rooms,
+      isLoading,
+      isAdmin,
+      loadHome,
+      createHome,
+      joinHome,
+      leaveHome,
+      deleteHome,
+      removeMember,
+      regenerateInviteCode,
+      createRoom,
+      deleteRoom,
+      refreshRooms,
+    }),
+    [
+      home,
+      rooms,
+      isLoading,
+      isAdmin,
+      loadHome,
+      createHome,
+      joinHome,
+      leaveHome,
+      deleteHome,
+      removeMember,
+      regenerateInviteCode,
+      createRoom,
+      deleteRoom,
+      refreshRooms,
+    ]
+  );
 });
