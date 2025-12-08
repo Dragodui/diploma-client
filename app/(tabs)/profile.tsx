@@ -127,6 +127,8 @@ export default function ProfileScreen() {
     ]);
   };
 
+  console.log(home)
+
   const MENU_ITEMS = [
     {
       icon: HomeIcon,

@@ -8,12 +8,12 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.black,
-        tabBarInactiveTintColor: Colors.gray400,
+        tabBarActiveTintColor: Colors.white,
+        tabBarInactiveTintColor: Colors.gray600,
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.surface,
           borderTopWidth: 0,
           height: 80,
           paddingTop: 12,
@@ -25,7 +25,7 @@ export default function TabLayout() {
           elevation: 0,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.05,
+          shadowOpacity: 0.2,
           shadowRadius: 12,
         },
         tabBarLabelStyle: {
@@ -41,7 +41,7 @@ export default function TabLayout() {
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <Home size={24} color={focused ? Colors.white : color} />
+              <Home size={24} color={focused ? Colors.black : color} />
             </View>
           ),
         }}
@@ -52,7 +52,7 @@ export default function TabLayout() {
           title: "Tasks",
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <CheckSquare size={24} color={focused ? Colors.white : color} />
+              <CheckSquare size={24} color={focused ? Colors.black : color} />
             </View>
           ),
         }}
@@ -63,7 +63,7 @@ export default function TabLayout() {
           title: "Shopping",
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <ShoppingBag size={24} color={focused ? Colors.white : color} />
+              <ShoppingBag size={24} color={focused ? Colors.black : color} />
             </View>
           ),
         }}
@@ -74,7 +74,7 @@ export default function TabLayout() {
           title: "Budget",
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <DollarSign size={24} color={focused ? Colors.white : color} />
+              <DollarSign size={24} color={focused ? Colors.black : color} />
             </View>
           ),
         }}
@@ -85,7 +85,7 @@ export default function TabLayout() {
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <User size={24} color={focused ? Colors.white : color} />
+              <User size={24} color={focused ? Colors.black : color} />
             </View>
           ),
         }}
@@ -103,6 +103,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tabIconActive: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.accentPurple,
   },
 });

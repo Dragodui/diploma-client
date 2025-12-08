@@ -22,6 +22,13 @@ export default {
   accentPurple: "#d8d4fc",
   accentPink: "#ff7476",
 
+  // Semantic Colors (Dark Mode)
+  background: "#0D0E0E",
+  surface: "#1c1d21",
+  text: "#FFFFFF",
+  textSecondary: "#999999",
+  border: "#333333",
+
   // Status colors
   green500: "#22C55E",
   red500: "#EF4444",

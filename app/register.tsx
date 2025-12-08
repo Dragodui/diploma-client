@@ -77,6 +77,7 @@ export default function RegisterScreen() {
             }}
             autoCapitalize="words"
             autoComplete="name"
+            dark
           />
 
           <Input
@@ -90,6 +91,7 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            dark
           />
 
           <Input
@@ -103,6 +105,7 @@ export default function RegisterScreen() {
             secureTextEntry
             autoComplete="password-new"
             error={error || undefined}
+            dark
           />
 
           <Button
@@ -129,7 +132,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -141,8 +144,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 48,
-    fontFamily: fonts[900],
-    color: Colors.black,
+    fontFamily: fonts[700],
+    color: Colors.white,
     marginBottom: 8,
   },
   tagline: {
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
   link: {
     fontSize: 14,
     fontFamily: fonts[700],
-    color: Colors.black,
+    color: Colors.white,
     textDecorationLine: "underline",
   },
 });

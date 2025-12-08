@@ -73,6 +73,7 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            dark
           />
 
           <Input
@@ -86,6 +87,8 @@ export default function LoginScreen() {
             secureTextEntry
             autoComplete="password"
             error={error || undefined}
+            dark
+            style={{ borderColor: "rgba(216, 212, 252, 0.3)", borderWidth: 2 }}
           />
 
           <TouchableOpacity
@@ -119,7 +122,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -131,8 +134,8 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 48,
-    fontFamily: fonts[900],
-    color: Colors.black,
+    fontFamily: fonts[700],
+    color: Colors.white,
     marginBottom: 8,
   },
   tagline: {
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 14,
     fontFamily: fonts[600],
-    color: Colors.gray500,
+    color: Colors.gray400,
   },
   loginButton: {
     marginTop: 8,
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
   link: {
     fontSize: 14,
     fontFamily: fonts[700],
-    color: Colors.black,
+    color: Colors.white,
     textDecorationLine: "underline",
   },
 });

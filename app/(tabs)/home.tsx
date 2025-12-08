@@ -79,7 +79,7 @@ export default function HomeScreen() {
   if (authLoading || homeLoading || isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.black} />
+        <ActivityIndicator size="large" color={Colors.white} />
       </View>
     );
   }
@@ -226,7 +226,7 @@ export default function HomeScreen() {
 
         {/* Budget Card */}
         <Card
-          variant="white"
+          variant="dark"
           borderRadius={40}
           padding={32}
           onPress={() => router.push("/(tabs)/budget")}
@@ -243,7 +243,7 @@ export default function HomeScreen() {
             <View style={styles.budgetProgress}>
               <Text style={styles.budgetProgressText}>70% of budget used</Text>
             </View>
-            <ArrowRight size={24} color={Colors.black} />
+            <ArrowRight size={24} color={Colors.white} />
           </View>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: "70%" }]} />
@@ -267,7 +267,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
@@ -280,14 +280,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 40,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   emptyIconContainer: {
     width: 96,
@@ -301,13 +301,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 28,
     fontFamily: fonts[700],
-    color: Colors.black,
+    color: Colors.white,
     marginBottom: 12,
   },
   emptyText: {
     fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray500,
+    color: Colors.gray400,
     textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
@@ -315,13 +315,13 @@ const styles = StyleSheet.create({
   emptyButton: {
     paddingHorizontal: 40,
     paddingVertical: 16,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.white,
     borderRadius: 20,
   },
   emptyButtonText: {
     fontSize: 16,
     fontFamily: fonts[700],
-    color: Colors.white,
+    color: Colors.black,
   },
   header: {
     flexDirection: "row",
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 36,
     fontFamily: fonts[700],
-    color: Colors.black,
+    color: Colors.white,
   },
   avatarContainer: {
     width: 56,
@@ -356,14 +356,14 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: Colors.gray200,
+    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
     fontSize: 20,
     fontFamily: fonts[700],
-    color: Colors.black,
+    color: Colors.white,
   },
   heroCard: {
     marginBottom: 16,
@@ -466,6 +466,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 5,
+    backgroundColor: Colors.surface,
   },
   budgetHeader: {
     flexDirection: "row",
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
   budgetAmount: {
     fontSize: 48,
     fontFamily: fonts[800],
-    color: Colors.black,
+    color: Colors.white,
     marginBottom: 24,
   },
   budgetFooter: {
@@ -515,13 +516,13 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.gray100,
+    backgroundColor: Colors.gray800,
     borderRadius: 4,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.white,
     borderRadius: 4,
   },
   quickAddButton: {
@@ -529,13 +530,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.accentYellow,
     paddingVertical: 16,
     borderRadius: 20,
   },
   quickAddText: {
     fontSize: 16,
     fontFamily: fonts[700],
-    color: Colors.white,
+    color: Colors.black,
   },
 });
