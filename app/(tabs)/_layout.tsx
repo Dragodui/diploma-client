@@ -1,23 +1,26 @@
 import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
-import { Home, CheckSquare, ShoppingBag, DollarSign, User } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { Home, CheckCircle, ShoppingBag, Clock, User } from "lucide-react-native";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.white,
-        tabBarInactiveTintColor: Colors.gray600,
+        tabBarActiveTintColor: theme.isDark ? "#FFFFFF" : "#1C1C1E",
+        tabBarInactiveTintColor: theme.textSecondary,
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: theme.surface,
           borderTopWidth: 0,
-          height: 80,
-          paddingTop: 12,
-          paddingBottom: 24,
+          height: 90,
+          paddingTop: 16,
+          paddingBottom: 28,
+          paddingHorizontal: 16,
           position: "absolute",
           bottom: 0,
           left: 0,
@@ -25,8 +28,8 @@ export default function TabLayout() {
           elevation: 0,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 12,
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -40,8 +43,8 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <Home size={24} color={focused ? Colors.black : color} />
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <Home size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
@@ -51,8 +54,8 @@ export default function TabLayout() {
         options={{
           title: "Tasks",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <CheckSquare size={24} color={focused ? Colors.black : color} />
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <CheckCircle size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
@@ -62,8 +65,8 @@ export default function TabLayout() {
         options={{
           title: "Shopping",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <ShoppingBag size={24} color={focused ? Colors.black : color} />
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <ShoppingBag size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
@@ -73,8 +76,8 @@ export default function TabLayout() {
         options={{
           title: "Budget",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <DollarSign size={24} color={focused ? Colors.black : color} />
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <Clock size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
@@ -84,8 +87,8 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-              <User size={24} color={focused ? Colors.black : color} />
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <User size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
@@ -101,8 +104,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-  },
-  tabIconActive: {
-    backgroundColor: Colors.accentPurple,
   },
 });

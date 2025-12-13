@@ -9,45 +9,47 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Check, Plus, ShoppingBag, Trash2 } from "lucide-react-native";
+import { ArrowLeft, Check, Plus, Search, Trash2, Utensils, Candy, Cake, Apple } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { shoppingApi } from "@/lib/api";
 import { ShoppingCategory, ShoppingItem } from "@/lib/types";
-import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
-const CATEGORY_COLORS = [
-  Colors.accentYellow,
-  Colors.accentPurple,
-  Colors.accentPink,
-  Colors.white,
-];
+// Category colors matching PDF
+const CATEGORY_COLORS = ["#D8D4FC", "#FBEB9E", "#FF7476", "#A8E6CF"];
+const CATEGORY_ICONS = ["list", "flag", "bookmark", "cloud", "file", "emoji"];
 
-const CATEGORY_ICONS = ["cart", "apple", "milk", "bread", "soap", "other"];
+// Color options for creating new lists
+const COLOR_OPTIONS = [
+  "#FF7476", "#FF9F7A", "#FBEB9E", "#A8E6CF", "#7DD3E8", "#D8D4FC", "#F5A3D3",
+  "#22C55E", "#F472B6", "#C4B5FD", "#94A3B8", "#FDE68A", "#6EE7B7",
+];
 
 export default function ShoppingScreen() {
   const insets = useSafeAreaInsets();
   const { home } = useHome();
+  const { theme } = useTheme();
 
   const [categories, setCategories] = useState<ShoppingCategory[]>([]);
   const [items, setItems] = useState<Record<number, ShoppingItem[]>>({});
-  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState<ShoppingCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Create category modal
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
   const [selectedIcon, setSelectedIcon] = useState(CATEGORY_ICONS[0]);
   const [creatingCategory, setCreatingCategory] = useState(false);
 
   // Create item modal
   const [showItemModal, setShowItemModal] = useState(false);
   const [newItemName, setNewItemName] = useState("");
-  const [newItemLink, setNewItemLink] = useState("");
   const [creatingItem, setCreatingItem] = useState(false);
 
   const loadShoppingData = useCallback(async () => {
@@ -67,18 +69,13 @@ export default function ShoppingScreen() {
           itemsData[category.id] = categoryItems || [];
         }
         setItems(itemsData);
-
-        // Set first category as active if none selected
-        if (!activeCategory && categoriesData.length > 0) {
-          setActiveCategory(categoriesData[0].id);
-        }
       }
     } catch (error) {
       console.error("Error loading shopping data:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [home, activeCategory]);
+  }, [home]);
 
   useEffect(() => {
     loadShoppingData();
@@ -102,6 +99,7 @@ export default function ShoppingScreen() {
 
       setNewCategoryName("");
       setSelectedIcon(CATEGORY_ICONS[0]);
+      setSelectedColor(COLOR_OPTIONS[0]);
       setShowCategoryModal(false);
       await loadShoppingData();
     } catch (error) {
@@ -117,13 +115,11 @@ export default function ShoppingScreen() {
     setCreatingItem(true);
     try {
       await shoppingApi.createItem(home.id, {
-        category_id: activeCategory,
+        category_id: activeCategory.id,
         name: newItemName.trim(),
-        link: newItemLink.trim() || undefined,
       });
 
       setNewItemName("");
-      setNewItemLink("");
       setShowItemModal(false);
       await loadShoppingData();
     } catch (error) {
@@ -163,221 +159,300 @@ export default function ShoppingScreen() {
     }
   };
 
-  const getActiveItems = () => {
-    if (!activeCategory) return [];
-    return items[activeCategory] || [];
+  const getCategoryIcon = (category: ShoppingCategory, index: number) => {
+    const iconColor = "#1C1C1E";
+    switch (index % 4) {
+      case 0:
+        return <Utensils size={24} color={iconColor} />;
+      case 1:
+        return <Candy size={24} color={iconColor} />;
+      case 2:
+        return <Cake size={24} color={iconColor} />;
+      case 3:
+        return <Apple size={24} color={iconColor} />;
+      default:
+        return <Utensils size={24} color={iconColor} />;
+    }
   };
 
-  const getCategoryProgress = (categoryId: number) => {
-    const categoryItems = items[categoryId] || [];
-    if (categoryItems.length === 0) return { bought: 0, total: 0 };
-    const bought = categoryItems.filter((i) => i.is_bought).length;
-    return { bought, total: categoryItems.length };
+  const getActiveItems = () => {
+    if (!activeCategory) return [];
+    return items[activeCategory.id] || [];
   };
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.black} />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
 
+  // List detail view
+  if (activeCategory) {
+    const categoryItems = getActiveItems();
+    const colorIndex = categories.findIndex((c) => c.id === activeCategory.id) % CATEGORY_COLORS.length;
+
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Detail Header */}
+          <View style={styles.detailHeader}>
+            <TouchableOpacity
+              style={[styles.backButton, { backgroundColor: theme.surface }]}
+              onPress={() => setActiveCategory(null)}
+            >
+              <ArrowLeft size={22} color={theme.text} />
+            </TouchableOpacity>
+            <Text style={[styles.detailTitle, { color: theme.text }]}>{activeCategory.name}</Text>
+            <View style={[styles.detailIcon, { backgroundColor: CATEGORY_COLORS[colorIndex] }]}>
+              {getCategoryIcon(activeCategory, colorIndex)}
+            </View>
+          </View>
+
+          {/* Items List */}
+          <View style={styles.itemsList}>
+            {categoryItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.itemRow}
+                onPress={() => toggleItemBought(item.id)}
+                activeOpacity={0.95}
+              >
+                <View
+                  style={[
+                    styles.itemCheckbox,
+                    { borderColor: theme.textSecondary },
+                    item.is_bought && {
+                      backgroundColor: theme.accent.purple,
+                      borderColor: theme.accent.purple,
+                    },
+                  ]}
+                >
+                  {item.is_bought && <Check size={16} color="#1C1C1E" strokeWidth={3} />}
+                </View>
+                <Text
+                  style={[
+                    styles.itemName,
+                    { color: theme.text },
+                    item.is_bought && styles.itemNameBought,
+                  ]}
+                >
+                  {item.name}
+                </Text>
+                {item.is_bought && (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteItem(item.id)}
+                  >
+                    <Trash2 size={18} color={theme.textSecondary} />
+                  </TouchableOpacity>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
+        {/* Add Item FAB */}
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: theme.accent.purple }]}
+          onPress={() => setShowItemModal(true)}
+          activeOpacity={0.8}
+        >
+          <Plus size={28} color="#1C1C1E" strokeWidth={2.5} />
+        </TouchableOpacity>
+
+        {/* Add Item Modal */}
+        <Modal
+          visible={showItemModal}
+          onClose={() => setShowItemModal(false)}
+          title="Add Item"
+        >
+          <View style={styles.modalContent}>
+            <Input
+              label="Item Name"
+              placeholder="e.g., Milk"
+              value={newItemName}
+              onChangeText={setNewItemName}
+            />
+
+            <Button
+              title="Add Item"
+              onPress={handleCreateItem}
+              loading={creatingItem}
+              disabled={!newItemName.trim() || creatingItem}
+              variant="purple"
+              style={styles.modalButton}
+            />
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
+  // Main shopping lists view - matches PDF exactly
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
+        }
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Shopping</Text>
-            <Text style={styles.subtitle}>Household essentials</Text>
+            <Text style={[styles.title, { color: theme.text }]}>Shopping</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>My Lists</Text>
           </View>
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowCategoryModal(true)}
+            style={[styles.searchButton, { backgroundColor: theme.accent.cyan }]}
             activeOpacity={0.8}
           >
-            <Plus size={28} color={Colors.black} strokeWidth={3} />
+            <Search size={24} color="#1C1C1E" />
           </TouchableOpacity>
         </View>
 
-        {/* Categories Scroll */}
-        {categories.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesContainer}
-            contentContainerStyle={styles.categoriesContent}
-          >
-            {categories.map((category, index) => {
-              const progress = getCategoryProgress(category.id);
-              const colorIndex = index % CATEGORY_COLORS.length;
-              const isActive = activeCategory === category.id;
+        {/* Category Grid - matches PDF layout */}
+        <View style={styles.grid}>
+          {categories.map((category, index) => {
+            const colorIndex = index % CATEGORY_COLORS.length;
+            const itemCount = items[category.id]?.length || 0;
 
-              return (
-                <TouchableOpacity
-                  key={category.id}
-                  style={[
-                    styles.categoryCard,
-                    { backgroundColor: CATEGORY_COLORS[colorIndex] },
-                    isActive && styles.categoryCardActive,
-                  ]}
-                  onPress={() => setActiveCategory(category.id)}
-                  activeOpacity={0.9}
-                >
-                  <ShoppingBag size={24} color={Colors.black} />
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={[styles.categoryCard, { backgroundColor: CATEGORY_COLORS[colorIndex] }]}
+                onPress={() => setActiveCategory(category)}
+                activeOpacity={0.9}
+              >
+                <View style={styles.categoryIconContainer}>
+                  {getCategoryIcon(category, index)}
+                </View>
+                <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{category.name}</Text>
-                  <Text style={styles.categoryProgress}>
-                    {progress.bought}/{progress.total}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-
-        {/* Items List */}
-        {categories.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
-              <ShoppingBag size={48} color={Colors.black} />
-            </View>
-            <Text style={styles.emptyText}>No categories yet</Text>
-            <Text style={styles.emptySubtext}>Create a category to start adding items</Text>
-          </View>
-        ) : (
-          <View style={styles.itemsContainer}>
-            <View style={styles.itemsHeader}>
-              <Text style={styles.itemsTitle}>
-                {categories.find((c) => c.id === activeCategory)?.name || "Items"}
-              </Text>
-              {activeCategory && (
-                <TouchableOpacity
-                  style={styles.addItemButton}
-                  onPress={() => setShowItemModal(true)}
-                  activeOpacity={0.8}
-                >
-                  <Plus size={20} color={Colors.white} />
-                  <Text style={styles.addItemText}>Add Item</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {getActiveItems().length === 0 ? (
-              <View style={styles.emptyItemsContainer}>
-                <Text style={styles.emptyItemsText}>No items in this category</Text>
-              </View>
-            ) : (
-              getActiveItems().map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[styles.itemCard, item.is_bought && styles.itemCardBought]}
-                  onPress={() => toggleItemBought(item.id)}
-                  activeOpacity={0.95}
-                >
-                  <View style={styles.itemContent}>
-                    <View style={[styles.checkbox, item.is_bought && styles.checkboxCompleted]}>
-                      {item.is_bought && <Check size={16} color={Colors.black} strokeWidth={4} />}
-                    </View>
-                    <View style={styles.itemInfo}>
-                      <Text style={[styles.itemName, item.is_bought && styles.itemNameBought]}>
-                        {item.name}
-                      </Text>
-                      {item.link && (
-                        <Text style={styles.itemLink} numberOfLines={1}>
-                          {item.link}
-                        </Text>
-                      )}
-                    </View>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteItem(item.id)}
-                    >
-                      <Trash2 size={18} color={Colors.gray400} />
-                    </TouchableOpacity>
+                  <Text style={styles.categoryCount}>{itemCount} Items</Text>
+                </View>
+                <View style={styles.categoryArrow}>
+                  <View style={styles.arrowCircle}>
+                    <ArrowLeft
+                      size={16}
+                      color="rgba(0,0,0,0.3)"
+                      style={{ transform: [{ rotate: "180deg" }] }}
+                    />
                   </View>
-                </TouchableOpacity>
-              ))
-            )}
-          </View>
-        )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* Add New List Card - Dashed border */}
+          <TouchableOpacity
+            style={[styles.addCard, { borderColor: theme.textSecondary }]}
+            onPress={() => setShowCategoryModal(true)}
+            activeOpacity={0.8}
+          >
+            <Plus size={32} color={theme.textSecondary} strokeWidth={1.5} />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
-      {/* Create Category Modal */}
+      {/* Create Category Modal - matches PDF design */}
       <Modal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        title="New Category"
+        title="New List"
       >
         <View style={styles.modalContent}>
+          {/* Icon Preview */}
+          <View style={styles.iconPreview}>
+            <View style={[styles.iconPreviewCircle, { backgroundColor: selectedColor }]}>
+              <Utensils size={32} color="#1C1C1E" />
+            </View>
+          </View>
+
+          {/* Title Input */}
           <Input
-            label="Category Name"
-            placeholder="e.g., Groceries"
+            placeholder="Title"
             value={newCategoryName}
             onChangeText={setNewCategoryName}
-            dark
           />
 
-          <View style={styles.iconPicker}>
-            <Text style={styles.pickerLabel}>Icon</Text>
-            <View style={styles.iconOptions}>
-              {CATEGORY_ICONS.map((icon) => (
+          {/* Color Picker */}
+          <View style={styles.colorPicker}>
+            <View style={styles.colorRow}>
+              {COLOR_OPTIONS.slice(0, 7).map((color) => (
                 <TouchableOpacity
-                  key={icon}
-                  style={[styles.iconOption, selectedIcon === icon && styles.iconOptionActive]}
-                  onPress={() => setSelectedIcon(icon)}
-                >
-                  <ShoppingBag size={24} color={selectedIcon === icon ? Colors.black : Colors.gray400} />
-                </TouchableOpacity>
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color },
+                    selectedColor === color && styles.colorOptionSelected,
+                  ]}
+                  onPress={() => setSelectedColor(color)}
+                />
+              ))}
+            </View>
+            <View style={styles.colorRow}>
+              {COLOR_OPTIONS.slice(7).map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color },
+                    selectedColor === color && styles.colorOptionSelected,
+                  ]}
+                  onPress={() => setSelectedColor(color)}
+                />
               ))}
             </View>
           </View>
 
-          <Button
-            title="Create Category"
-            onPress={handleCreateCategory}
-            loading={creatingCategory}
-            disabled={!newCategoryName.trim() || creatingCategory}
-            variant="yellow"
-            style={styles.modalButton}
-          />
+          {/* Icon Picker */}
+          <View style={styles.iconPicker}>
+            {[1, 2, 3].map((row) => (
+              <View key={row} style={styles.iconRow}>
+                {[1, 2, 3, 4, 5, 6].map((col) => (
+                  <TouchableOpacity
+                    key={`${row}-${col}`}
+                    style={[styles.iconOption, { backgroundColor: theme.surface }]}
+                  >
+                    <Utensils size={20} color={theme.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </View>
         </View>
-      </Modal>
 
-      {/* Create Item Modal */}
-      <Modal visible={showItemModal} onClose={() => setShowItemModal(false)} title="Add Item">
-        <View style={styles.modalContent}>
-          <Input
-            label="Item Name"
-            placeholder="e.g., Milk"
-            value={newItemName}
-            onChangeText={setNewItemName}
-            dark
-          />
-
-          <Input
-            label="Link (Optional)"
-            placeholder="https://..."
-            value={newItemLink}
-            onChangeText={setNewItemLink}
-            keyboardType="url"
-            autoCapitalize="none"
-            dark
-          />
-
-          <Button
-            title="Add Item"
-            onPress={handleCreateItem}
-            loading={creatingItem}
-            disabled={!newItemName.trim() || creatingItem}
-            variant="purple"
-            style={styles.modalButton}
-          />
+        <View style={styles.modalActions}>
+          <TouchableOpacity
+            style={[styles.modalCancelButton, { backgroundColor: theme.surface }]}
+            onPress={() => setShowCategoryModal(false)}
+          >
+            <ArrowLeft
+              size={24}
+              color={theme.textSecondary}
+              style={{ transform: [{ rotate: "45deg" }] }}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.modalConfirmButton,
+              { backgroundColor: theme.textSecondary },
+              newCategoryName && { backgroundColor: theme.text },
+            ]}
+            onPress={handleCreateCategory}
+            disabled={!newCategoryName.trim() || creatingCategory}
+          >
+            <Check size={24} color={theme.background} />
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -387,219 +462,233 @@ export default function ShoppingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.white,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
     marginBottom: 24,
   },
   title: {
     fontSize: 36,
     fontFamily: fonts[700],
-    color: Colors.black,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray400,
   },
-  addButton: {
+  searchButton: {
     width: 56,
     height: 56,
-    borderRadius: 16,
-    backgroundColor: Colors.accentYellow,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
-  categoriesContainer: {
-    marginBottom: 32,
-    marginHorizontal: -24,
-  },
-  categoriesContent: {
-    paddingHorizontal: 24,
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   categoryCard: {
-    width: 120,
-    height: 140,
+    width: "47%",
+    aspectRatio: 0.9,
     borderRadius: 24,
-    padding: 16,
+    padding: 18,
     justifyContent: "space-between",
-    borderWidth: 3,
-    borderColor: "transparent",
   },
-  categoryCardActive: {
-    borderColor: Colors.black,
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoryInfo: {
+    flex: 1,
+    justifyContent: "flex-end",
   },
   categoryName: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  categoryProgress: {
-    fontSize: 12,
-    fontFamily: fonts[600],
-    color: "rgba(0,0,0,0.5)",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.accentYellow,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  emptyText: {
     fontSize: 20,
     fontFamily: fonts[700],
-    color: Colors.gray400,
-    marginBottom: 8,
+    color: "#1C1C1E",
+    marginBottom: 4,
   },
-  emptySubtext: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    color: Colors.gray400,
-    textAlign: "center",
+  categoryCount: {
+    fontSize: 13,
+    fontFamily: fonts[500],
+    color: "rgba(0, 0, 0, 0.5)",
   },
-  itemsContainer: {
-    flex: 1,
+  categoryArrow: {
+    position: "absolute",
+    bottom: 18,
+    right: 18,
   },
-  itemsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  itemsTitle: {
-    fontSize: 24,
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  addItemButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: Colors.black,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  addItemText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-    color: Colors.white,
-  },
-  emptyItemsContainer: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 20,
-    padding: 40,
-    alignItems: "center",
-  },
-  emptyItemsText: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    color: Colors.gray400,
-  },
-  itemCard: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-  },
-  itemCardBought: {
-    opacity: 0.5,
-  },
-  itemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: Colors.gray400,
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     justifyContent: "center",
     alignItems: "center",
   },
-  checkboxCompleted: {
-    backgroundColor: Colors.accentPurple,
-    borderColor: Colors.accentPurple,
+  addCard: {
+    width: "47%",
+    aspectRatio: 0.9,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  itemInfo: {
+  // Detail view styles
+  detailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 32,
+    gap: 12,
+  },
+  backButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  detailTitle: {
     flex: 1,
+    fontSize: 24,
+    fontFamily: fonts[700],
+  },
+  detailIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  itemsList: {
+    gap: 16,
+  },
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingVertical: 8,
+  },
+  itemCheckbox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
   itemName: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 18,
     fontFamily: fonts[600],
-    color: Colors.black,
   },
   itemNameBought: {
     textDecorationLine: "line-through",
-    color: Colors.gray500,
-  },
-  itemLink: {
-    fontSize: 12,
-    fontFamily: fonts[400],
-    color: Colors.gray400,
-    marginTop: 4,
+    opacity: 0.5,
   },
   deleteButton: {
     padding: 8,
   },
+  fab: {
+    position: "absolute",
+    bottom: 120,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   modalContent: {
     flex: 1,
   },
-  iconPicker: {
+  iconPreview: {
+    alignItems: "center",
     marginBottom: 24,
   },
-  pickerLabel: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    color: Colors.gray400,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  iconOptions: {
-    flexDirection: "row",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  iconOption: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: Colors.primaryDark,
+  iconPreviewCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  iconOptionActive: {
-    backgroundColor: Colors.accentYellow,
+  colorPicker: {
+    marginBottom: 24,
+    gap: 12,
+  },
+  colorRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+  },
+  colorOption: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  colorOptionSelected: {
+    borderWidth: 3,
+    borderColor: "rgba(0, 0, 0, 0.3)",
+  },
+  iconPicker: {
+    gap: 12,
+  },
+  iconRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+  },
+  iconOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    paddingTop: 16,
+  },
+  modalCancelButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalConfirmButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalButton: {
     marginTop: "auto",

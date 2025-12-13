@@ -14,26 +14,45 @@ import {
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
 import { StatusBar } from "expo-status-bar";
-import Colors from "@/constants/colors";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HomeProvider } from "@/contexts/HomeContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { theme } = useTheme();
+
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="register" options={{ headerShown: false }} />
-      <Stack.Screen name="verify" options={{ headerShown: false }} />
-      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
-      <Stack.Screen name="rooms" options={{ headerShown: false }} />
-      <Stack.Screen name="polls" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      <StatusBar style={theme.isDark ? "light" : "dark"} />
+      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="verify" options={{ headerShown: false }} />
+        <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+        <Stack.Screen name="rooms" options={{ headerShown: false }} />
+        <Stack.Screen name="polls" options={{ headerShown: false }} />
+      </Stack>
+    </>
+  );
+}
+
+function AppContent() {
+  const { theme } = useTheme();
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.background }}>
+      <AuthProvider>
+        <HomeProvider>
+          <RootLayoutNav />
+        </HomeProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -60,14 +79,9 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.background }}>
-        <StatusBar style="light" />
-        <AuthProvider>
-          <HomeProvider>
-            <RootLayoutNav />
-          </HomeProvider>
-        </AuthProvider>
-      </GestureHandlerRootView>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

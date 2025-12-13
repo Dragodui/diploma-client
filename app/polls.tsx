@@ -11,37 +11,27 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  ArrowLeft,
-  Plus,
-  BarChart2,
-  Check,
-  Clock,
-  Users,
-  X,
-} from "lucide-react-native";
+import { Plus, Check, Users, X } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { pollApi } from "@/lib/api";
 import { Poll, PollOption } from "@/lib/types";
-import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
-
-type FilterType = "active" | "closed";
 
 export default function PollsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const { home, isAdmin } = useHome();
+  const { theme } = useTheme();
 
   const [polls, setPolls] = useState<Poll[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterType>("active");
 
   // Create poll modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -57,7 +47,7 @@ export default function PollsScreen() {
 
     try {
       const pollsData = await pollApi.getByHomeId(home.id);
-      setPolls(pollsData || []);
+      setPolls(pollsData?.filter((p) => p.status === "open") || []);
     } catch (error) {
       console.error("Error loading polls:", error);
     } finally {
@@ -115,26 +105,6 @@ export default function PollsScreen() {
     }
   };
 
-  const handleClosePoll = (pollId: number) => {
-    if (!home) return;
-
-    Alert.alert("Close Poll", "Are you sure you want to close this poll?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Close",
-        onPress: async () => {
-          try {
-            await pollApi.close(home.id, pollId);
-            await loadPolls();
-          } catch (error) {
-            console.error("Error closing poll:", error);
-            Alert.alert("Error", "Failed to close poll");
-          }
-        },
-      },
-    ]);
-  };
-
   const addOption = () => {
     if (pollOptions.length < 6) {
       setPollOptions([...pollOptions, ""]);
@@ -154,12 +124,6 @@ export default function PollsScreen() {
     }
   };
 
-  const getFilteredPolls = () => {
-    return polls.filter((poll) =>
-      activeFilter === "active" ? poll.status === "open" : poll.status === "closed"
-    );
-  };
-
   const hasUserVoted = (poll: Poll) => {
     if (!user || !poll.options) return false;
     return poll.options.some((opt) => opt.votes?.some((v) => v.user_id === user.id));
@@ -175,202 +139,118 @@ export default function PollsScreen() {
     return null;
   };
 
-  const getTotalVotes = (poll: Poll) => {
-    if (!poll.options) return 0;
-    return poll.options.reduce((sum, opt) => sum + (opt.votes?.length || 0), 0);
-  };
-
-  const getVotePercentage = (option: PollOption, poll: Poll) => {
-    const total = getTotalVotes(poll);
-    if (total === 0) return 0;
-    return Math.round(((option.votes?.length || 0) / total) * 100);
-  };
-
-  const isPollCreator = (poll: Poll) => {
-    return poll.creator_id === user?.id;
+  const getTimeRemaining = () => {
+    // Demo - in real app, calculate from poll data
+    return "Closing in 2h";
   };
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.black} />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
-
-  if (!home) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color={Colors.black} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Polls</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Join a home to participate in polls</Text>
-        </View>
-      </View>
-    );
-  }
-
-  const filteredPolls = getFilteredPolls();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
+        }
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color={Colors.black} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Polls</Text>
-          <TouchableOpacity
-            onPress={() => setShowCreateModal(true)}
-            style={styles.addButton}
-          >
-            <Plus size={24} color={Colors.black} />
-          </TouchableOpacity>
-        </View>
+        <Text style={[styles.title, { color: theme.text }]}>Polls</Text>
 
-        {/* Filter Tabs */}
-        <View style={styles.filterContainer}>
-          <TouchableOpacity
-            style={[styles.filterButton, activeFilter === "active" && styles.filterButtonActive]}
-            onPress={() => setActiveFilter("active")}
-          >
-            <Text
-              style={[styles.filterText, activeFilter === "active" && styles.filterTextActive]}
-            >
-              Active
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterButton, activeFilter === "closed" && styles.filterButtonActive]}
-            onPress={() => setActiveFilter("closed")}
-          >
-            <Text
-              style={[styles.filterText, activeFilter === "closed" && styles.filterTextActive]}
-            >
-              Closed
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Polls List */}
-        {filteredPolls.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <BarChart2 size={48} color={Colors.gray400} />
-            </View>
-            <Text style={styles.emptyTitle}>
-              No {activeFilter === "active" ? "Active" : "Closed"} Polls
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {activeFilter === "active"
-                ? "Create a poll to get feedback from your roommates"
-                : "Closed polls will appear here"}
-            </Text>
+        {/* Poll Cards */}
+        {polls.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No active polls</Text>
           </View>
         ) : (
-          <View style={styles.pollsList}>
-            {filteredPolls.map((poll) => {
-              const voted = hasUserVoted(poll);
-              const userVote = getUserVote(poll);
-              const totalVotes = getTotalVotes(poll);
-              const isClosed = poll.status === "closed";
-              const canClose = (isPollCreator(poll) || isAdmin) && !isClosed;
+          polls.map((poll) => {
+            const voted = hasUserVoted(poll);
+            const userVote = getUserVote(poll);
 
-              return (
-                <View key={poll.id} style={styles.pollCard}>
-                  <View style={styles.pollHeader}>
-                    <Text style={styles.pollQuestion}>{poll.question}</Text>
-                    {canClose && (
-                      <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => handleClosePoll(poll.id)}
-                      >
-                        <X size={18} color={Colors.gray500} />
-                      </TouchableOpacity>
-                    )}
+            return (
+              <View
+                key={poll.id}
+                style={[styles.pollCard, { backgroundColor: theme.accent.purple }]}
+              >
+                {/* Poll Header */}
+                <View style={styles.pollHeader}>
+                  <View style={styles.pollBadge}>
+                    <Text style={styles.pollBadgeText}>{getTimeRemaining()}</Text>
                   </View>
-
-                  <View style={styles.pollMeta}>
-                    <View style={styles.pollMetaItem}>
-                      <Users size={14} color={Colors.gray400} />
-                      <Text style={styles.pollMetaText}>{totalVotes} votes</Text>
-                    </View>
-                    <View style={styles.pollMetaItem}>
-                      <Clock size={14} color={Colors.gray400} />
-                      <Text style={styles.pollMetaText}>
-                        {isClosed ? "Closed" : "Open"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.optionsList}>
-                    {poll.options?.map((option) => {
-                      const percentage = getVotePercentage(option, poll);
-                      const isSelected = userVote === option.id;
-                      const showResults = voted || isClosed;
-
-                      return (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={[
-                            styles.optionButton,
-                            showResults && styles.optionButtonVoted,
-                            isSelected && styles.optionButtonSelected,
-                          ]}
-                          onPress={() => !voted && !isClosed && handleVote(poll.id, option.id)}
-                          disabled={voted || isClosed}
-                          activeOpacity={voted || isClosed ? 1 : 0.8}
-                        >
-                          {showResults && (
-                            <View
-                              style={[styles.optionProgress, { width: `${percentage}%` }]}
-                            />
-                          )}
-                          <View style={styles.optionContent}>
-                            <Text
-                              style={[
-                                styles.optionText,
-                                isSelected && styles.optionTextSelected,
-                              ]}
-                            >
-                              {option.option_text}
-                            </Text>
-                            {showResults && (
-                              <View style={styles.optionResult}>
-                                {isSelected && (
-                                  <Check size={16} color={Colors.accentPurple} />
-                                )}
-                                <Text
-                                  style={[
-                                    styles.optionPercentage,
-                                    isSelected && styles.optionPercentageSelected,
-                                  ]}
-                                >
-                                  {percentage}%
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
+                  <View style={styles.pollUsers}>
+                    <Users size={16} color="#1C1C1E" />
+                    <Users size={16} color="#1C1C1E" style={{ marginLeft: -8 }} />
+                    <Users size={16} color="#1C1C1E" style={{ marginLeft: -8 }} />
                   </View>
                 </View>
-              );
-            })}
-          </View>
+
+                {/* Poll Question */}
+                <Text style={styles.pollQuestion}>{poll.question}</Text>
+
+                {/* Poll Options */}
+                <View style={styles.optionsList}>
+                  {poll.options?.map((option) => {
+                    const isSelected = userVote === option.id;
+                    const voteCount = option.votes?.length || 0;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.id}
+                        style={[
+                          styles.optionButton,
+                          isSelected && styles.optionButtonSelected,
+                        ]}
+                        onPress={() => !voted && handleVote(poll.id, option.id)}
+                        disabled={voted}
+                        activeOpacity={voted ? 1 : 0.8}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            isSelected && styles.optionTextSelected,
+                          ]}
+                        >
+                          {option.option_text}
+                        </Text>
+                        <View style={styles.optionRight}>
+                          {isSelected && <Check size={16} color="#FFFFFF" />}
+                          <Text
+                            style={[
+                              styles.optionVotes,
+                              isSelected && styles.optionVotesSelected,
+                            ]}
+                          >
+                            {voteCount} vote{voteCount !== 1 ? "s" : ""}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })
         )}
+
+        {/* Create New Poll Button */}
+        <TouchableOpacity
+          style={[styles.createPollButton, { borderColor: theme.textSecondary }]}
+          onPress={() => setShowCreateModal(true)}
+          activeOpacity={0.8}
+        >
+          <Plus size={24} color={theme.textSecondary} />
+          <Text style={[styles.createPollText, { color: theme.textSecondary }]}>
+            Create New Poll
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Create Poll Modal */}
@@ -387,11 +267,10 @@ export default function PollsScreen() {
               placeholder="What do you want to ask?"
               value={pollQuestion}
               onChangeText={setPollQuestion}
-              dark
             />
 
             <View style={styles.optionsSection}>
-              <Text style={styles.optionsLabel}>OPTIONS</Text>
+              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>OPTIONS</Text>
               {pollOptions.map((option, index) => (
                 <View key={index} style={styles.optionInputRow}>
                   <View style={styles.optionInputWrapper}>
@@ -399,31 +278,35 @@ export default function PollsScreen() {
                       placeholder={`Option ${index + 1}`}
                       value={option}
                       onChangeText={(text) => updateOption(index, text)}
-                      dark
                     />
                   </View>
                   {pollOptions.length > 2 && (
                     <TouchableOpacity
-                      style={styles.removeOptionButton}
+                      style={[styles.removeOptionButton, { backgroundColor: theme.surface }]}
                       onPress={() => removeOption(index)}
                     >
-                      <X size={20} color={Colors.gray400} />
+                      <X size={20} color={theme.textSecondary} />
                     </TouchableOpacity>
                   )}
                 </View>
               ))}
 
               {pollOptions.length < 6 && (
-                <TouchableOpacity style={styles.addOptionButton} onPress={addOption}>
-                  <Plus size={20} color={Colors.accentPurple} />
-                  <Text style={styles.addOptionText}>Add Option</Text>
+                <TouchableOpacity
+                  style={[styles.addOptionButton, { borderColor: theme.accent.purple }]}
+                  onPress={addOption}
+                >
+                  <Plus size={20} color={theme.accent.purple} />
+                  <Text style={[styles.addOptionText, { color: theme.accent.purple }]}>
+                    Add Option
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
           </View>
         </ScrollView>
 
-        <View style={styles.modalFooter}>
+        <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
           <Button
             title="Create Poll"
             onPress={handleCreatePoll}
@@ -444,73 +327,23 @@ export default function PollsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.white,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.gray50,
-    justifyContent: "center",
-    alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 36,
     fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.accentPurple,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  placeholder: {
-    width: 48,
-  },
-  filterContainer: {
-    flexDirection: "row",
-    gap: 12,
     marginBottom: 24,
-  },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: Colors.gray50,
-    alignItems: "center",
-  },
-  filterButtonActive: {
-    backgroundColor: Colors.black,
-  },
-  filterText: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-    color: Colors.gray400,
-  },
-  filterTextActive: {
-    color: Colors.white,
   },
   emptyContainer: {
     flex: 1,
@@ -521,132 +354,89 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray400,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.gray100,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    color: Colors.gray500,
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  pollsList: {
-    gap: 16,
   },
   pollCard: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 24,
+    borderRadius: 28,
     padding: 24,
+    marginBottom: 16,
   },
   pollHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  pollQuestion: {
-    flex: 1,
-    fontSize: 18,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    lineHeight: 26,
-    marginRight: 12,
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.gray200,
-    justifyContent: "center",
     alignItems: "center",
+    marginBottom: 16,
   },
-  pollMeta: {
-    flexDirection: "row",
-    gap: 16,
-    marginBottom: 20,
+  pollBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
-  pollMetaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  pollMetaText: {
+  pollBadgeText: {
     fontSize: 12,
     fontFamily: fonts[600],
-    color: Colors.gray400,
+    color: "#1C1C1E",
+  },
+  pollUsers: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  pollQuestion: {
+    fontSize: 22,
+    fontFamily: fonts[700],
+    color: "#1C1C1E",
+    lineHeight: 28,
+    marginBottom: 20,
   },
   optionsList: {
     gap: 10,
   },
   optionButton: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 14,
     padding: 16,
-    position: "relative",
-    overflow: "hidden",
-  },
-  optionButtonVoted: {
-    backgroundColor: Colors.gray100,
-  },
-  optionButtonSelected: {
-    borderWidth: 2,
-    borderColor: Colors.accentPurple,
-  },
-  optionProgress: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: Colors.accentPurple,
-    opacity: 0.15,
-    borderRadius: 16,
-  },
-  optionContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+  optionButtonSelected: {
+    backgroundColor: "#1C1C1E",
+  },
   optionText: {
     fontSize: 15,
     fontFamily: fonts[600],
-    color: Colors.black,
-    flex: 1,
+    color: "#1C1C1E",
   },
   optionTextSelected: {
-    color: Colors.accentPurple,
+    color: "#FFFFFF",
   },
-  optionResult: {
+  optionRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
-  optionPercentage: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-    color: Colors.gray500,
+  optionVotes: {
+    fontSize: 13,
+    fontFamily: fonts[500],
+    color: "rgba(0, 0, 0, 0.5)",
   },
-  optionPercentageSelected: {
-    color: Colors.accentPurple,
+  optionVotesSelected: {
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  createPollButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 20,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    marginTop: 8,
+  },
+  createPollText: {
+    fontSize: 16,
+    fontFamily: fonts[600],
   },
   modalScrollView: {
     flex: 1,
@@ -660,7 +450,6 @@ const styles = StyleSheet.create({
   optionsLabel: {
     fontSize: 12,
     fontFamily: fonts[700],
-    color: Colors.gray400,
     letterSpacing: 1,
     marginBottom: 12,
     marginLeft: 4,
@@ -678,7 +467,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: Colors.primaryDark,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -691,18 +479,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.accentPurple,
     borderStyle: "dashed",
     marginTop: 8,
   },
   addOptionText: {
     fontSize: 14,
     fontFamily: fonts[700],
-    color: Colors.accentPurple,
   },
   modalFooter: {
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.gray700,
   },
 });

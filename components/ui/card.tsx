@@ -1,8 +1,8 @@
 import { FC, ReactNode } from "react";
 import { View, StyleSheet, ViewStyle, TouchableOpacity } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 
-type CardVariant = "default" | "dark" | "yellow" | "purple" | "pink" | "white";
+type CardVariant = "default" | "surface" | "yellow" | "purple" | "pink" | "mint" | "white";
 
 interface CardProps {
   children: ReactNode;
@@ -21,20 +21,24 @@ const Card: FC<CardProps> = ({
   padding = 24,
   borderRadius = 32,
 }) => {
+  const { theme } = useTheme();
+
   const getCardStyle = () => {
     switch (variant) {
-      case "dark":
-        return styles.cardDark;
+      case "surface":
+        return { backgroundColor: theme.surface };
       case "yellow":
-        return styles.cardYellow;
+        return { backgroundColor: theme.accent.yellow };
       case "purple":
-        return styles.cardPurple;
+        return { backgroundColor: theme.accent.purple };
       case "pink":
-        return styles.cardPink;
+        return { backgroundColor: theme.accent.pink };
+      case "mint":
+        return { backgroundColor: theme.accent.mint };
       case "white":
-        return styles.cardWhite;
+        return { backgroundColor: "#FFFFFF" };
       default:
-        return styles.cardDefault;
+        return { backgroundColor: theme.surface };
     }
   };
 
@@ -59,24 +63,6 @@ const Card: FC<CardProps> = ({
 const styles = StyleSheet.create({
   card: {
     overflow: "hidden",
-  },
-  cardDefault: {
-    backgroundColor: Colors.gray50,
-  },
-  cardDark: {
-    backgroundColor: Colors.secondaryDark,
-  },
-  cardYellow: {
-    backgroundColor: Colors.accentYellow,
-  },
-  cardPurple: {
-    backgroundColor: Colors.accentPurple,
-  },
-  cardPink: {
-    backgroundColor: Colors.accentPink,
-  },
-  cardWhite: {
-    backgroundColor: Colors.white,
   },
 });
 

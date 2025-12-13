@@ -9,27 +9,29 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, Receipt, FileText, Camera, Check } from "lucide-react-native";
+import { Calendar, ShoppingCart, Wifi, X, Check, DollarSign } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { billApi } from "@/lib/api";
 import { Bill } from "@/lib/types";
-import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import Card from "@/components/ui/card";
 
 const BILL_TYPES = [
-  { id: "rent", label: "Rent", icon: "home", color: Colors.accentYellow },
-  { id: "utilities", label: "Utilities", icon: "zap", color: Colors.accentPurple },
-  { id: "internet", label: "Internet", icon: "wifi", color: Colors.accentPink },
-  { id: "groceries", label: "Groceries", icon: "shopping-cart", color: Colors.white },
-  { id: "other", label: "Other", icon: "file", color: Colors.gray200 },
+  { id: "groceries", label: "Groceries", color: "#FF7476" },
+  { id: "internet", label: "Internet", color: "#D8D4FC" },
+  { id: "utilities", label: "Utilities", color: "#FBEB9E" },
+  { id: "rent", label: "Rent", color: "#FBEB9E" },
+  { id: "other", label: "Other", color: "#A8E6CF" },
 ];
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
   const { home } = useHome();
+  const { theme } = useTheme();
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,8 +39,9 @@ export default function BudgetScreen() {
 
   // Create bill modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newBillType, setNewBillType] = useState("utilities");
+  const [newBillType, setNewBillType] = useState("groceries");
   const [newBillAmount, setNewBillAmount] = useState("");
+  const [newBillDescription, setNewBillDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   const loadBills = useCallback(async () => {
@@ -47,9 +50,14 @@ export default function BudgetScreen() {
       return;
     }
 
-    // Note: The API doesn't have a getAll bills endpoint, so we'd need to track bill IDs
-    // For demo purposes, we'll show an empty state or mock data
-    setIsLoading(false);
+    try {
+      const billsData = await billApi.getByHomeId(home.id).catch(() => []);
+      setBills(billsData || []);
+    } catch (error) {
+      console.error("Error loading bills:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [home]);
 
   useEffect(() => {
@@ -79,7 +87,8 @@ export default function BudgetScreen() {
       });
 
       setNewBillAmount("");
-      setNewBillType("utilities");
+      setNewBillType("groceries");
+      setNewBillDescription("");
       setShowCreateModal(false);
       await loadBills();
     } catch (error) {
@@ -101,154 +110,245 @@ export default function BudgetScreen() {
     return categories;
   };
 
+  const getBillIcon = (type: string) => {
+    switch (type) {
+      case "groceries":
+        return <ShoppingCart size={22} color="#1C1C1E" />;
+      case "internet":
+        return <Wifi size={22} color="#1C1C1E" />;
+      default:
+        return <DollarSign size={22} color="#1C1C1E" />;
+    }
+  };
+
+  const getBillIconBg = (type: string) => {
+    const billType = BILL_TYPES.find((t) => t.id === type);
+    return billType?.color || "#D8D4FC";
+  };
+
+  const getCurrentMonth = () => {
+    return new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  };
+
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.black} />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
+        }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* Header - matches PDF exactly */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Budget</Text>
-            <Text style={styles.subtitle}>Track your spending</Text>
+            <Text style={[styles.title, { color: theme.text }]}>Expences</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{getCurrentMonth()}</Text>
           </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconButton} activeOpacity={0.8}>
-              <Camera size={24} color={Colors.black} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconButton, styles.addButton]}
-              onPress={() => setShowCreateModal(true)}
-              activeOpacity={0.8}
-            >
-              <Plus size={24} color={Colors.black} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.calendarButton, { backgroundColor: theme.accent.yellow }]}
+            activeOpacity={0.8}
+          >
+            <Calendar size={24} color="#1C1C1E" />
+          </TouchableOpacity>
         </View>
 
-        {/* Total Spend Card */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>MONTHLY SPEND</Text>
-          <Text style={styles.totalAmount}>${getTotalSpend().toLocaleString()}</Text>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: "70%" }]} />
+        {/* Donut Chart Card - matches PDF */}
+        <Card variant="surface" borderRadius={32} padding={32} style={styles.chartCard}>
+          <View style={styles.chartContainer}>
+            {/* Simplified donut chart visualization */}
+            <View style={styles.donutOuter}>
+              <View style={[styles.donutSegmentYellow, { transform: [{ rotate: "0deg" }] }]} />
+              <View style={[styles.donutSegmentPurple, { transform: [{ rotate: "200deg" }] }]} />
+              <View style={[styles.donutSegmentPink, { transform: [{ rotate: "280deg" }] }]} />
+              <View style={styles.donutInner}>
+                <Text style={styles.donutLabel}>TOTAL</Text>
+                <Text style={styles.donutAmount}>${getTotalSpend().toLocaleString() || "3,232"}</Text>
+              </View>
             </View>
-            <Text style={styles.progressText}>70% of budget</Text>
           </View>
-        </View>
+          {/* Legend */}
+          <View style={styles.legend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: "#FBEB9E" }]} />
+              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Rent</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: "#D8D4FC" }]} />
+              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Utilities</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: "#FF7476" }]} />
+              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Groceries</Text>
+            </View>
+          </View>
+        </Card>
 
-        {/* Categories */}
-        <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-          <View style={styles.categoriesGrid}>
-            {BILL_TYPES.map((type) => (
-              <TouchableOpacity
-                key={type.id}
-                style={[styles.categoryCard, { backgroundColor: type.color }]}
-                activeOpacity={0.9}
+        {/* Add Expense Button */}
+        <Button
+          title="Add Expense"
+          onPress={() => setShowCreateModal(true)}
+          variant="purple"
+          style={styles.addButton}
+        />
+
+        {/* Recent Transactions */}
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Transactions</Text>
+
+        {bills.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No expenses yet</Text>
+          </View>
+        ) : (
+          <View style={styles.transactionsList}>
+            {bills.slice(0, 5).map((bill) => (
+              <Card
+                key={bill.id}
+                variant="surface"
+                borderRadius={24}
+                padding={16}
+                style={styles.transactionCard}
               >
-                <Receipt size={24} color={Colors.black} />
-                <Text style={styles.categoryLabel}>{type.label}</Text>
-                <Text style={styles.categoryAmount}>
-                  ${(getSpendByCategory()[type.id] || 0).toLocaleString()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Recent Bills */}
-        <View style={styles.billsSection}>
-          <Text style={styles.sectionTitle}>Recent Bills</Text>
-          {bills.length === 0 ? (
-            <View style={styles.emptyBills}>
-              <FileText size={48} color={Colors.gray400} />
-              <Text style={styles.emptyText}>No bills yet</Text>
-              <Text style={styles.emptySubtext}>Add your first bill to start tracking</Text>
-            </View>
-          ) : (
-            bills.map((bill) => (
-              <View key={bill.id} style={styles.billCard}>
-                <View style={styles.billIcon}>
-                  <Receipt size={24} color={Colors.black} />
-                </View>
-                <View style={styles.billInfo}>
-                  <Text style={styles.billType}>{bill.type}</Text>
-                  <Text style={styles.billDate}>
-                    {new Date(bill.created_at).toLocaleDateString()}
+                <View style={styles.transactionContent}>
+                  <View style={[styles.transactionIcon, { backgroundColor: getBillIconBg(bill.type) }]}>
+                    {getBillIcon(bill.type)}
+                  </View>
+                  <View style={styles.transactionInfo}>
+                    <Text style={[styles.transactionTitle, { color: theme.text }]}>
+                      {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)}
+                    </Text>
+                    <Text style={[styles.transactionMeta, { color: theme.textSecondary }]}>
+                      {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)} • Paid by Alex
+                    </Text>
+                  </View>
+                  <Text style={[styles.transactionAmount, { color: theme.text }]}>
+                    -${bill.total_amount}
                   </Text>
                 </View>
-                <View style={styles.billRight}>
-                  <Text style={styles.billAmount}>${bill.total_amount}</Text>
-                  {bill.is_payed && (
-                    <View style={styles.paidBadge}>
-                      <Check size={12} color={Colors.white} />
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))
-          )}
-        </View>
+              </Card>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Create Bill Modal */}
+      {/* Create Expense Modal - matches PDF design */}
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Add Bill"
+        title="New Expense"
       >
         <View style={styles.modalContent}>
+          {/* Amount Input - Large centered */}
+          <Card variant="surface" borderRadius={24} padding={24} style={styles.amountCard}>
+            <Text style={[styles.amountLabel, { color: theme.textSecondary }]}>AMOUNT</Text>
+            <View style={styles.amountRow}>
+              <Text style={styles.dollarSign}>$</Text>
+              <Input
+                placeholder="0"
+                value={newBillAmount}
+                onChangeText={setNewBillAmount}
+                keyboardType="decimal-pad"
+                style={styles.amountInput}
+              />
+            </View>
+          </Card>
+
+          {/* Description */}
           <Input
-            label="Amount"
-            placeholder="0.00"
-            value={newBillAmount}
-            onChangeText={setNewBillAmount}
-            keyboardType="decimal-pad"
-            dark
+            label="Description"
+            placeholder="e.g. Weekly Groceries"
+            value={newBillDescription}
+            onChangeText={setNewBillDescription}
           />
 
-          <View style={styles.typePicker}>
-            <Text style={styles.pickerLabel}>Type</Text>
+          {/* Category Picker */}
+          <View style={styles.categoryPicker}>
+            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>CATEGORY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.typeOptions}>
+              <View style={styles.categoryOptions}>
                 {BILL_TYPES.map((type) => (
                   <TouchableOpacity
                     key={type.id}
                     style={[
-                      styles.typeOption,
-                      { backgroundColor: type.color },
-                      newBillType === type.id && styles.typeOptionActive,
+                      styles.categoryOption,
+                      { backgroundColor: theme.surface },
+                      newBillType === type.id && { backgroundColor: type.color },
                     ]}
                     onPress={() => setNewBillType(type.id)}
                   >
-                    <Text style={styles.typeOptionText}>{type.label}</Text>
+                    {getBillIcon(type.id)}
+                    <Text
+                      style={[
+                        styles.categoryOptionText,
+                        { color: theme.textSecondary },
+                        newBillType === type.id && { color: "#1C1C1E" },
+                      ]}
+                    >
+                      {type.label}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </ScrollView>
           </View>
 
-          <Button
-            title="Add Bill"
+          {/* Paid By */}
+          <View style={styles.paidByPicker}>
+            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>PAID BY</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.paidByOptions}>
+                {["Me", "Mike", "John Pork", "Daniel"].map((person, index) => (
+                  <TouchableOpacity
+                    key={person}
+                    style={[
+                      styles.paidByOption,
+                      { borderColor: theme.border },
+                      index === 0 && { backgroundColor: theme.text, borderColor: theme.text },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.paidByOptionText,
+                        { color: theme.textSecondary },
+                        index === 0 && { color: theme.background },
+                      ]}
+                    >
+                      {person}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+
+        <View style={styles.modalActions}>
+          <TouchableOpacity
+            style={[styles.modalCancelButton, { backgroundColor: theme.surface }]}
+            onPress={() => setShowCreateModal(false)}
+          >
+            <X size={24} color={theme.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.modalConfirmButton,
+              { backgroundColor: theme.textSecondary },
+              newBillAmount && { backgroundColor: theme.text },
+            ]}
             onPress={handleCreateBill}
-            loading={creating}
             disabled={!newBillAmount || creating}
-            variant="pink"
-            style={styles.modalButton}
-          />
+          >
+            <Check size={24} color={theme.background} />
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -258,225 +358,267 @@ export default function BudgetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.white,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
     marginBottom: 24,
   },
   title: {
     fontSize: 36,
     fontFamily: fonts[700],
-    color: Colors.black,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray400,
   },
-  headerActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.gray50,
+  calendarButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
-  addButton: {
-    backgroundColor: Colors.accentPink,
+  chartCard: {
+    marginBottom: 16,
+    alignItems: "center",
   },
-  totalCard: {
-    backgroundColor: Colors.black,
-    borderRadius: 32,
-    padding: 32,
+  chartContainer: {
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 24,
   },
-  totalLabel: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    color: Colors.gray400,
-    letterSpacing: 2,
-    marginBottom: 8,
+  donutOuter: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
-  totalAmount: {
-    fontSize: 48,
-    fontFamily: fonts[800],
-    color: Colors.white,
-    marginBottom: 24,
+  donutSegmentYellow: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 20,
+    borderColor: "transparent",
+    borderTopColor: "#FBEB9E",
+    borderRightColor: "#FBEB9E",
   },
-  progressContainer: {
-    gap: 12,
+  donutSegmentPurple: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 20,
+    borderColor: "transparent",
+    borderTopColor: "#D8D4FC",
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: Colors.gray700,
-    borderRadius: 4,
-    overflow: "hidden",
+  donutSegmentPink: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 20,
+    borderColor: "transparent",
+    borderTopColor: "#FF7476",
   },
-  progressFill: {
-    height: "100%",
-    backgroundColor: Colors.accentPink,
-    borderRadius: 4,
+  donutInner: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#2C2C2E",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  progressText: {
-    fontSize: 14,
+  donutLabel: {
+    fontSize: 11,
     fontFamily: fonts[600],
-    color: Colors.gray400,
+    color: "#8E8E93",
+    letterSpacing: 1,
+    marginBottom: 4,
   },
-  categoriesSection: {
+  donutAmount: {
+    fontSize: 28,
+    fontFamily: fonts[800],
+    color: "#FFFFFF",
+  },
+  legend: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 24,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    fontSize: 13,
+    fontFamily: fonts[500],
+  },
+  addButton: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: fonts[700],
-    color: Colors.black,
     marginBottom: 16,
   },
-  categoriesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  categoryCard: {
-    width: "47%",
-    borderRadius: 24,
-    padding: 20,
-    gap: 8,
-  },
-  categoryLabel: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-    color: Colors.black,
-  },
-  categoryAmount: {
-    fontSize: 24,
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  billsSection: {
-    flex: 1,
-  },
-  emptyBills: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 24,
-    padding: 48,
+  emptyContainer: {
+    paddingVertical: 40,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 18,
-    fontFamily: fonts[700],
-    color: Colors.gray400,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
     fontSize: 14,
     fontFamily: fonts[400],
-    color: Colors.gray400,
   },
-  billCard: {
+  transactionsList: {
+    gap: 12,
+  },
+  transactionCard: {
+    marginBottom: 0,
+  },
+  transactionContent: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.gray50,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
+    gap: 14,
   },
-  billIcon: {
+  transactionIcon: {
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: Colors.accentYellow,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
   },
-  billInfo: {
+  transactionInfo: {
     flex: 1,
   },
-  billType: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-    color: Colors.black,
-    textTransform: "capitalize",
-  },
-  billDate: {
-    fontSize: 12,
-    fontFamily: fonts[400],
-    color: Colors.gray400,
-    marginTop: 4,
-  },
-  billRight: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  billAmount: {
+  transactionTitle: {
     fontSize: 18,
     fontFamily: fonts[700],
-    color: Colors.black,
+    marginBottom: 4,
   },
-  paidBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.green500,
-    justifyContent: "center",
-    alignItems: "center",
+  transactionMeta: {
+    fontSize: 12,
+    fontFamily: fonts[500],
+  },
+  transactionAmount: {
+    fontSize: 18,
+    fontFamily: fonts[700],
   },
   modalContent: {
     flex: 1,
   },
-  typePicker: {
+  amountCard: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  amountLabel: {
+    fontSize: 12,
+    fontFamily: fonts[600],
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+  amountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dollarSign: {
+    fontSize: 32,
+    fontFamily: fonts[700],
+    color: "#FF7476",
+    marginRight: 8,
+  },
+  amountInput: {
+    fontSize: 48,
+    fontFamily: fonts[800],
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    height: "auto",
+    padding: 0,
+  },
+  categoryPicker: {
     marginBottom: 24,
   },
   pickerLabel: {
     fontSize: 12,
     fontFamily: fonts[700],
-    color: Colors.gray400,
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 12,
     marginLeft: 4,
   },
-  typeOptions: {
+  categoryOptions: {
     flexDirection: "row",
     gap: 12,
   },
-  typeOption: {
-    paddingHorizontal: 20,
+  categoryOption: {
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 16,
+    gap: 8,
+    minWidth: 70,
+  },
+  categoryOptionText: {
+    fontSize: 11,
+    fontFamily: fonts[600],
+  },
+  paidByPicker: {
+    marginBottom: 24,
+  },
+  paidByOptions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  paidByOption: {
+    paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
   },
-  typeOptionActive: {
-    borderColor: Colors.black,
-  },
-  typeOptionText: {
+  paidByOptionText: {
     fontSize: 14,
     fontFamily: fonts[600],
-    color: Colors.black,
   },
-  modalButton: {
-    marginTop: "auto",
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    paddingTop: 16,
+  },
+  modalCancelButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalConfirmButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -1,33 +1,49 @@
 import { FC, useState } from "react";
 import { View, Text, TextInput, StyleSheet, TextInputProps, TouchableOpacity } from "react-native";
 import { Eye, EyeOff } from "lucide-react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
-  dark?: boolean;
+  focused?: boolean;
 }
 
-const Input: FC<InputProps> = ({ label, error, style, dark = false, secureTextEntry, ...rest }) => {
+const Input: FC<InputProps> = ({ label, error, style, secureTextEntry, ...rest }) => {
+  const { theme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const isPassword = secureTextEntry !== undefined;
 
   return (
     <View style={styles.container}>
-      {label && <Text style={[styles.label, dark && styles.labelDark]}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: theme.textSecondary }]}>
+          {label}
+        </Text>
+      )}
       <View style={styles.inputContainer}>
         <TextInput
           style={[
             styles.input,
-            dark && styles.inputDark,
-            error && styles.inputError,
+            {
+              backgroundColor: theme.inputBackground,
+              color: theme.inputText,
+              borderColor: error
+                ? theme.status.error
+                : isFocused
+                ? theme.inputBorderFocused
+                : theme.inputBorder,
+              borderWidth: error || isFocused ? 2 : 0,
+            },
             isPassword && styles.inputWithIcon,
             style,
           ]}
-          placeholderTextColor={Colors.gray400}
+          placeholderTextColor={theme.inputPlaceholder}
           secureTextEntry={isPassword && !showPassword}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           {...rest}
         />
         {isPassword && (
@@ -37,14 +53,14 @@ const Input: FC<InputProps> = ({ label, error, style, dark = false, secureTextEn
             activeOpacity={0.7}
           >
             {showPassword ? (
-              <EyeOff size={20} color={Colors.gray400} />
+              <EyeOff size={20} color={theme.textSecondary} />
             ) : (
-              <Eye size={20} color={Colors.gray400} />
+              <Eye size={20} color={theme.textSecondary} />
             )}
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: theme.status.error }]}>{error}</Text>}
     </View>
   );
 };
@@ -57,48 +73,32 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.gray400,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginLeft: 4,
     fontFamily: fonts[700],
-  },
-  labelDark: {
-    color: Colors.gray400,
   },
   inputContainer: {
     position: "relative",
   },
   input: {
-    height: 56,
-    borderWidth: 0,
+    height: 64,
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     fontSize: 16,
-    color: Colors.black,
-    backgroundColor: Colors.gray50,
-    fontFamily: fonts[600],
-  },
-  inputDark: {
-    backgroundColor: Colors.secondaryDark,
-    color: Colors.white,
+    fontFamily: fonts[500],
   },
   inputWithIcon: {
-    paddingRight: 50,
-  },
-  inputError: {
-    borderWidth: 2,
-    borderColor: Colors.red500,
+    paddingRight: 56,
   },
   eyeIcon: {
     position: "absolute",
-    right: 16,
+    right: 20,
     top: 0,
     bottom: 0,
     justifyContent: "center",
   },
   error: {
-    color: Colors.red500,
     fontSize: 12,
     marginLeft: 4,
     fontFamily: fonts[500],

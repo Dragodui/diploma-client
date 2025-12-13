@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from "react-native";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 
 type ButtonVariant = "primary" | "secondary" | "yellow" | "purple" | "pink" | "outline" | "danger";
@@ -33,53 +33,76 @@ const Button: FC<ButtonProps> = ({
   textStyle,
   icon,
 }) => {
+  const { theme } = useTheme();
+
   const getButtonStyle = () => {
     switch (variant) {
       case "yellow":
-        return styles.buttonYellow;
+        return { backgroundColor: theme.accent.yellow };
       case "purple":
-        return styles.buttonPurple;
+        return { backgroundColor: theme.accent.purple };
       case "pink":
-        return styles.buttonPink;
+        return { backgroundColor: theme.accent.pink };
       case "secondary":
-        return styles.buttonSecondary;
+        return { backgroundColor: theme.surface };
       case "outline":
-        return styles.buttonOutline;
+        return {
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          borderColor: theme.border,
+          borderStyle: "dashed" as const,
+        };
       case "danger":
-        return styles.buttonDanger;
+        return { backgroundColor: theme.accent.dangerLight };
       default:
-        return styles.buttonPrimary;
+        return { backgroundColor: theme.isDark ? theme.text : theme.background };
     }
   };
 
-  const getTextStyle = () => {
+  const getTextColor = () => {
     switch (variant) {
       case "yellow":
       case "purple":
       case "pink":
-        return styles.textDark;
+        return "#1C1C1E"; // Always dark text on accent colors
       case "outline":
-        return styles.textOutline;
+        return theme.textSecondary;
       case "danger":
-        return styles.textDanger;
+        return "#FFFFFF";
       default:
-        return styles.textLight;
+        return theme.isDark ? "#1C1C1E" : "#FFFFFF";
+    }
+  };
+
+  const getLoaderColor = () => {
+    switch (variant) {
+      case "yellow":
+      case "purple":
+      case "pink":
+        return "#1C1C1E";
+      default:
+        return theme.isDark ? "#1C1C1E" : "#FFFFFF";
     }
   };
 
   return (
     <TouchableOpacity
-      style={[styles.button, getButtonStyle(), disabled && styles.disabled, style]}
+      style={[
+        styles.button,
+        getButtonStyle(),
+        disabled && styles.disabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "yellow" || variant === "purple" || variant === "pink" ? Colors.black : Colors.white} />
+        <ActivityIndicator color={getLoaderColor()} />
       ) : (
         <>
           {icon}
-          <Text style={[styles.text, getTextStyle(), textStyle]}>{title}</Text>
+          <Text style={[styles.text, { color: getTextColor() }, textStyle]}>{title}</Text>
         </>
       )}
     </TouchableOpacity>
@@ -88,7 +111,7 @@ const Button: FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    height: 56,
+    height: 64,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -96,47 +119,12 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 24,
   },
-  buttonPrimary: {
-    backgroundColor: Colors.black,
-  },
-  buttonSecondary: {
-    backgroundColor: Colors.secondaryDark,
-  },
-  buttonYellow: {
-    backgroundColor: Colors.accentYellow,
-  },
-  buttonPurple: {
-    backgroundColor: Colors.accentPurple,
-  },
-  buttonPink: {
-    backgroundColor: Colors.accentPink,
-  },
-  buttonOutline: {
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: Colors.gray600,
-  },
-  buttonDanger: {
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-  },
   disabled: {
     opacity: 0.5,
   },
   text: {
     fontSize: 16,
     fontFamily: fonts[700],
-  },
-  textLight: {
-    color: Colors.white,
-  },
-  textDark: {
-    color: Colors.black,
-  },
-  textOutline: {
-    color: Colors.gray400,
-  },
-  textDanger: {
-    color: Colors.red500,
   },
 });
 

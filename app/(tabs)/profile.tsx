@@ -15,17 +15,15 @@ import {
   Bell,
   Shield,
   ChevronRight,
-  Copy,
-  RefreshCw,
-  DoorOpen,
-  Users,
+  User,
+  Sun,
+  Moon,
 } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import * as Clipboard from "expo-clipboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
@@ -35,7 +33,8 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { home, isAdmin, createHome, joinHome, leaveHome, regenerateInviteCode } = useHome();
+  const { home, isAdmin, createHome, joinHome, leaveHome } = useHome();
+  const { theme, themeMode, setThemeMode } = useTheme();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -44,10 +43,10 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
+    Alert.alert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Logout",
+        text: "Log Out",
         style: "destructive",
         onPress: async () => {
           await logout();
@@ -87,206 +86,167 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLeaveHome = () => {
-    Alert.alert("Leave Home", "Are you sure you want to leave this home?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Leave",
-        style: "destructive",
-        onPress: async () => {
-          const result = await leaveHome();
-          if (!result.success) {
-            Alert.alert("Error", result.error || "Failed to leave home");
-          }
-        },
-      },
-    ]);
-  };
-
-  const copyInviteCode = async () => {
-    if (home?.invite_code) {
-      await Clipboard.setStringAsync(home.invite_code);
-      Alert.alert("Copied", "Invite code copied to clipboard");
+  const getUsername = () => {
+    if (user?.name) {
+      const names = user.name.split(" ");
+      return `@${names[0].toLowerCase()}_${names[names.length - 1]?.toLowerCase() || "user"}`;
     }
+    return "@user";
   };
-
-  const handleRegenerateCode = () => {
-    Alert.alert("Regenerate Code", "This will invalidate the current invite code. Continue?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Regenerate",
-        onPress: async () => {
-          const result = await regenerateInviteCode();
-          if (result.success) {
-            Alert.alert("Success", "Invite code regenerated");
-          } else {
-            Alert.alert("Error", result.error || "Failed to regenerate code");
-          }
-        },
-      },
-    ]);
-  };
-
-  console.log(home)
 
   const MENU_ITEMS = [
     {
       icon: HomeIcon,
       label: "Home Settings",
-      color: Colors.accentYellow,
-      onPress: () => {},
-      show: !!home,
+      color: theme.accent.yellow,
+      onPress: () => router.push("/rooms"),
     },
     {
       icon: Settings,
-      label: "App Settings",
-      color: Colors.white,
+      label: "Settings",
+      color: theme.surface,
       onPress: () => {},
-      show: true,
     },
     {
       icon: Bell,
       label: "Notifications",
-      color: Colors.accentPurple,
+      color: theme.surface,
       onPress: () => {},
-      show: true,
     },
     {
       icon: Shield,
       label: "Security",
-      color: Colors.accentPink,
+      color: theme.accent.pink,
       onPress: () => {},
-      show: true,
     },
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header */}
+        {/* Profile Avatar - matches PDF exactly */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
+          <View style={[styles.avatarContainer, { borderColor: theme.accent.purple }]}>
             {user?.avatar ? (
               <Image source={{ uri: user.avatar }} style={styles.avatar} />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>{user?.name?.charAt(0) || "U"}</Text>
+              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.surface }]}>
+                <User size={64} color={theme.textSecondary} />
               </View>
             )}
           </View>
-          <Text style={styles.userName}>{user?.name || "User"}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
+
+          {/* Name */}
+          <Text style={[styles.userName, { color: theme.text }]}>{user?.name || "User"}</Text>
+
+          {/* Username */}
+          <Text style={[styles.userHandle, { color: theme.textSecondary }]}>{getUsername()}</Text>
+
+          {/* Role Badge */}
           {home && (
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeText}>{isAdmin ? "Home Admin" : "Member"}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.roleBadgeText, { color: theme.textSecondary }]}>
+                {isAdmin ? "Home Admin" : "Member"}
+              </Text>
             </View>
           )}
         </View>
 
-        {/* Home Section */}
-        {!home ? (
-          <View style={styles.noHomeSection}>
-            <Text style={styles.noHomeTitle}>Join or Create a Home</Text>
-            <Text style={styles.noHomeText}>
-              Connect with your roommates to manage tasks, bills, and more together.
-            </Text>
-            <View style={styles.homeButtons}>
-              <TouchableOpacity
-                style={styles.createHomeButton}
-                onPress={() => setShowCreateModal(true)}
-                activeOpacity={0.8}
-              >
-                <HomeIcon size={24} color={Colors.black} />
-                <Text style={styles.createHomeText}>Create Home</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.joinHomeButton}
-                onPress={() => setShowJoinModal(true)}
-                activeOpacity={0.8}
-              >
-                <Users size={24} color={Colors.white} />
-                <Text style={styles.joinHomeText}>Join Home</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.homeSection}>
-            <View style={styles.homeCard}>
-              <View style={styles.homeHeader}>
-                <HomeIcon size={24} color={Colors.black} />
-                <Text style={styles.homeName}>{home.name}</Text>
-              </View>
-              {home.invite_code && (
-                <View style={styles.inviteCodeSection}>
-                  <Text style={styles.inviteLabel}>INVITE CODE</Text>
-                  <View style={styles.inviteCodeRow}>
-                    <Text style={styles.inviteCode}>{home.invite_code}</Text>
-                    <TouchableOpacity onPress={copyInviteCode} style={styles.copyButton}>
-                      <Copy size={20} color={Colors.black} />
-                    </TouchableOpacity>
-                    {isAdmin && (
-                      <TouchableOpacity onPress={handleRegenerateCode} style={styles.refreshButton}>
-                        <RefreshCw size={18} color={Colors.gray500} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              )}
-              {home.memberships && (
-                <Text style={styles.membersCount}>
-                  {home.memberships.length} member{home.memberships.length !== 1 ? "s" : ""}
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Menu Items */}
+        {/* Menu Items - matches PDF exactly */}
         <View style={styles.menuSection}>
-          {MENU_ITEMS.filter((item) => item.show).map((item, index) => {
+          {MENU_ITEMS.map((item, index) => {
             const Icon = item.icon;
             return (
               <TouchableOpacity
                 key={index}
-                style={styles.menuItem}
+                style={[styles.menuItem, { backgroundColor: theme.surface }]}
                 onPress={item.onPress}
                 activeOpacity={0.8}
               >
                 <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
-                  <Icon size={20} color={Colors.black} />
+                  <Icon size={22} color="#1C1C1E" />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <ChevronRight size={20} color={Colors.gray400} />
+                <Text style={[styles.menuLabel, { color: theme.text }]}>{item.label}</Text>
+                <ChevronRight size={20} color={theme.textSecondary} />
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Leave Home / Logout */}
-        <View style={styles.bottomActions}>
-          {home && (
+        {/* Theme Toggle */}
+        <View style={styles.themeSection}>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>THEME</Text>
+          <View style={styles.themeToggle}>
             <TouchableOpacity
-              style={styles.leaveHomeButton}
-              onPress={handleLeaveHome}
-              activeOpacity={0.8}
+              style={[
+                styles.themeOption,
+                { backgroundColor: theme.surface },
+                themeMode === "light" && { backgroundColor: theme.accent.yellow },
+              ]}
+              onPress={() => setThemeMode("light")}
             >
-              <DoorOpen size={20} color={Colors.red500} />
-              <Text style={styles.leaveHomeText}>Leave Home</Text>
+              <Sun size={20} color={themeMode === "light" ? "#1C1C1E" : theme.textSecondary} />
+              <Text
+                style={[
+                  styles.themeOptionText,
+                  { color: themeMode === "light" ? "#1C1C1E" : theme.textSecondary },
+                ]}
+              >
+                Light
+              </Text>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <LogOut size={20} color={Colors.red500} />
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.themeOption,
+                { backgroundColor: theme.surface },
+                themeMode === "dark" && { backgroundColor: theme.accent.purple },
+              ]}
+              onPress={() => setThemeMode("dark")}
+            >
+              <Moon size={20} color={themeMode === "dark" ? "#1C1C1E" : theme.textSecondary} />
+              <Text
+                style={[
+                  styles.themeOptionText,
+                  { color: themeMode === "dark" ? "#1C1C1E" : theme.textSecondary },
+                ]}
+              >
+                Dark
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Home Actions - only show if no home */}
+        {!home && (
+          <View style={styles.homeActions}>
+            <Button
+              title="Create Home"
+              onPress={() => setShowCreateModal(true)}
+              variant="yellow"
+              style={styles.homeButton}
+            />
+            <Button
+              title="Join Home"
+              onPress={() => setShowJoinModal(true)}
+              variant="purple"
+              style={styles.homeButton}
+            />
+          </View>
+        )}
+
+        {/* Logout Button - matches PDF exactly */}
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: theme.accent.dangerLight }]}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
+          <LogOut size={20} color="#FFFFFF" />
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Create Home Modal */}
@@ -301,7 +261,6 @@ export default function ProfileScreen() {
             placeholder="e.g., Our Apartment"
             value={homeName}
             onChangeText={setHomeName}
-            dark
           />
           <Button
             title="Create Home"
@@ -323,7 +282,6 @@ export default function ProfileScreen() {
             value={inviteCode}
             onChangeText={setInviteCode}
             autoCapitalize="characters"
-            dark
           />
           <Button
             title="Join Home"
@@ -342,176 +300,54 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   profileHeader: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 40,
   },
   avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: Colors.accentYellow,
-    padding: 4,
-    marginBottom: 16,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 3,
+    overflow: "hidden",
+    marginBottom: 20,
   },
   avatar: {
     width: "100%",
     height: "100%",
-    borderRadius: 56,
   },
   avatarPlaceholder: {
     width: "100%",
     height: "100%",
-    borderRadius: 56,
-    backgroundColor: Colors.gray200,
     justifyContent: "center",
     alignItems: "center",
-  },
-  avatarText: {
-    fontSize: 40,
-    fontFamily: fonts[700],
-    color: Colors.black,
   },
   userName: {
     fontSize: 28,
     fontFamily: fonts[700],
-    color: Colors.black,
     marginBottom: 4,
   },
-  userEmail: {
-    fontSize: 14,
+  userHandle: {
+    fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray400,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   roleBadge: {
-    backgroundColor: Colors.secondaryDark,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
   },
   roleBadgeText: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    color: Colors.accentYellow,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  noHomeSection: {
-    backgroundColor: Colors.gray50,
-    borderRadius: 32,
-    padding: 32,
-    marginBottom: 24,
-    alignItems: "center",
-  },
-  noHomeTitle: {
-    fontSize: 22,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  noHomeText: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    color: Colors.gray500,
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  homeButtons: {
-    width: "100%",
-    gap: 12,
-  },
-  createHomeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    backgroundColor: Colors.accentYellow,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  createHomeText: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  joinHomeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    backgroundColor: Colors.black,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  joinHomeText: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-    color: Colors.white,
-  },
-  homeSection: {
-    marginBottom: 24,
-  },
-  homeCard: {
-    backgroundColor: Colors.accentYellow,
-    borderRadius: 32,
-    padding: 24,
-  },
-  homeHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 20,
-  },
-  homeName: {
-    fontSize: 24,
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  inviteCodeSection: {
-    marginBottom: 16,
-  },
-  inviteLabel: {
-    fontSize: 10,
-    fontFamily: fonts[700],
-    color: "rgba(0,0,0,0.5)",
-    letterSpacing: 2,
-    marginBottom: 8,
-  },
-  inviteCodeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  inviteCode: {
-    fontSize: 20,
-    fontFamily: fonts[800],
-    color: Colors.black,
-    letterSpacing: 2,
-    flex: 1,
-  },
-  copyButton: {
-    padding: 8,
-  },
-  refreshButton: {
-    padding: 8,
-  },
-  membersCount: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts[600],
-    color: "rgba(0,0,0,0.6)",
   },
   menuSection: {
     gap: 12,
@@ -520,9 +356,9 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.gray50,
-    borderRadius: 20,
     padding: 16,
+    borderRadius: 20,
+    gap: 14,
   },
   menuIcon: {
     width: 44,
@@ -530,44 +366,56 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
   },
   menuLabel: {
     flex: 1,
     fontSize: 16,
-    fontFamily: fonts[700],
-    color: Colors.black,
+    fontFamily: fonts[600],
   },
-  bottomActions: {
+  themeSection: {
+    marginBottom: 32,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontFamily: fonts[700],
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  themeToggle: {
+    flexDirection: "row",
     gap: 12,
   },
-  leaveHomeButton: {
+  themeOption: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    gap: 8,
     paddingVertical: 16,
-    borderRadius: 20,
+    borderRadius: 16,
   },
-  leaveHomeText: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-    color: Colors.red500,
+  themeOptionText: {
+    fontSize: 14,
+    fontFamily: fonts[600],
   },
+  homeActions: {
+    gap: 12,
+    marginBottom: 32,
+  },
+  homeButton: {},
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 18,
     borderRadius: 20,
   },
   logoutText: {
     fontSize: 16,
     fontFamily: fonts[700],
-    color: Colors.red500,
+    color: "#FFFFFF",
   },
   modalContent: {
     flex: 1,
