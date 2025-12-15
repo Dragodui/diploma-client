@@ -254,6 +254,11 @@ export const billApi = {
     return { message: response.data.message };
   },
 
+  getByHomeId: async (homeId: number): Promise<Bill[]> => {
+    const response = await api.get<{ status: boolean; bills: Bill[] }>(`/homes/${homeId}/bills`);
+    return response.data.bills || [];
+  },
+
   getById: async (homeId: number, billId: number): Promise<Bill> => {
     const response = await api.get<{ status: boolean; bill: Bill }>(`/homes/${homeId}/bills/${billId}`);
     return response.data.bill;
