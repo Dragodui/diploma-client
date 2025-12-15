@@ -229,6 +229,13 @@ export const taskApi = {
     return { message: response.data.message };
   },
 
+  markUncompleted: async (homeId: number, taskId: number, assignmentId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/mark-uncompleted`, {
+      assignment_id: assignmentId,
+    });
+    return { message: response.data.message };
+  },
+
   // Mark task as completed for current user (auto-assigns if not assigned)
   completeTask: async (homeId: number, taskId: number): Promise<{ message: string }> => {
     const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/complete`);
@@ -303,7 +310,6 @@ export const shoppingApi = {
     const response = await api.get<{ status: boolean; items: ShoppingItem[] }>(`/homes/${homeId}/shopping/categories/${categoryId}/items`);
     return response.data.items || [];
   },
-
   deleteCategory: async (homeId: number, categoryId: number): Promise<{ message: string }> => {
     const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/categories/${categoryId}`);
     return { message: response.data.message };

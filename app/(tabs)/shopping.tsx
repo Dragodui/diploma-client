@@ -322,6 +322,7 @@ export default function ShoppingScreen() {
           visible={showItemModal}
           onClose={() => setShowItemModal(false)}
           title="Add Item"
+          height="full"
         >
           <View style={styles.modalContent}>
             <Input
@@ -748,6 +749,7 @@ const styles = StyleSheet.create({
   modalConfirmButton: {
     flex: 1,
     height: 56,
+    width: 56,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",

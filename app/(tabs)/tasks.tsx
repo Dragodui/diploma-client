@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, Plus, Calendar, Trash } from "lucide-react-native";
+import DateTimePickerModal from "react-native-modal-datetime-picker"; // <--- ИМПОРТ
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -41,6 +43,11 @@ export default function TasksScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
+  
+  // --- НОВЫЕ СТЕЙТЫ ДЛЯ ДАТЫ ---
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -76,11 +83,19 @@ export default function TasksScreen() {
     setRefreshing(false);
   };
 
+  // --- DATE PICKER HANDLERS ---
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
+
+  const handleConfirmDate = (date: Date) => {
+    setSelectedDate(date);
+    hideDatePicker();
+  };
+
   // --- ACTIONS ---
 
   const handleDelete = (taskId: number) => {
     if (!home) return;
-    console.log(home)
 
     Alert.alert(
       "Delete Task?",
@@ -104,13 +119,46 @@ export default function TasksScreen() {
     );
   };
 
-  const handleCompleteTask = async (taskId: number) => {
-    if (!home) return;
-    try {
-      await taskApi.completeTask(home.id, taskId);
-      await loadTasks();
-    } catch (error) {
-      console.error("Error completing task:", error);
+  const handleToggleTask = async (task: Task) => {
+    if (!home || !user) return;
+
+    const completed = isTaskCompleted(task);
+
+    if (completed) {
+      let assignmentId = task.assignments?.find((a) => a.user_id === user.id)?.id;
+      if (!assignmentId) {
+        assignmentId = assignments.find(a => a.task_id === task.id && a.user_id === user.id)?.id;
+      }
+
+      if (assignmentId) {
+        try {
+          await taskApi.markUncompleted(home.id, task.id, assignmentId);
+          await loadTasks();
+        } catch (error) {
+          console.error("Error uncompleting task:", error);
+          Alert.alert("Error", "Failed to uncomplete task.");
+        }
+      }
+    } else {
+      Alert.alert(
+        "Complete Task?",
+        "Are you sure you want to mark this task as completed?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Complete",
+            onPress: async () => {
+              try {
+                await taskApi.completeTask(home.id, task.id);
+                await loadTasks();
+              } catch (error) {
+                console.error("Error completing task:", error);
+                Alert.alert("Error", "Failed to complete task.");
+              }
+            },
+          },
+        ]
+      );
     }
   };
 
@@ -123,6 +171,8 @@ export default function TasksScreen() {
         name: newTaskName.trim(),
         description: newTaskDescription.trim(),
         schedule_type: "once",
+        // Отправляем дату в формате ISO, если она выбрана
+        due_date: selectedDate ? selectedDate.toISOString() : undefined,
         home_id: home.id,
         room_id: selectedRoomId || undefined,
       });
@@ -130,6 +180,7 @@ export default function TasksScreen() {
       // Reset form
       setNewTaskName("");
       setNewTaskDescription("");
+      setSelectedDate(null); // Сброс даты
       setSelectedRoomId(null);
       setShowCreateModal(false);
       await loadTasks();
@@ -169,8 +220,27 @@ export default function TasksScreen() {
   };
 
   const getTaskDueText = (task: Task) => {
-    const dueTexts = ["Today", "Tomorrow", "Thu", "Fri"];
-    return dueTexts[Math.floor(Math.random() * dueTexts.length)];
+    if (task.due_date) {
+      const date = new Date(task.due_date);
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return "No due date";
+  };
+
+  const getTaskCompletedDate = (task: Task) => {
+    let assignment = task.assignments?.find((a) => a.user_id === user?.id);
+    if (!assignment) {
+      assignment = assignments.find(a => a.task_id === task.id && a.user_id === user?.id);
+    }
+    if (!assignment && task.assignments) {
+      assignment = task.assignments.find(a => a.status === "completed");
+    }
+
+    if (assignment && assignment.complete_date) {
+      const date = new Date(assignment.complete_date);
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return "";
   };
 
   const getMyTasksCount = () => {
@@ -183,20 +253,18 @@ export default function TasksScreen() {
   const renderTaskItem = (task: Task, index: number) => {
     const completed = isTaskCompleted(task);
     const colorIndex = index % userColors.length;
+    const completedDate = completed ? getTaskCompletedDate(task) : "";
 
     return (
-      // 1. CHANGE: The outer container is now a VIEW (not clickable)
       <View
         key={task.id}
         style={[styles.taskCard, { backgroundColor: theme.surface }]}
       >
         <View style={styles.taskContent}>
-          
-          {/* 2. NEW: Wrap the Checkbox and Text in their own TouchableOpacity */}
-          {/* This takes up the remaining space (flex: 1) so you can click anywhere on the text */}
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 }}
-            onPress={() => handleCompleteTask(task.id)}
+            onPress={() => handleToggleTask(task)}
             activeOpacity={0.7}
           >
             {/* Checkbox */}
@@ -234,13 +302,20 @@ export default function TasksScreen() {
                     {getTaskDueText(task)}
                   </Text>
                 </View>
+                {completed && completedDate && (
+                  <>
+                    <Text style={[styles.taskSeparator, { color: theme.textSecondary }]}>•</Text>
+                    <Text style={{ fontSize: 12, color: theme.status.success, fontFamily: fonts[600] }}>
+                      Done: {completedDate}
+                    </Text>
+                  </>
+                )}
               </View>
             </View>
           </TouchableOpacity>
 
-          {/* 3. SEPARATE: The Delete button is now a sibling, not a child */}
-          <TouchableOpacity 
-            onPress={() => handleDelete(task.id)} 
+          <TouchableOpacity
+            onPress={() => handleDelete(task.id)}
             hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
             style={styles.deleteButton}
             activeOpacity={0.6}
@@ -352,6 +427,46 @@ export default function TasksScreen() {
             multiline
             numberOfLines={3}
           />
+
+          {/* --- НОВЫЙ КОМПОНЕНТ ДАТЫ --- */}
+          <View style={{ marginBottom: 24 }}> 
+            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>
+              Due Date
+            </Text>
+
+            <TouchableOpacity 
+              onPress={showDatePicker}
+              style={{
+                backgroundColor: theme.surface,
+                borderRadius: 12,
+                padding: 16,
+                borderWidth: 1, // Если у Input есть бордер, оставь
+                borderColor: 'transparent', // Или theme.border
+                height: 56,
+                justifyContent: 'center'
+              }}
+            >
+              <Text style={{ 
+                color: selectedDate ? theme.text : theme.textSecondary,
+                fontSize: 16,
+                fontFamily: fonts[600]
+              }}>
+                {selectedDate 
+                  ? selectedDate.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) 
+                  : "Select Date & Time"}
+              </Text>
+            </TouchableOpacity>
+
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="datetime"
+              onConfirm={handleConfirmDate}
+              onCancel={hideDatePicker}
+              is24Hour={true}
+              themeVariant={theme.mode === 'dark' ? 'dark' : 'light'}
+            />
+          </View>
+          {/* --------------------------- */}
 
           {rooms.length > 0 && (
             <View style={styles.roomPicker}>

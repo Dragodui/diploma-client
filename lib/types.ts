@@ -45,6 +45,7 @@ export interface Task {
   name: string;
   description: string;
   schedule_type: string;
+  due_date?: string;
   created_at: string;
   room?: Room;
   assignments?: TaskAssignment[];
@@ -185,6 +186,7 @@ export interface CreateTaskForm {
   name: string;
   description: string;
   schedule_type: string;
+  due_date?: string;
   home_id: number;
   room_id?: number;
 }

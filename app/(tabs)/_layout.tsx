@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
-import { Home, CheckCircle, ShoppingBag, Clock, User } from "lucide-react-native";
+import { Home, CheckCircle, ShoppingBag, Clock, User, ChartColumn } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 
@@ -78,6 +78,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <Clock size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            </View>
+          ),
+        }}
+      />
+       <Tabs.Screen
+        name="polls"
+        options={{
+          title: "Polls",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
+              <ChartColumn size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
             </View>
           ),
         }}
