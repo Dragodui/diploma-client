@@ -19,7 +19,9 @@ import {
   User,
   Sun,
   Moon,
+  Copy,
 } from "lucide-react-native";
+import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,7 +72,7 @@ export default function ProfileScreen() {
     try {
       const formData = new FormData();
       // @ts-ignore - React Native FormData expects specific format
-      formData.append("avatar", {
+      formData.append("image", {
         uri,
         name: "avatar.jpg",
         type: "image/jpeg",
@@ -209,6 +211,28 @@ export default function ProfileScreen() {
                 {isAdmin ? "Home Admin" : "Member"}
               </Text>
             </View>
+          )}
+
+          {/* Invite Code */}
+          {home && home.invite_code && (
+            <TouchableOpacity
+              style={[styles.inviteCodeContainer, { backgroundColor: theme.surface }]}
+              onPress={async () => {
+                await Clipboard.setStringAsync(home.invite_code);
+                Alert.alert("Copied!", "Invite code copied to clipboard");
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.inviteCodeLabel, { color: theme.textSecondary }]}>
+                Home Code
+              </Text>
+              <View style={styles.inviteCodeRow}>
+                <Text style={[styles.inviteCodeText, { color: theme.text }]}>
+                  {home.invite_code}
+                </Text>
+                <Copy size={16} color={theme.textSecondary} />
+              </View>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -405,6 +429,29 @@ const styles = StyleSheet.create({
   roleBadgeText: {
     fontSize: 13,
     fontFamily: fonts[600],
+  },
+  inviteCodeContainer: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  inviteCodeLabel: {
+    fontSize: 11,
+    fontFamily: fonts[600],
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  inviteCodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inviteCodeText: {
+    fontSize: 18,
+    fontFamily: fonts[700],
+    letterSpacing: 2,
   },
   menuSection: {
     gap: 12,

@@ -68,9 +68,9 @@ export const [HomeProvider, useHome] = createContextHook(() => {
   const createHome = useCallback(
     async (name: string): Promise<HomeResult> => {
       try {
-        const newHome = await homeApi.create(name);
-        setHome(newHome);
-        setIsAdmin(true);
+        await homeApi.create(name);
+        // Reload home data after creating
+        await loadHome();
         return { success: true };
       } catch (error: any) {
         console.error("Error creating home:", error);
@@ -80,7 +80,7 @@ export const [HomeProvider, useHome] = createContextHook(() => {
         };
       }
     },
-    []
+    [loadHome]
   );
 
   const joinHome = useCallback(
@@ -159,8 +159,9 @@ export const [HomeProvider, useHome] = createContextHook(() => {
     if (!home) return { success: false, error: "No home found" };
 
     try {
-      const updatedHome = await homeApi.regenerateInviteCode(home.id);
-      setHome(updatedHome);
+      await homeApi.regenerateInviteCode(home.id);
+      // Reload home data to get the new invite code
+      await loadHome();
       return { success: true };
     } catch (error: any) {
       console.error("Error regenerating invite code:", error);
@@ -168,6 +169,17 @@ export const [HomeProvider, useHome] = createContextHook(() => {
         success: false,
         error: error.response?.data?.error || "Failed to regenerate invite code",
       };
+    }
+  }, [home, loadHome]);
+
+  const refreshRooms = useCallback(async () => {
+    if (!home) return;
+
+    try {
+      const roomsData = await roomApi.getByHomeId(home.id);
+      setRooms(roomsData || []);
+    } catch (error) {
+      console.error("Error refreshing rooms:", error);
     }
   }, [home]);
 
@@ -177,8 +189,9 @@ export const [HomeProvider, useHome] = createContextHook(() => {
       if (!home) return { success: false, error: "No home found" };
 
       try {
-        const newRoom = await roomApi.create(home.id, name);
-        setRooms((prev) => [...prev, newRoom]);
+        await roomApi.create(home.id, name);
+        // Reload rooms after creating
+        await refreshRooms();
         return { success: true };
       } catch (error: any) {
         console.error("Error creating room:", error);
@@ -188,7 +201,7 @@ export const [HomeProvider, useHome] = createContextHook(() => {
         };
       }
     },
-    [home]
+    [home, refreshRooms]
   );
 
   const deleteRoom = useCallback(
@@ -209,17 +222,6 @@ export const [HomeProvider, useHome] = createContextHook(() => {
     },
     [home]
   );
-
-  const refreshRooms = useCallback(async () => {
-    if (!home) return;
-
-    try {
-      const roomsData = await roomApi.getByHomeId(home.id);
-      setRooms(roomsData || []);
-    } catch (error) {
-      console.error("Error refreshing rooms:", error);
-    }
-  }, [home]);
 
   return useMemo(
     () => ({

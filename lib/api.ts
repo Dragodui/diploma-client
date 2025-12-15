@@ -98,307 +98,313 @@ export const authApi = {
 // ============ User API ============
 export const userApi = {
   getMe: async (): Promise<User> => {
-    const response = await api.post<User>("/user");
-    return response.data;
+    const response = await api.post<{ status: boolean; user: User }>("/user");
+    return response.data.user;
   },
 
-  update: async (data: { name?: string; avatar?: string }): Promise<User> => {
-    const response = await api.patch<User>("/user", data);
-    return response.data;
+  update: async (data: { name?: string; avatar?: string }): Promise<{ message: string }> => {
+    const formData = new FormData();
+    if (data.name) formData.append("name", data.name);
+    if (data.avatar) formData.append("avatar", data.avatar);
+
+    const response = await api.patch<{ status: boolean; message: string }>("/user", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return { message: response.data.message };
   },
 };
 
 // ============ Home API ============
 export const homeApi = {
-  create: async (name: string): Promise<Home> => {
-    const response = await api.post<Home>("/homes/create", { name });
-    return response.data;
+  create: async (name: string): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>("/homes/create", { name });
+    return { message: response.data.message };
   },
 
   getUserHome: async (): Promise<Home> => {
-    const response = await api.get<{
-      home: Home
-    }>("/homes/my");
+    const response = await api.get<{ home: Home }>("/homes/my");
     return response.data.home;
   },
 
   getById: async (homeId: number): Promise<Home> => {
-    const response = await api.get<Home>(`/homes/${homeId}`);
-    return response.data;
+    const response = await api.get<{ home: Home }>(`/homes/${homeId}`);
+    return response.data.home;
   },
 
   join: async (code: string): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>("/homes/join", { code });
-    return response.data;
+    const response = await api.post<{ status: boolean; message: string }>("/homes/join", { code });
+    return { message: response.data.message };
   },
 
   leave: async (homeId: number): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>(`/homes/${homeId}/leave`);
-    return response.data;
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/leave`);
+    return { message: response.data.message };
   },
 
   delete: async (homeId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}`);
+    return { message: response.data.message };
   },
 
   removeMember: async (homeId: number, userId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/members/${userId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/members/${userId}`);
+    return { message: response.data.message };
   },
 
-  regenerateInviteCode: async (homeId: number): Promise<Home> => {
-    const response = await api.post<Home>(`/homes/${homeId}/regenerate_code`);
-    return response.data;
+  regenerateInviteCode: async (homeId: number): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/regenerate_code`);
+    return { message: response.data.message };
   },
 };
 
 // ============ Room API ============
 export const roomApi = {
-  create: async (homeId: number, name: string): Promise<Room> => {
-    const response = await api.post<Room>(`/homes/${homeId}/rooms`, { name });
-    return response.data;
+  create: async (homeId: number, name: string): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/rooms`, { name, home_id: homeId });
+    return { message: response.data.message };
   },
 
   getByHomeId: async (homeId: number): Promise<Room[]> => {
-    const response = await api.get<Room[]>(`/homes/${homeId}/rooms`);
-    return response.data;
+    const response = await api.get<{ status: boolean; rooms: Room[] }>(`/homes/${homeId}/rooms`);
+    return response.data.rooms || [];
   },
 
   getById: async (homeId: number, roomId: number): Promise<Room> => {
-    const response = await api.get<Room>(`/homes/${homeId}/rooms/${roomId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; room: Room }>(`/homes/${homeId}/rooms/${roomId}`);
+    return response.data.room;
   },
 
   delete: async (homeId: number, roomId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/rooms/${roomId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/rooms/${roomId}`);
+    return { message: response.data.message };
   },
 };
 
 // ============ Task API ============
 export const taskApi = {
-  create: async (homeId: number, data: CreateTaskForm): Promise<Task> => {
-    const response = await api.post<Task>(`/homes/${homeId}/tasks`, data);
-    return response.data;
+  create: async (homeId: number, data: CreateTaskForm): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/tasks`, data);
+    return { message: response.data.message };
   },
 
   getByHomeId: async (homeId: number): Promise<Task[]> => {
-    const response = await api.get<{tasks: Task[]}>(`/homes/${homeId}/tasks`);
-    return response.data.tasks;
+    const response = await api.get<{ status: boolean; tasks: Task[] }>(`/homes/${homeId}/tasks`);
+    return response.data.tasks || [];
   },
 
   getById: async (homeId: number, taskId: number): Promise<Task> => {
-    const response = await api.get<Task>(`/homes/${homeId}/tasks/${taskId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; task: Task }>(`/homes/${homeId}/tasks/${taskId}`);
+    return response.data.task;
   },
 
   delete: async (homeId: number, taskId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/tasks/${taskId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}`);
+    return { message: response.data.message };
   },
 
-  assignUser: async (homeId: number, taskId: number, userId: number, date: string): Promise<TaskAssignment> => {
-    const response = await api.post<TaskAssignment>(`/homes/${homeId}/tasks/${taskId}/assign`, {
+  assignUser: async (homeId: number, taskId: number, userId: number, date: string): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/assign`, {
       task_id: taskId,
       home_id: homeId,
       user_id: userId,
       date,
     });
-    return response.data;
+    return { message: response.data.message };
   },
 
-  reassignRoom: async (homeId: number, taskId: number, roomId: number): Promise<Task> => {
-    const response = await api.patch<Task>(`/homes/${homeId}/tasks/${taskId}/reassign-room`, {
+  reassignRoom: async (homeId: number, taskId: number, roomId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/reassign-room`, {
       task_id: taskId,
       room_id: roomId,
     });
-    return response.data;
+    return { message: response.data.message };
   },
 
-  markCompleted: async (homeId: number, taskId: number): Promise<TaskAssignment> => {
-    const response = await api.patch<TaskAssignment>(`/homes/${homeId}/tasks/${taskId}/mark-completed`);
-    return response.data;
+  markCompleted: async (homeId: number, taskId: number, assignmentId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/mark-completed`, {
+      assignment_id: assignmentId,
+    });
+    return { message: response.data.message };
   },
 
   deleteAssignment: async (homeId: number, taskId: number, assignmentId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(
+    const response = await api.delete<{ status: boolean; message: string }>(
       `/homes/${homeId}/tasks/${taskId}/assignments/${assignmentId}`
     );
-    return response.data;
+    return { message: response.data.message };
   },
 
   getUserAssignments: async (homeId: number, userId: number): Promise<TaskAssignment[]> => {
-    const response = await api.get<{
-      assignments: TaskAssignment[]
-    }>(`/homes/${homeId}/users/${userId}/assignments`);
-    return response.data.assignments;
+    const response = await api.get<{ status: boolean; assignments: TaskAssignment[] }>(`/homes/${homeId}/users/${userId}/assignments`);
+    return response.data.assignments || [];
   },
 
   getClosestAssignment: async (homeId: number, userId: number): Promise<TaskAssignment | null> => {
-    const response = await api.get<TaskAssignment>(`/homes/${homeId}/users/${userId}/assignments/closest`);
-    return response.data;
+    const response = await api.get<{ status: boolean; assignment: TaskAssignment | null }>(`/homes/${homeId}/users/${userId}/assignments/closest`);
+    return response.data.assignment;
   },
 };
 
 // ============ Bill API ============
 export const billApi = {
-  create: async (homeId: number, data: CreateBillForm): Promise<Bill> => {
-    const response = await api.post<Bill>(`/homes/${homeId}/bills`, data);
-    return response.data;
+  create: async (homeId: number, data: CreateBillForm): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/bills`, data);
+    return { message: response.data.message };
   },
 
   getById: async (homeId: number, billId: number): Promise<Bill> => {
-    const response = await api.get<Bill>(`/homes/${homeId}/bills/${billId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; bill: Bill }>(`/homes/${homeId}/bills/${billId}`);
+    return response.data.bill;
   },
 
   delete: async (homeId: number, billId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/bills/${billId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}`);
+    return { message: response.data.message };
   },
 
-  markPayed: async (homeId: number, billId: number): Promise<Bill> => {
-    const response = await api.patch<Bill>(`/homes/${homeId}/bills/${billId}`);
-    return response.data;
+  markPayed: async (homeId: number, billId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}`);
+    return { message: response.data.message };
   },
 };
 
 // ============ Shopping API ============
 export const shoppingApi = {
   // Categories
-  createCategory: async (homeId: number, data: CreateCategoryForm): Promise<ShoppingCategory> => {
-    const response = await api.post<ShoppingCategory>(`/homes/${homeId}/shopping/categories`, data);
-    return response.data;
+  createCategory: async (homeId: number, data: CreateCategoryForm): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/categories`, data);
+    return { message: response.data.message };
   },
 
   getCategories: async (homeId: number): Promise<ShoppingCategory[]> => {
-    const response = await api.get<ShoppingCategory[]>(`/homes/${homeId}/shopping/categories/all`);
-    return response.data;
+    const response = await api.get<{ status: boolean; categories: ShoppingCategory[] }>(`/homes/${homeId}/shopping/categories/all`);
+    return response.data.categories || [];
   },
 
   getCategoryById: async (homeId: number, categoryId: number): Promise<ShoppingCategory> => {
-    const response = await api.get<ShoppingCategory>(`/homes/${homeId}/shopping/categories/${categoryId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; category: ShoppingCategory }>(`/homes/${homeId}/shopping/categories/${categoryId}`);
+    return response.data.category;
   },
 
   getCategoryItems: async (homeId: number, categoryId: number): Promise<ShoppingItem[]> => {
-    const response = await api.get<ShoppingItem[]>(`/homes/${homeId}/shopping/categories/${categoryId}/items`);
-    return response.data;
+    const response = await api.get<{ status: boolean; items: ShoppingItem[] }>(`/homes/${homeId}/shopping/categories/${categoryId}/items`);
+    return response.data.items || [];
   },
 
   deleteCategory: async (homeId: number, categoryId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/shopping/categories/${categoryId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/categories/${categoryId}`);
+    return { message: response.data.message };
   },
 
   editCategory: async (
     homeId: number,
     categoryId: number,
     data: { name?: string; icon?: string }
-  ): Promise<ShoppingCategory> => {
-    const response = await api.put<ShoppingCategory>(`/homes/${homeId}/shopping/categories/${categoryId}`, data);
-    return response.data;
+  ): Promise<{ message: string }> => {
+    const response = await api.put<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/categories/${categoryId}`, data);
+    return { message: response.data.message };
   },
 
   // Items
-  createItem: async (homeId: number, data: CreateItemForm): Promise<ShoppingItem> => {
-    const response = await api.post<ShoppingItem>(`/homes/${homeId}/shopping/items`, data);
-    return response.data;
+  createItem: async (homeId: number, data: CreateItemForm): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/items`, data);
+    return { message: response.data.message };
   },
 
   getItemById: async (homeId: number, itemId: number): Promise<ShoppingItem> => {
-    const response = await api.get<ShoppingItem>(`/homes/${homeId}/shopping/items/${itemId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; item: ShoppingItem }>(`/homes/${homeId}/shopping/items/${itemId}`);
+    return response.data.item;
   },
 
   deleteItem: async (homeId: number, itemId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/shopping/items/${itemId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/items/${itemId}`);
+    return { message: response.data.message };
   },
 
   editItem: async (
     homeId: number,
     itemId: number,
     data: { name?: string; image?: string; link?: string; is_bought?: boolean; bought_date?: string }
-  ): Promise<ShoppingItem> => {
-    const response = await api.put<ShoppingItem>(`/homes/${homeId}/shopping/items/${itemId}`, data);
-    return response.data;
+  ): Promise<{ message: string }> => {
+    const response = await api.put<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/items/${itemId}`, data);
+    return { message: response.data.message };
   },
 
-  markBought: async (homeId: number, itemId: number): Promise<ShoppingItem> => {
-    const response = await api.patch<ShoppingItem>(`/homes/${homeId}/shopping/items/${itemId}`);
-    return response.data;
+  markBought: async (homeId: number, itemId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/shopping/items/${itemId}`);
+    return { message: response.data.message };
   },
 };
 
 // ============ Poll API ============
 export const pollApi = {
-  create: async (homeId: number, data: CreatePollForm): Promise<Poll> => {
-    const response = await api.post<Poll>(`/homes/${homeId}/polls`, data);
-    return response.data;
+  create: async (homeId: number, data: CreatePollForm): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/polls`, data);
+    return { message: response.data.message };
   },
 
   getByHomeId: async (homeId: number): Promise<Poll[]> => {
-    const response = await api.get<Poll[]>(`/homes/${homeId}/polls`);
-    return response.data;
+    const response = await api.get<{ status: boolean; polls: Poll[] }>(`/homes/${homeId}/polls`);
+    return response.data.polls || [];
   },
 
   getById: async (homeId: number, pollId: number): Promise<Poll> => {
-    const response = await api.get<Poll>(`/homes/${homeId}/polls/${pollId}`);
-    return response.data;
+    const response = await api.get<{ status: boolean; poll: Poll }>(`/homes/${homeId}/polls/${pollId}`);
+    return response.data.poll;
   },
 
-  close: async (homeId: number, pollId: number): Promise<Poll> => {
-    const response = await api.patch<Poll>(`/homes/${homeId}/polls/${pollId}/close`);
-    return response.data;
+  close: async (homeId: number, pollId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/polls/${pollId}/close`);
+    return { message: response.data.message };
   },
 
   delete: async (homeId: number, pollId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/polls/${pollId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/polls/${pollId}`);
+    return { message: response.data.message };
   },
 
   vote: async (homeId: number, pollId: number, optionId: number): Promise<{ message: string }> => {
-    const response = await api.post<{ message: string }>(`/homes/${homeId}/polls/${pollId}/vote`, {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/polls/${pollId}/vote`, {
       option_id: optionId,
     });
-    return response.data;
+    return { message: response.data.message };
   },
 };
 
 // ============ Notification API ============
 export const notificationApi = {
   getUserNotifications: async (): Promise<Notification[]> => {
-    const response = await api.get<Notification[]>("/homes/notifications");
-    return response.data;
+    const response = await api.get<{ status: boolean; notifications: Notification[] }>("/homes/notifications");
+    return response.data.notifications || [];
   },
 
   markAsRead: async (notificationId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/notifications/${notificationId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/notifications/${notificationId}`);
+    return { message: response.data.message };
   },
 
   getHomeNotifications: async (homeId: number): Promise<HomeNotification[]> => {
-    const response = await api.get<HomeNotification[]>(`/homes/${homeId}/notifications`);
-    return response.data;
+    const response = await api.get<{ status: boolean; notifications: HomeNotification[] }>(`/homes/${homeId}/notifications`);
+    return response.data.notifications || [];
   },
 
   markHomeNotificationAsRead: async (homeId: number, notificationId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ message: string }>(`/homes/${homeId}/notifications/${notificationId}`);
-    return response.data;
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/notifications/${notificationId}`);
+    return { message: response.data.message };
   },
 };
 
 // ============ Image Upload API ============
 export const imageApi = {
   upload: async (formData: FormData): Promise<{ url: string }> => {
-    const response = await api.post<{ url: string }>("/upload", formData, {
+    const response = await api.post<{ status: boolean; message: string; url: string }>("/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
+    return { url: response.data.url };
   },
 };
 

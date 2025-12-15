@@ -161,7 +161,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const updateUser = useCallback(async (data: { name?: string; avatar?: string }): Promise<AuthResult> => {
     try {
-      const updatedUser = await userApi.update(data);
+      await userApi.update(data);
+      // Reload user data after update
+      const updatedUser = await userApi.getMe();
       await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
       setAuthState((prev) => ({
         ...prev,
