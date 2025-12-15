@@ -117,8 +117,18 @@ export default function TasksScreen() {
     return tasks;
   };
 
-  const isTaskCompleted = (taskId: number) => {
-    const assignment = assignments.find((a) => a.task_id === taskId);
+  const isTaskCompleted = (task: Task) => {
+    // Check from task's assignments first
+    if (task.assignments && task.assignments.length > 0) {
+      const userAssignment = task.assignments.find((a) => a.user_id === user?.id);
+      if (userAssignment) {
+        return userAssignment.status === "completed";
+      }
+      // If user not assigned, check if any assignment is completed
+      return task.assignments.some((a) => a.status === "completed");
+    }
+    // Fallback to separate assignments list
+    const assignment = assignments.find((a) => a.task_id === task.id);
     return assignment?.status === "completed";
   };
 
@@ -141,7 +151,7 @@ export default function TasksScreen() {
   };
 
   const renderTaskItem = (task: Task, index: number) => {
-    const completed = isTaskCompleted(task.id);
+    const completed = isTaskCompleted(task);
     const colorIndex = index % userColors.length;
 
     return (
