@@ -12,8 +12,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, ShoppingCart, Wifi, X, Check, DollarSign } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { billApi } from "@/lib/api";
-import { Bill } from "@/lib/types";
+import { Bill, User, HomeMembership } from "@/lib/types";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
@@ -32,6 +33,7 @@ export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
   const { home } = useHome();
   const { theme } = useTheme();
+  const { user } = useAuth();
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +44,19 @@ export default function BudgetScreen() {
   const [newBillType, setNewBillType] = useState("groceries");
   const [newBillAmount, setNewBillAmount] = useState("");
   const [newBillDescription, setNewBillDescription] = useState("");
+  const [selectedPaidBy, setSelectedPaidBy] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Get home members
+  const getHomeMembers = (): { id: number; name: string }[] => {
+    if (!home?.memberships) return [];
+    return home.memberships.map((m: HomeMembership) => ({
+      id: m.user_id,
+      name: m.user?.name || `User ${m.user_id}`,
+    }));
+  };
+
+  const members = getHomeMembers();
 
   const loadBills = useCallback(async () => {
     if (!home) {
@@ -307,26 +321,42 @@ export default function BudgetScreen() {
             <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>PAID BY</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.paidByOptions}>
-                {["Me", "Mike", "John Pork", "Daniel"].map((person, index) => (
+                {members.length > 0 ? (
+                  members.map((member) => {
+                    const isSelected = selectedPaidBy === member.id || (!selectedPaidBy && member.id === user?.id);
+                    const displayName = member.id === user?.id ? "Me" : member.name;
+                    return (
+                      <TouchableOpacity
+                        key={member.id}
+                        style={[
+                          styles.paidByOption,
+                          { borderColor: theme.border },
+                          isSelected && { backgroundColor: theme.text, borderColor: theme.text },
+                        ]}
+                        onPress={() => setSelectedPaidBy(member.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.paidByOptionText,
+                            { color: theme.textSecondary },
+                            isSelected && { color: theme.background },
+                          ]}
+                        >
+                          {displayName}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
                   <TouchableOpacity
-                    key={person}
                     style={[
                       styles.paidByOption,
-                      { borderColor: theme.border },
-                      index === 0 && { backgroundColor: theme.text, borderColor: theme.text },
+                      { backgroundColor: theme.text, borderColor: theme.text },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.paidByOptionText,
-                        { color: theme.textSecondary },
-                        index === 0 && { color: theme.background },
-                      ]}
-                    >
-                      {person}
-                    </Text>
+                    <Text style={[styles.paidByOptionText, { color: theme.background }]}>Me</Text>
                   </TouchableOpacity>
-                ))}
+                )}
               </View>
             </ScrollView>
           </View>

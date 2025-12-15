@@ -9,7 +9,13 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Check, Plus, Search, Trash2, Utensils, Candy, Cake, Apple } from "lucide-react-native";
+import {
+  ArrowLeft, Check, Plus, Search, Trash2,
+  Utensils, Candy, Cake, Apple, ShoppingCart, Coffee,
+  Wine, Milk, Beef, Fish, Carrot, Cookie,
+  Pill, Baby, Dog, Shirt, Sparkles, Scissors,
+  Home, Lightbulb, Wrench, Car, Book, Gift
+} from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { shoppingApi } from "@/lib/api";
@@ -20,8 +26,65 @@ import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
 // Category colors matching PDF
-const CATEGORY_COLORS = ["#D8D4FC", "#FBEB9E", "#FF7476", "#A8E6CF"];
-const CATEGORY_ICONS = ["list", "flag", "bookmark", "cloud", "file", "emoji"];
+const CATEGORY_COLORS = ["#D8D4FC", "#FBEB9E", "#FF7476", "#A8E6CF", "#7DD3E8", "#F5A3D3"];
+
+// Available icons for categories
+const ICON_OPTIONS = [
+  { id: "utensils", label: "Food" },
+  { id: "shopping-cart", label: "Cart" },
+  { id: "coffee", label: "Coffee" },
+  { id: "wine", label: "Drinks" },
+  { id: "milk", label: "Dairy" },
+  { id: "beef", label: "Meat" },
+  { id: "fish", label: "Fish" },
+  { id: "carrot", label: "Veggies" },
+  { id: "apple", label: "Fruits" },
+  { id: "candy", label: "Sweets" },
+  { id: "cake", label: "Bakery" },
+  { id: "cookie", label: "Snacks" },
+  { id: "pill", label: "Medicine" },
+  { id: "baby", label: "Baby" },
+  { id: "dog", label: "Pets" },
+  { id: "shirt", label: "Clothes" },
+  { id: "sparkles", label: "Cleaning" },
+  { id: "scissors", label: "Beauty" },
+  { id: "home", label: "Home" },
+  { id: "lightbulb", label: "Electronics" },
+  { id: "wrench", label: "Tools" },
+  { id: "car", label: "Auto" },
+  { id: "book", label: "Books" },
+  { id: "gift", label: "Gifts" },
+];
+
+const getIconComponent = (iconId: string, size: number = 24, color: string = "#1C1C1E") => {
+  switch (iconId) {
+    case "utensils": return <Utensils size={size} color={color} />;
+    case "shopping-cart": return <ShoppingCart size={size} color={color} />;
+    case "coffee": return <Coffee size={size} color={color} />;
+    case "wine": return <Wine size={size} color={color} />;
+    case "milk": return <Milk size={size} color={color} />;
+    case "beef": return <Beef size={size} color={color} />;
+    case "fish": return <Fish size={size} color={color} />;
+    case "carrot": return <Carrot size={size} color={color} />;
+    case "apple": return <Apple size={size} color={color} />;
+    case "candy": return <Candy size={size} color={color} />;
+    case "cake": return <Cake size={size} color={color} />;
+    case "cookie": return <Cookie size={size} color={color} />;
+    case "pill": return <Pill size={size} color={color} />;
+    case "baby": return <Baby size={size} color={color} />;
+    case "dog": return <Dog size={size} color={color} />;
+    case "shirt": return <Shirt size={size} color={color} />;
+    case "sparkles": return <Sparkles size={size} color={color} />;
+    case "scissors": return <Scissors size={size} color={color} />;
+    case "home": return <Home size={size} color={color} />;
+    case "lightbulb": return <Lightbulb size={size} color={color} />;
+    case "wrench": return <Wrench size={size} color={color} />;
+    case "car": return <Car size={size} color={color} />;
+    case "book": return <Book size={size} color={color} />;
+    case "gift": return <Gift size={size} color={color} />;
+    default: return <Utensils size={size} color={color} />;
+  }
+};
 
 // Color options for creating new lists
 const COLOR_OPTIONS = [
@@ -44,7 +107,7 @@ export default function ShoppingScreen() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
-  const [selectedIcon, setSelectedIcon] = useState(CATEGORY_ICONS[0]);
+  const [selectedIcon, setSelectedIcon] = useState(ICON_OPTIONS[0].id);
   const [creatingCategory, setCreatingCategory] = useState(false);
 
   // Create item modal
@@ -98,7 +161,7 @@ export default function ShoppingScreen() {
       });
 
       setNewCategoryName("");
-      setSelectedIcon(CATEGORY_ICONS[0]);
+      setSelectedIcon(ICON_OPTIONS[0].id);
       setSelectedColor(COLOR_OPTIONS[0]);
       setShowCategoryModal(false);
       await loadShoppingData();
@@ -159,20 +222,8 @@ export default function ShoppingScreen() {
     }
   };
 
-  const getCategoryIcon = (category: ShoppingCategory, index: number) => {
-    const iconColor = "#1C1C1E";
-    switch (index % 4) {
-      case 0:
-        return <Utensils size={24} color={iconColor} />;
-      case 1:
-        return <Candy size={24} color={iconColor} />;
-      case 2:
-        return <Cake size={24} color={iconColor} />;
-      case 3:
-        return <Apple size={24} color={iconColor} />;
-      default:
-        return <Utensils size={24} color={iconColor} />;
-    }
+  const getCategoryIcon = (category: ShoppingCategory) => {
+    return getIconComponent(category.icon || "utensils", 24, "#1C1C1E");
   };
 
   const getActiveItems = () => {
@@ -210,7 +261,7 @@ export default function ShoppingScreen() {
             </TouchableOpacity>
             <Text style={[styles.detailTitle, { color: theme.text }]}>{activeCategory.name}</Text>
             <View style={[styles.detailIcon, { backgroundColor: CATEGORY_COLORS[colorIndex] }]}>
-              {getCategoryIcon(activeCategory, colorIndex)}
+              {getCategoryIcon(activeCategory)}
             </View>
           </View>
 
@@ -333,7 +384,7 @@ export default function ShoppingScreen() {
                 activeOpacity={0.9}
               >
                 <View style={styles.categoryIconContainer}>
-                  {getCategoryIcon(category, index)}
+                  {getCategoryIcon(category)}
                 </View>
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{category.name}</Text>
@@ -374,7 +425,7 @@ export default function ShoppingScreen() {
           {/* Icon Preview */}
           <View style={styles.iconPreview}>
             <View style={[styles.iconPreviewCircle, { backgroundColor: selectedColor }]}>
-              <Utensils size={32} color="#1C1C1E" />
+              {getIconComponent(selectedIcon, 32, "#1C1C1E")}
             </View>
           </View>
 
@@ -416,20 +467,27 @@ export default function ShoppingScreen() {
           </View>
 
           {/* Icon Picker */}
-          <View style={styles.iconPicker}>
-            {[1, 2, 3].map((row) => (
-              <View key={row} style={styles.iconRow}>
-                {[1, 2, 3, 4, 5, 6].map((col) => (
-                  <TouchableOpacity
-                    key={`${row}-${col}`}
-                    style={[styles.iconOption, { backgroundColor: theme.surface }]}
-                  >
-                    <Utensils size={20} color={theme.textSecondary} />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </View>
+          <ScrollView style={styles.iconPickerScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.iconPicker}>
+              {[0, 1, 2, 3].map((row) => (
+                <View key={row} style={styles.iconRow}>
+                  {ICON_OPTIONS.slice(row * 6, row * 6 + 6).map((icon) => (
+                    <TouchableOpacity
+                      key={icon.id}
+                      style={[
+                        styles.iconOption,
+                        { backgroundColor: theme.surface },
+                        selectedIcon === icon.id && { backgroundColor: selectedColor },
+                      ]}
+                      onPress={() => setSelectedIcon(icon.id)}
+                    >
+                      {getIconComponent(icon.id, 20, selectedIcon === icon.id ? "#1C1C1E" : theme.textSecondary)}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
         </View>
 
         <View style={styles.modalActions}>
@@ -656,6 +714,9 @@ const styles = StyleSheet.create({
   colorOptionSelected: {
     borderWidth: 3,
     borderColor: "rgba(0, 0, 0, 0.3)",
+  },
+  iconPickerScroll: {
+    maxHeight: 220,
   },
   iconPicker: {
     gap: 12,
