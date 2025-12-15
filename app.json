@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Household Assistant API Documentation",
-    "slug": "household-assistant-api",
+    "name": "Household manager app",
+    "slug": "household-manager-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.household-assistant-api"
+      "bundleIdentifier": "app.rork.household-manager-app"
     },
     "android": {
       "adaptiveIcon": {
