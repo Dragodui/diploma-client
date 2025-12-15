@@ -7,6 +7,7 @@ import {
   Task,
   TaskAssignment,
   Bill,
+  BillCategory,
   ShoppingCategory,
   ShoppingItem,
   Poll,
@@ -262,7 +263,7 @@ export const taskApi = {
 
 // ============ Bill API ============
 export const billApi = {
-  create: async (homeId: number, data: CreateBillForm): Promise<{ message: string }> => {
+  create: async (homeId: number, data: CreateBillForm & { bill_category_id?: number }): Promise<{ message: string }> => {
     const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/bills`, data);
     return { message: response.data.message };
   },
@@ -284,6 +285,23 @@ export const billApi = {
 
   markPayed: async (homeId: number, billId: number): Promise<{ message: string }> => {
     const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}`);
+    return { message: response.data.message };
+  },
+};
+
+export const billCategoryApi = {
+  create: async (homeId: number, data: { name: string; color?: string }): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/bill-categories`, data);
+    return { message: response.data.message };
+  },
+
+  getAll: async (homeId: number): Promise<BillCategory[]> => {
+    const response = await api.get<{ status: boolean; categories: BillCategory[] }>(`/homes/${homeId}/bill-categories`);
+    return response.data.categories || [];
+  },
+
+  delete: async (homeId: number, categoryId: number): Promise<{ message: string }> => {
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/bill-categories/${categoryId}`);
     return { message: response.data.message };
   },
 };

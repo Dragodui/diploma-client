@@ -68,6 +68,8 @@ export interface Bill {
   id: number;
   home_id: number;
   type: string;
+  bill_category_id?: number;
+  bill_category?: BillCategory;
   is_payed: boolean;
   payment_date?: string;
   total_amount: number;
@@ -100,6 +102,14 @@ export interface ShoppingItem {
   bought_date?: string;
   created_at: string;
   user?: User;
+}
+
+export interface BillCategory {
+  id: number;
+  home_id: number;
+  name: string;
+  color: string;
+  created_at: string;
 }
 
 // Poll types

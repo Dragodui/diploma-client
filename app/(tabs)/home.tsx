@@ -15,7 +15,7 @@ import { Zap, ArrowRight, Home as HomeIcon, BarChart2, User } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { taskApi, pollApi } from "@/lib/api";
+import { taskApi, pollApi, billApi } from "@/lib/api";
 import { TaskAssignment, Poll } from "@/lib/types";
 import fonts from "@/constants/fonts";
 import Card from "@/components/ui/card";
@@ -29,6 +29,7 @@ export default function HomeScreen() {
 
   const [nextAssignment, setNextAssignment] = useState<TaskAssignment | null>(null);
   const [polls, setPolls] = useState<Poll[]>([]);
+  const [monthlySpend, setMonthlySpend] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -46,13 +47,29 @@ export default function HomeScreen() {
     }
 
     try {
-      const [assignmentData, pollsData] = await Promise.all([
+      const [assignmentData, pollsData, billsData] = await Promise.all([
         taskApi.getClosestAssignment(home.id, user.id).catch(() => null),
         pollApi.getByHomeId(home.id).catch(() => []),
+        billApi.getByHomeId(home.id).catch(() => []),
       ]);
 
       setNextAssignment(assignmentData);
       setPolls(pollsData.filter((p) => p.status === "open") || []);
+
+      // Calculate monthly spend
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      const total = (billsData || []).reduce((sum, bill) => {
+        const billDate = new Date(bill.created_at);
+        if (billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear) {
+          return sum + bill.total_amount;
+        }
+        return sum;
+      }, 0);
+      setMonthlySpend(total);
+
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -106,7 +123,8 @@ export default function HomeScreen() {
       </View>
     );
   }
-  
+  console.log(nextAssignment)
+
   const formatTaskTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
@@ -243,14 +261,14 @@ export default function HomeScreen() {
         >
           <View style={styles.budgetHeader}>
             <Text style={styles.budgetLabel}>MONTHLY SPEND</Text>
-            <View style={styles.budgetBadge}>
+            {/* <View style={styles.budgetBadge}>
               <Text style={styles.budgetBadgeText}>+12%</Text>
-            </View>
+            </View> */}
           </View>
-          <Text style={styles.budgetAmount}>$3,232</Text>
+          <Text style={styles.budgetAmount}>${monthlySpend.toFixed(0)}</Text>
           <View style={styles.budgetFooter}>
             <View style={styles.budgetProgress}>
-              <Text style={styles.budgetProgressText}>70% of budget used</Text>
+              <Text style={styles.budgetProgressText}>Total expenses this month</Text>
             </View>
             <ArrowRight size={24} color="#1C1C1E" />
           </View>

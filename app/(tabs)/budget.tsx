@@ -7,27 +7,65 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Calendar, ShoppingCart, Wifi, X, Check, DollarSign } from "lucide-react-native";
+import { DollarSign, Plus, Trash } from "lucide-react-native";
+import Svg, { Circle, G } from "react-native-svg";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { billApi } from "@/lib/api";
-import { Bill, User, HomeMembership } from "@/lib/types";
+import { billApi, billCategoryApi } from "@/lib/api";
+import { Bill, BillCategory } from "@/lib/types";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
-import Card from "@/components/ui/card";
 
-const BILL_TYPES = [
-  { id: "groceries", label: "Groceries", color: "#FF7476" },
-  { id: "internet", label: "Internet", color: "#D8D4FC" },
-  { id: "utilities", label: "Utilities", color: "#FBEB9E" },
-  { id: "rent", label: "Rent", color: "#FBEB9E" },
-  { id: "other", label: "Other", color: "#A8E6CF" },
-];
+
+const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data: { value: number; color: string }[]; size?: number; strokeWidth?: number; total: number; theme: any }) => {
+  const center = size / 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  let currentAngle = -90;
+
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      <Svg width={size} height={size}>
+        {data.map((item, index) => {
+          const percentage = item.value / total;
+          const strokeLength = circumference * percentage;
+          const angle = percentage * 360;
+
+          const circle = (
+            <Circle
+              key={index}
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke={item.color}
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              strokeDasharray={[strokeLength, circumference]}
+              strokeDashoffset={0}
+              rotation={currentAngle}
+              origin={`${center}, ${center}`}
+              strokeLinecap="round"
+            />
+          );
+
+          currentAngle += angle;
+          return circle;
+        })}
+      </Svg>
+      <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 24, fontFamily: fonts[700], color: theme.text }}>${total.toFixed(0)}</Text>
+        <Text style={{ fontSize: 12, fontFamily: fonts[400], color: theme.textSecondary }}>Total</Text>
+      </View>
+    </View>
+  );
+};
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
@@ -36,56 +74,104 @@ export default function BudgetScreen() {
   const { user } = useAuth();
 
   const [bills, setBills] = useState<Bill[]>([]);
+  const [categories, setCategories] = useState<BillCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Create bill modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newBillType, setNewBillType] = useState("groceries");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [newBillAmount, setNewBillAmount] = useState("");
-  const [newBillDescription, setNewBillDescription] = useState("");
-  const [selectedPaidBy, setSelectedPaidBy] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
 
-  // Get home members
-  const getHomeMembers = (): { id: number; name: string }[] => {
-    if (!home?.memberships) return [];
-    return home.memberships.map((m: HomeMembership) => ({
-      id: m.user_id,
-      name: m.user?.name || `User ${m.user_id}`,
-    }));
-  };
+  // Create category modal
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedColor, setSelectedColor] = useState(theme.accent.yellow);
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
-  const members = getHomeMembers();
+  // Color options for categories
+  const COLOR_OPTIONS = [
+    "#FF7476", "#FF9F7A", "#FBEB9E", "#A8E6CF", "#7DD3E8", "#D8D4FC", "#F5A3D3",
+    "#22C55E", "#F472B6", "#C4B5FD", "#94A3B8", "#FDE68A", "#6EE7B7",
+  ];
 
-  const loadBills = useCallback(async () => {
+  const loadData = useCallback(async () => {
     if (!home) {
       setIsLoading(false);
       return;
     }
 
     try {
-      const billsData = await billApi.getByHomeId(home.id).catch(() => []);
+      const [billsData, categoriesData] = await Promise.all([
+        billApi.getByHomeId(home.id).catch(() => []),
+        billCategoryApi.getAll(home.id).catch(() => []),
+      ]);
       setBills(billsData || []);
+      setCategories(categoriesData || []);
     } catch (error) {
-      console.error("Error loading bills:", error);
+      console.error("Error loading budget data:", error);
     } finally {
       setIsLoading(false);
     }
   }, [home]);
 
   useEffect(() => {
-    loadBills();
-  }, [loadBills]);
+    loadData();
+  }, [loadData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadBills();
+    await loadData();
     setRefreshing(false);
   };
 
+  const handleCreateCategory = async () => {
+    if (!home || !newCategoryName.trim()) return;
+
+    setCreatingCategory(true);
+    try {
+      await billCategoryApi.create(home.id, {
+        name: newCategoryName.trim(),
+        color: selectedColor,
+      });
+      setNewCategoryName("");
+      setShowCategoryModal(false);
+      await loadData();
+    } catch (error) {
+      console.error("Error creating category:", error);
+      Alert.alert("Error", "Could not create category.");
+    } finally {
+      setCreatingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: number) => {
+    if (!home) return;
+    Alert.alert(
+      "Delete Category?",
+      "This will not delete existing bills, but they will lose their category.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await billCategoryApi.delete(home.id, categoryId);
+              await loadData();
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Failed to delete category.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleCreateBill = async () => {
-    if (!home || !newBillAmount) return;
+    if (!home || !newBillAmount || !selectedCategoryId) return;
 
     setCreating(true);
     try {
@@ -93,56 +179,81 @@ export default function BudgetScreen() {
       const endDate = new Date(now);
       endDate.setMonth(endDate.getMonth() + 1);
 
+      const category = categories.find(c => c.id === selectedCategoryId);
+
       await billApi.create(home.id, {
-        type: newBillType,
+        type: category?.name || "Expense", // Fallback type
+        bill_category_id: selectedCategoryId,
         total_amount: parseFloat(newBillAmount),
         period_start: now.toISOString(),
         period_end: endDate.toISOString(),
+        ocr_data: {},
       });
 
       setNewBillAmount("");
-      setNewBillType("groceries");
-      setNewBillDescription("");
+      setSelectedCategoryId(null);
       setShowCreateModal(false);
-      await loadBills();
+      await loadData();
     } catch (error) {
       console.error("Error creating bill:", error);
+      Alert.alert("Error", "Could not create bill.");
     } finally {
       setCreating(false);
     }
   };
 
-  const getTotalSpend = () => {
-    return bills.reduce((sum, bill) => sum + bill.total_amount, 0);
+  const handleDeleteBill = async (billId: number) => {
+    if (!home) return;
+    Alert.alert("Delete Bill?", "This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await billApi.delete(home.id, billId);
+            await loadData();
+          } catch (error) {
+            console.error(error);
+            Alert.alert("Error", "Failed to delete bill.");
+          }
+        },
+      },
+    ]);
   };
 
-  const getSpendByCategory = () => {
-    const categories: Record<string, number> = {};
-    bills.forEach((bill) => {
-      categories[bill.type] = (categories[bill.type] || 0) + bill.total_amount;
+  const getCategoryColor = (categoryId?: number) => {
+    const category = categories.find(c => c.id === categoryId);
+    return category?.color || theme.accent.yellow;
+  };
+
+  const getCategoryName = (bill: Bill) => {
+    if (bill.bill_category) return bill.bill_category.name;
+    const category = categories.find(c => c.id === bill.bill_category_id);
+    return category?.name || bill.type;
+  };
+
+  const chartData = categories.map(cat => {
+    const catBills = bills.filter(b => b.bill_category_id === cat.id);
+    const total = catBills.reduce((sum, b) => sum + b.total_amount, 0);
+    return {
+      value: total,
+      color: cat.color || theme.accent.yellow,
+      name: cat.name
+    };
+  }).filter(d => d.value > 0);
+
+  const uncategorizedBills = bills.filter(b => !b.bill_category_id);
+  if (uncategorizedBills.length > 0) {
+    const total = uncategorizedBills.reduce((sum, b) => sum + b.total_amount, 0);
+    chartData.push({
+      value: total,
+      color: theme.textSecondary,
+      name: 'Uncategorized'
     });
-    return categories;
-  };
+  }
 
-  const getBillIcon = (type: string) => {
-    switch (type) {
-      case "groceries":
-        return <ShoppingCart size={22} color="#1C1C1E" />;
-      case "internet":
-        return <Wifi size={22} color="#1C1C1E" />;
-      default:
-        return <DollarSign size={22} color="#1C1C1E" />;
-    }
-  };
-
-  const getBillIconBg = (type: string) => {
-    const billType = BILL_TYPES.find((t) => t.id === type);
-    return billType?.color || "#D8D4FC";
-  };
-
-  const getCurrentMonth = () => {
-    return new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  };
+  const totalSpend = bills.reduce((sum, b) => sum + b.total_amount, 0);
 
   if (isLoading) {
     return (
@@ -155,231 +266,180 @@ export default function BudgetScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
-        style={styles.scrollView}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
-        }
-        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />}
       >
-        {/* Header - matches PDF exactly */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: theme.text }]}>Expences</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{getCurrentMonth()}</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Expenses</Text>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.surface }]}
+              onPress={() => setShowCategoryModal(true)}
+            >
+              <Text style={{ fontSize: 12, color: theme.text, fontFamily: fonts[600] }}>+ Category</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.accent.pink }]}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <Plus size={24} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.calendarButton, { backgroundColor: theme.accent.yellow }]}
-            activeOpacity={0.8}
-          >
-            <Calendar size={24} color="#1C1C1E" />
-          </TouchableOpacity>
         </View>
 
-        {/* Donut Chart Card - matches PDF */}
-        <Card variant="surface" borderRadius={32} padding={32} style={styles.chartCard}>
-          <View style={styles.chartContainer}>
-            {/* Simplified donut chart visualization */}
-            <View style={styles.donutOuter}>
-              <View style={[styles.donutSegmentYellow, { transform: [{ rotate: "0deg" }] }]} />
-              <View style={[styles.donutSegmentPurple, { transform: [{ rotate: "200deg" }] }]} />
-              <View style={[styles.donutSegmentPink, { transform: [{ rotate: "280deg" }] }]} />
-              <View style={styles.donutInner}>
-                <Text style={styles.donutLabel}>TOTAL</Text>
-                <Text style={styles.donutAmount}>${getTotalSpend().toLocaleString() || "3,232"}</Text>
-              </View>
-            </View>
-          </View>
-          {/* Legend */}
-          <View style={styles.legend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: "#FBEB9E" }]} />
-              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Rent</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: "#D8D4FC" }]} />
-              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Utilities</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: "#FF7476" }]} />
-              <Text style={[styles.legendText, { color: theme.textSecondary }]}>Groceries</Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* Add Expense Button */}
-        <Button
-          title="Add Expense"
-          onPress={() => setShowCreateModal(true)}
-          variant="purple"
-          style={styles.addButton}
-        />
-
-        {/* Recent Transactions */}
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Transactions</Text>
-
-        {bills.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No expenses yet</Text>
-          </View>
-        ) : (
-          <View style={styles.transactionsList}>
-            {bills.slice(0, 5).map((bill) => (
-              <Card
-                key={bill.id}
-                variant="surface"
-                borderRadius={24}
-                padding={16}
-                style={styles.transactionCard}
-              >
-                <View style={styles.transactionContent}>
-                  <View style={[styles.transactionIcon, { backgroundColor: getBillIconBg(bill.type) }]}>
-                    {getBillIcon(bill.type)}
-                  </View>
-                  <View style={styles.transactionInfo}>
-                    <Text style={[styles.transactionTitle, { color: theme.text }]}>
-                      {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)}
-                    </Text>
-                    <Text style={[styles.transactionMeta, { color: theme.textSecondary }]}>
-                      {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)} • Paid by Alex
-                    </Text>
-                  </View>
-                  <Text style={[styles.transactionAmount, { color: theme.text }]}>
-                    -${bill.total_amount}
-                  </Text>
-                </View>
-              </Card>
-            ))}
+        {/* Chart */}
+        {totalSpend > 0 && (
+          <View style={{ alignItems: 'center', marginBottom: 32 }}>
+            <DonutChart data={chartData} total={totalSpend} theme={theme} />
           </View>
         )}
+
+        {/* Categories List (Horizontal) */}
+        <View style={{ marginBottom: 24 }}>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Categories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            {categories.map(cat => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryChip, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                onLongPress={() => handleDeleteCategory(cat.id)}
+              >
+                <View style={[styles.categoryDot, { backgroundColor: cat.color || theme.accent.yellow }]} />
+                <Text style={[styles.categoryText, { color: theme.text }]}>{cat.name}</Text>
+              </TouchableOpacity>
+            ))}
+            {categories.length === 0 && (
+              <Text style={{ color: theme.textSecondary, fontStyle: 'italic' }}>No categories yet</Text>
+            )}
+          </ScrollView>
+        </View>
+
+        {/* Bills List */}
+       <View style={styles.billsList}>
+  {bills.map((bill) => (
+    <View key={bill.id} style={[styles.billCard, { backgroundColor: theme.surface }]}>
+      
+      <View style={styles.billHeader}>
+        
+        <View style={[styles.billIcon, { backgroundColor: getCategoryColor(bill.bill_category_id) }]}>
+          <DollarSign size={20} color="#1C1C1E" />
+        </View>
+
+        <View style={styles.billInfo}>
+          <Text style={[styles.billType, { color: theme.text }]}>{getCategoryName(bill)}</Text>
+          <Text style={[styles.billDate, { color: theme.textSecondary }]}>
+   {new Date(bill.created_at).toLocaleDateString("pl-PL")} {new Date(bill.created_at).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
+
+        <Text style={[styles.billAmount, { color: theme.text }]}>
+          ${bill.total_amount.toFixed(2)}
+        </Text>
+
+        <TouchableOpacity
+          onPress={() => handleDeleteBill(bill.id)}
+          style={{       
+            padding: 1         
+          }}
+        >
+          <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
+        </TouchableOpacity>
+
+      </View>
+    </View>
+  ))}
+  
+  {bills.length === 0 && (
+    <Text style={{ textAlign: "center", color: theme.textSecondary, marginTop: 40 }}>
+      No expenses recorded yet.
+    </Text>
+  )}
+</View>
       </ScrollView>
 
-      {/* Create Expense Modal - matches PDF design */}
+      {/* Create Bill Modal */}
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="New Expense"
+        title="Add Expense"
         height="full"
       >
         <View style={styles.modalContent}>
-          {/* Amount Input - Large centered */}
-          <Card variant="surface" borderRadius={24} padding={24} style={styles.amountCard}>
-            <Text style={[styles.amountLabel, { color: theme.textSecondary }]}>AMOUNT</Text>
-            <View style={styles.amountRow}>
-              <Text style={styles.dollarSign}>$</Text>
-              <Input
-                placeholder="0"
-                value={newBillAmount}
-                onChangeText={setNewBillAmount}
-                keyboardType="decimal-pad"
-                style={styles.amountInput}
-              />
+          <Text style={[styles.label, { color: theme.textSecondary }]}>Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {categories.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryOption,
+                    { backgroundColor: theme.surface, borderColor: theme.border },
+                    selectedCategoryId === cat.id && { borderColor: theme.accent.pink, backgroundColor: theme.accent.pinkLight }
+                  ]}
+                  onPress={() => setSelectedCategoryId(cat.id)}
+                >
+                  <Text style={{ color: theme.text }}>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </Card>
+          </ScrollView>
 
-          {/* Description */}
           <Input
-            label="Description"
-            placeholder="e.g. Weekly Groceries"
-            value={newBillDescription}
-            onChangeText={setNewBillDescription}
+            label="Amount"
+            placeholder="0.00"
+            value={newBillAmount}
+            onChangeText={setNewBillAmount}
+            keyboardType="numeric"
           />
 
-          {/* Category Picker */}
-          <View style={styles.categoryPicker}>
-            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>CATEGORY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.categoryOptions}>
-                {BILL_TYPES.map((type) => (
-                  <TouchableOpacity
-                    key={type.id}
-                    style={[
-                      styles.categoryOption,
-                      { backgroundColor: theme.surface },
-                      newBillType === type.id && { backgroundColor: type.color },
-                    ]}
-                    onPress={() => setNewBillType(type.id)}
-                  >
-                    {getBillIcon(type.id)}
-                    <Text
-                      style={[
-                        styles.categoryOptionText,
-                        { color: theme.textSecondary },
-                        newBillType === type.id && { color: "#1C1C1E" },
-                      ]}
-                    >
-                      {type.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Paid By */}
-          <View style={styles.paidByPicker}>
-            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>PAID BY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.paidByOptions}>
-                {members.length > 0 ? (
-                  members.map((member) => {
-                    const isSelected = selectedPaidBy === member.id || (!selectedPaidBy && member.id === user?.id);
-                    const displayName = member.id === user?.id ? "Me" : member.name;
-                    return (
-                      <TouchableOpacity
-                        key={member.id}
-                        style={[
-                          styles.paidByOption,
-                          { borderColor: theme.border },
-                          isSelected && { backgroundColor: theme.text, borderColor: theme.text },
-                        ]}
-                        onPress={() => setSelectedPaidBy(member.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.paidByOptionText,
-                            { color: theme.textSecondary },
-                            isSelected && { color: theme.background },
-                          ]}
-                        >
-                          {displayName}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })
-                ) : (
-                  <TouchableOpacity
-                    style={[
-                      styles.paidByOption,
-                      { backgroundColor: theme.text, borderColor: theme.text },
-                    ]}
-                  >
-                    <Text style={[styles.paidByOptionText, { color: theme.background }]}>Me</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-
-        <View style={styles.modalActions}>
-          <TouchableOpacity
-            style={[styles.modalCancelButton, { backgroundColor: theme.surface }]}
-            onPress={() => setShowCreateModal(false)}
-          >
-            <X size={24} color={theme.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.modalConfirmButton,
-              { backgroundColor: theme.textSecondary },
-              newBillAmount && { backgroundColor: theme.text },
-            ]}
+          <Button
+            title="Add Expense"
             onPress={handleCreateBill}
-            disabled={!newBillAmount || creating}
-          >
-            <Check size={24} color={theme.background} />
-          </TouchableOpacity>
+            loading={creating}
+            disabled={!newBillAmount || !selectedCategoryId}
+            variant="pink"
+            style={{ marginTop: 20 }}
+          />
+        </View>
+      </Modal>
+
+      {/* Create Category Modal */}
+      <Modal
+        visible={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        title="New Category"
+        height="full"
+      >
+        <View style={styles.modalContent}>
+          <Input
+            label="Category Name"
+            placeholder="e.g. Groceries, Internet"
+            value={newCategoryName}
+            onChangeText={setNewCategoryName}
+          />
+
+          <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>Color</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+            {COLOR_OPTIONS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[
+                  { width: 32, height: 32, borderRadius: 16, backgroundColor: color },
+                  selectedColor === color && { borderWidth: 2, borderColor: theme.text }
+                ]}
+                onPress={() => setSelectedColor(color)}
+              />
+            ))}
+          </View>
+
+          <Button
+            title="Create Category"
+            onPress={handleCreateCategory}
+            loading={creatingCategory}
+            disabled={!newCategoryName.trim()}
+            variant="yellow"
+            style={{ marginTop: 20 }}
+          />
         </View>
       </Modal>
     </View>
@@ -390,12 +450,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -405,251 +462,91 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 24,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontFamily: fonts[700],
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-  },
-  calendarButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  chartCard: {
-    marginBottom: 16,
-    alignItems: "center",
-  },
-  chartContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  donutOuter: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  donutSegmentYellow: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 20,
-    borderColor: "transparent",
-    borderTopColor: "#FBEB9E",
-    borderRightColor: "#FBEB9E",
-  },
-  donutSegmentPurple: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 20,
-    borderColor: "transparent",
-    borderTopColor: "#D8D4FC",
-  },
-  donutSegmentPink: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 20,
-    borderColor: "transparent",
-    borderTopColor: "#FF7476",
-  },
-  donutInner: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#2C2C2E",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  donutLabel: {
-    fontSize: 11,
-    fontFamily: fonts[600],
-    color: "#8E8E93",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  donutAmount: {
-    fontSize: 28,
-    fontFamily: fonts[800],
-    color: "#FFFFFF",
-  },
-  legend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    fontSize: 13,
-    fontFamily: fonts[500],
   },
   addButton: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: fonts[700],
-    marginBottom: 16,
-  },
-  emptyContainer: {
-    paddingVertical: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-  },
-  transactionsList: {
-    gap: 12,
-  },
-  transactionCard: {
-    marginBottom: 0,
-  },
-  transactionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  transactionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },
-  transactionInfo: {
+  sectionTitle: {
+    fontSize: 14,
+    fontFamily: fonts[700],
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 8,
+  },
+  categoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  categoryText: {
+    fontFamily: fonts[600],
+    fontSize: 14,
+  },
+  billsList: {
+    gap: 12,
+  },
+  billCard: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  billHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  billIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  billInfo: {
     flex: 1,
   },
-  transactionTitle: {
-    fontSize: 18,
-    fontFamily: fonts[700],
-    marginBottom: 4,
+  billType: {
+    fontSize: 16,
+    fontFamily: fonts[600],
+    marginBottom: 2,
   },
-  transactionMeta: {
+  billDate: {
     fontSize: 12,
-    fontFamily: fonts[500],
   },
-  transactionAmount: {
+  billAmount: {
     fontSize: 18,
     fontFamily: fonts[700],
   },
   modalContent: {
-    flex: 1,
+    paddingTop: 10,
   },
-  amountCard: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  amountLabel: {
+  label: {
     fontSize: 12,
-    fontFamily: fonts[600],
-    letterSpacing: 1.5,
+    fontFamily: fonts[700],
     marginBottom: 8,
-  },
-  amountRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dollarSign: {
-    fontSize: 32,
-    fontFamily: fonts[700],
-    color: "#FF7476",
-    marginRight: 8,
-  },
-  amountInput: {
-    fontSize: 48,
-    fontFamily: fonts[800],
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    height: "auto",
-    padding: 0,
-  },
-  categoryPicker: {
-    marginBottom: 24,
-  },
-  pickerLabel: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  categoryOptions: {
-    flexDirection: "row",
-    gap: 12,
+    textTransform: 'uppercase',
   },
   categoryOption: {
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 16,
-    gap: 8,
-    minWidth: 70,
-  },
-  categoryOptionText: {
-    fontSize: 11,
-    fontFamily: fonts[600],
-  },
-  paidByPicker: {
-    marginBottom: 24,
-  },
-  paidByOptions: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  paidByOption: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-  },
-  paidByOptionText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    paddingTop: 16,
-  },
-  modalCancelButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalConfirmButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  }
 });
