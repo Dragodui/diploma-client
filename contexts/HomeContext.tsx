@@ -20,18 +20,23 @@ export const [HomeProvider, useHome] = createContextHook(() => {
     try {
       setIsLoading(true);
       const homeData = await homeApi.getUserHome();
-      setHome(homeData);
+      // Check if home has valid ID
+      if (homeData && homeData.id) {
+        setHome(homeData);
 
-      // Check if current user is admin
-      if (homeData.memberships && user) {
-        const membership = homeData.memberships.find((m: HomeMembership) => m.user_id === user.id);
-        setIsAdmin(membership?.role === "admin");
-      }
+        // Check if current user is admin
+        if (homeData.memberships && user) {
+          const membership = homeData.memberships.find((m: HomeMembership) => m.user_id === user.id);
+          setIsAdmin(membership?.role === "admin");
+        }
 
-      // Load rooms
-      if (homeData.id) {
+        // Load rooms
         const roomsData = await roomApi.getByHomeId(homeData.id);
         setRooms(roomsData || []);
+      } else {
+        setHome(null);
+        setRooms([]);
+        setIsAdmin(false);
       }
     } catch (error: any) {
       console.error("Error loading home:", error);

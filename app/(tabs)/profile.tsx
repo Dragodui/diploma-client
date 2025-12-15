@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import {
   LogOut,
@@ -29,10 +30,13 @@ import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
+import * as ImagePicker from "expo-image-picker";
+import { imageApi } from "@/lib/api";
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { home, isAdmin, createHome, joinHome, leaveHome } = useHome();
   const { theme, themeMode, setThemeMode } = useTheme();
 
@@ -41,6 +45,48 @@ export default function ProfileScreen() {
   const [homeName, setHomeName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      // @ts-ignore - React Native FormData expects specific format
+      formData.append("file", {
+        uri,
+        name: "avatar.jpg",
+        type: "image/jpeg",
+      });
+
+      const response = await imageApi.upload(formData);
+      if (response.url) {
+        await updateUser({ avatar: response.url });
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("Error", "Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
@@ -105,19 +151,19 @@ export default function ProfileScreen() {
       icon: Settings,
       label: "Settings",
       color: theme.surface,
-      onPress: () => {},
+      onPress: () => { },
     },
     {
       icon: Bell,
       label: "Notifications",
       color: theme.surface,
-      onPress: () => {},
+      onPress: () => { },
     },
     {
       icon: Shield,
       label: "Security",
       color: theme.accent.pink,
-      onPress: () => {},
+      onPress: () => { },
     },
   ];
 
@@ -130,15 +176,25 @@ export default function ProfileScreen() {
       >
         {/* Profile Avatar - matches PDF exactly */}
         <View style={styles.profileHeader}>
-          <View style={[styles.avatarContainer, { borderColor: theme.accent.purple }]}>
+          <TouchableOpacity
+            style={[styles.avatarContainer, { borderColor: theme.accent.purple }]}
+            onPress={pickImage}
+            activeOpacity={0.8}
+            disabled={isUploading}
+          >
             {user?.avatar ? (
-              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+              <Image source={{ uri: user.avatar }} style={[styles.avatar, isUploading && { opacity: 0.5 }]} />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: theme.surface }]}>
                 <User size={64} color={theme.textSecondary} />
               </View>
             )}
-          </View>
+            {isUploading && (
+              <View style={StyleSheet.absoluteFill}>
+                <ActivityIndicator size="small" color={theme.accent.purple} style={{ flex: 1 }} />
+              </View>
+            )}
+          </TouchableOpacity>
 
           {/* Name */}
           <Text style={[styles.userName, { color: theme.text }]}>{user?.name || "User"}</Text>
@@ -254,6 +310,7 @@ export default function ProfileScreen() {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Create Home"
+        height="full"
       >
         <View style={styles.modalContent}>
           <Input

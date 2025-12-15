@@ -245,6 +245,7 @@ export default function BudgetScreen() {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="New Expense"
+        height="full"
       >
         <View style={styles.modalContent}>
           {/* Amount Input - Large centered */}

@@ -20,7 +20,7 @@ import {
   CreateItemForm,
 } from "./types";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "http://192.168.0.47:8000";
 
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,

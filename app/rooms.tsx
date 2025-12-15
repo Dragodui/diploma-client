@@ -11,24 +11,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Plus, Home, Trash2, DoorOpen } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
-const ROOM_COLORS = [
-  Colors.accentYellow,
-  Colors.accentPurple,
-  Colors.accentPink,
-  Colors.white,
-  Colors.gray200,
-];
-
 export default function RoomsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { home, rooms, isAdmin, createRoom, deleteRoom } = useHome();
+  const { theme } = useTheme();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomName, setRoomName] = useState("");
@@ -67,23 +60,23 @@ export default function RoomsScreen() {
 
   if (!home) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color={Colors.black} />
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: theme.surface }]}>
+            <ArrowLeft size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Rooms</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Rooms</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Join a home to manage rooms</Text>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Join a home to manage rooms</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
@@ -91,16 +84,16 @@ export default function RoomsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color={Colors.black} />
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: theme.surface }]}>
+            <ArrowLeft size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Rooms</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Rooms</Text>
           {isAdmin ? (
             <TouchableOpacity
               onPress={() => setShowCreateModal(true)}
-              style={styles.addButton}
+              style={[styles.addButton, { backgroundColor: theme.accent.yellow }]}
             >
-              <Plus size={24} color={Colors.black} />
+              <Plus size={24} color="#1C1C1E" />
             </TouchableOpacity>
           ) : (
             <View style={styles.placeholder} />
@@ -110,11 +103,11 @@ export default function RoomsScreen() {
         {/* Rooms Grid */}
         {rooms.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <DoorOpen size={48} color={Colors.gray400} />
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.surface }]}>
+              <DoorOpen size={48} color={theme.textSecondary} />
             </View>
-            <Text style={styles.emptyTitle}>No Rooms Yet</Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>No Rooms Yet</Text>
+            <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
               {isAdmin
                 ? "Create your first room to organize tasks by location"
                 : "Ask your home admin to create rooms"}
@@ -123,17 +116,33 @@ export default function RoomsScreen() {
         ) : (
           <View style={styles.roomsGrid}>
             {rooms.map((room, index) => {
+              // Use theme colors for room cards if needed, or keep colorful cards but ensure text contrast
+              // For now keeping colorful cards as per design, but ensuring text is readable
+              const ROOM_COLORS = [
+                theme.accent.yellow,
+                theme.accent.purple,
+                theme.accent.pink,
+                theme.surface,
+                theme.border,
+              ];
               const colorIndex = index % ROOM_COLORS.length;
+              const backgroundColor = ROOM_COLORS[colorIndex];
+              const isDarkBg = backgroundColor === theme.surface && theme.background === "#000000"; // Simple check
+              const textColor = "#1C1C1E"; // Most accent colors are light, so dark text is fine. Surface might need check.
+
+              // If surface is dark (dark mode), we need light text for that card
+              const finalTextColor = (backgroundColor === theme.surface || backgroundColor === theme.border) ? theme.text : "#1C1C1E";
+
               return (
                 <View
                   key={room.id}
-                  style={[styles.roomCard, { backgroundColor: ROOM_COLORS[colorIndex] }]}
+                  style={[styles.roomCard, { backgroundColor }]}
                 >
                   <View style={styles.roomIcon}>
-                    <Home size={28} color={Colors.black} />
+                    <Home size={28} color={finalTextColor} />
                   </View>
-                  <Text style={styles.roomName}>{room.name}</Text>
-                  <Text style={styles.roomDate}>
+                  <Text style={[styles.roomName, { color: finalTextColor }]}>{room.name}</Text>
+                  <Text style={[styles.roomDate, { color: finalTextColor, opacity: 0.6 }]}>
                     Added {new Date(room.created_at).toLocaleDateString()}
                   </Text>
                   {isAdmin && (
@@ -141,7 +150,7 @@ export default function RoomsScreen() {
                       style={styles.deleteButton}
                       onPress={() => handleDeleteRoom(room.id, room.name)}
                     >
-                      <Trash2 size={18} color={Colors.red500} />
+                      <Trash2 size={18} color={theme.accent.danger} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -156,6 +165,7 @@ export default function RoomsScreen() {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="New Room"
+        height="full"
       >
         <View style={styles.modalContent}>
           <Input
@@ -163,7 +173,6 @@ export default function RoomsScreen() {
             placeholder="e.g., Kitchen, Living Room"
             value={roomName}
             onChangeText={setRoomName}
-            dark
           />
           <Button
             title="Create Room"
@@ -182,7 +191,6 @@ export default function RoomsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
   },
   scrollView: {
     flex: 1,
@@ -201,20 +209,17 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: Colors.gray50,
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 24,
     fontFamily: fonts[700],
-    color: Colors.black,
   },
   addButton: {
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: Colors.accentYellow,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -230,7 +235,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontFamily: fonts[400],
-    color: Colors.gray400,
   },
   emptyState: {
     alignItems: "center",
@@ -240,7 +244,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.gray100,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
@@ -248,13 +251,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontFamily: fonts[700],
-    color: Colors.black,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: fonts[400],
-    color: Colors.gray500,
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 20,
@@ -283,13 +284,11 @@ const styles = StyleSheet.create({
   roomName: {
     fontSize: 18,
     fontFamily: fonts[700],
-    color: Colors.black,
     marginBottom: 4,
   },
   roomDate: {
     fontSize: 12,
     fontFamily: fonts[400],
-    color: "rgba(0,0,0,0.5)",
   },
   deleteButton: {
     position: "absolute",

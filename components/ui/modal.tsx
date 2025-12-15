@@ -28,7 +28,7 @@ const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "au
 
   const getHeightStyle = () => {
     if (height === "full") {
-      return { height: "85%" as const };
+      return { height: "95%" as const };
     }
     if (height === "auto") {
       return { maxHeight: "85%" as const };

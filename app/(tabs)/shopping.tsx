@@ -368,6 +368,7 @@ export default function ShoppingScreen() {
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         title="New List"
+        height="full"
       >
         <View style={styles.modalContent}>
           {/* Icon Preview */}
