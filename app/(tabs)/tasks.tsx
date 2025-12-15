@@ -77,7 +77,7 @@ export default function TasksScreen() {
     if (!home) return;
 
     try {
-      await taskApi.markCompleted(home.id, taskId);
+      await taskApi.completeTask(home.id, taskId);
       await loadTasks();
     } catch (error) {
       console.error("Error completing task:", error);

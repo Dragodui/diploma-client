@@ -229,6 +229,12 @@ export const taskApi = {
     return { message: response.data.message };
   },
 
+  // Mark task as completed for current user (auto-assigns if not assigned)
+  completeTask: async (homeId: number, taskId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/tasks/${taskId}/complete`);
+    return { message: response.data.message };
+  },
+
   deleteAssignment: async (homeId: number, taskId: number, assignmentId: number): Promise<{ message: string }> => {
     const response = await api.delete<{ status: boolean; message: string }>(
       `/homes/${homeId}/tasks/${taskId}/assignments/${assignmentId}`
