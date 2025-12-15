@@ -21,6 +21,9 @@ export const [HomeProvider, useHome] = createContextHook(() => {
       setIsLoading(true);
       const homeData = await homeApi.getUserHome();
       // Check if home has valid ID
+        console.log("Home data received:", homeData);
+    console.log("Home data type:", typeof homeData);
+    console.log("Home has id?", homeData?.id);
       if (homeData && homeData.id) {
         setHome(homeData);
 

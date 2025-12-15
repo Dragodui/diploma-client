@@ -116,8 +116,10 @@ export const homeApi = {
   },
 
   getUserHome: async (): Promise<Home> => {
-    const response = await api.get<Home>("/homes/my");
-    return response.data;
+    const response = await api.get<{
+      home: Home
+    }>("/homes/my");
+    return response.data.home;
   },
 
   getById: async (homeId: number): Promise<Home> => {
@@ -182,8 +184,8 @@ export const taskApi = {
   },
 
   getByHomeId: async (homeId: number): Promise<Task[]> => {
-    const response = await api.get<Task[]>(`/homes/${homeId}/tasks`);
-    return response.data;
+    const response = await api.get<{tasks: Task[]}>(`/homes/${homeId}/tasks`);
+    return response.data.tasks;
   },
 
   getById: async (homeId: number, taskId: number): Promise<Task> => {
@@ -227,8 +229,10 @@ export const taskApi = {
   },
 
   getUserAssignments: async (homeId: number, userId: number): Promise<TaskAssignment[]> => {
-    const response = await api.get<TaskAssignment[]>(`/homes/${homeId}/users/${userId}/assignments`);
-    return response.data;
+    const response = await api.get<{
+      assignments: TaskAssignment[]
+    }>(`/homes/${homeId}/users/${userId}/assignments`);
+    return response.data.assignments;
   },
 
   getClosestAssignment: async (homeId: number, userId: number): Promise<TaskAssignment | null> => {

@@ -70,7 +70,7 @@ export default function ProfileScreen() {
     try {
       const formData = new FormData();
       // @ts-ignore - React Native FormData expects specific format
-      formData.append("file", {
+      formData.append("avatar", {
         uri,
         name: "avatar.jpg",
         type: "image/jpeg",
