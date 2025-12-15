@@ -106,7 +106,7 @@ export default function HomeScreen() {
       </View>
     );
   }
-
+  
   const formatTaskTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const today = new Date();
@@ -173,7 +173,7 @@ export default function HomeScreen() {
           </View>
           {nextAssignment ? (
             <>
-              <Text style={styles.heroTitle}>{nextAssignment.task?.name || "Task"}</Text>
+              <Text style={styles.heroTitle}>{nextAssignment.task?.name || " Current Task"}</Text>
               <View style={styles.heroFooter}>
                 <View style={styles.heroBadge}>
                   <Text style={styles.heroBadgeText}>
