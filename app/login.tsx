@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,16 +15,60 @@ import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import { useGoogleAuth } from "@/lib/useGoogleAuth";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { login } = useAuth();
+  const { login, googleSignIn } = useAuth();
   const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const { request, response, promptAsync, getUserInfo, isReady } = useGoogleAuth();
+
+  useEffect(() => {
+    handleGoogleResponse();
+  }, [response]);
+
+  const handleGoogleResponse = async () => {
+    if (response?.type === "success") {
+      setIsGoogleLoading(true);
+      setError("");
+
+      const { authentication } = response;
+      if (authentication?.accessToken) {
+        const userInfo = await getUserInfo(authentication.accessToken);
+
+        if (userInfo) {
+          const result = await googleSignIn(userInfo.email, userInfo.name, userInfo.picture);
+
+          if (result.success) {
+            router.replace("/(tabs)/home");
+          } else {
+            setError(result.error || "Google Sign-In failed");
+          }
+        } else {
+          setError("Failed to get user info from Google");
+        }
+      }
+      setIsGoogleLoading(false);
+    } else if (response?.type === "error") {
+      setError("Google Sign-In was cancelled or failed");
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!isReady) {
+      setError("Google Sign-In is not ready yet");
+      return;
+    }
+    await promptAsync();
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -95,10 +139,27 @@ export default function LoginScreen() {
             title="Get Started"
             onPress={handleLogin}
             loading={isLoading}
-            disabled={isLoading}
+            disabled={isLoading || isGoogleLoading}
             variant="purple"
             style={styles.loginButton}
           />
+
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, { borderColor: theme.border }]}
+            onPress={handleGoogleSignIn}
+            disabled={isLoading || isGoogleLoading || !isReady}
+          >
+            <Ionicons name="logo-google" size={20} color={theme.text} />
+            <Text style={[styles.googleButtonText, { color: theme.text }]}>
+              {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Footer */}
@@ -141,6 +202,34 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 24,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    fontFamily: fonts[400],
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontFamily: fonts[600],
   },
   footer: {
     flexDirection: "row",

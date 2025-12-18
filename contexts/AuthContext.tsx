@@ -192,6 +192,28 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, []);
 
+  const googleSignIn = useCallback(async (email: string, name: string, avatar: string): Promise<AuthResult> => {
+    try {
+      const response = await authApi.googleSignIn(email, name, avatar);
+      const user = response.user;
+
+      setAuthState({
+        user,
+        token: response.token,
+        isLoading: false,
+        isAuthenticated: true,
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Google Sign-In error:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || "Google Sign-In failed",
+      };
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -218,6 +240,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       resetPassword,
       updateUser,
       refreshUser,
+      googleSignIn,
     }),
     [
       authState,
@@ -230,6 +253,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       resetPassword,
       updateUser,
       refreshUser,
+      googleSignIn,
     ]
   );
 });

@@ -94,6 +94,15 @@ export const authApi = {
     await AsyncStorage.removeItem("auth_token");
     await AsyncStorage.removeItem("user");
   },
+
+  googleSignIn: async (email: string, name: string, avatar: string): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>("/auth/google/mobile", { email, name, avatar });
+    if (response.data.token) {
+      await AsyncStorage.setItem("auth_token", response.data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
 };
 
 // ============ User API ============
