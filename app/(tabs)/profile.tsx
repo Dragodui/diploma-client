@@ -36,7 +36,6 @@ import Button from "@/components/ui/button";
 import * as ImagePicker from "expo-image-picker";
 import { imageApi } from "@/lib/api";
 import { useI18n } from "@/contexts/I18nContext";
-import { Language } from "@/lib/i18n";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -48,6 +47,7 @@ export default function ProfileScreen() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [homeName, setHomeName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -180,7 +180,7 @@ export default function ProfileScreen() {
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Avatar - matches PDF exactly */}
+        {/* Profile Avatar */}
         <View style={styles.profileHeader}>
           <TouchableOpacity
             style={[styles.avatarContainer, { borderColor: theme.accent.purple }]}
@@ -202,13 +202,9 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Name */}
           <Text style={[styles.userName, { color: theme.text }]}>{user?.name || "User"}</Text>
-
-          {/* Username */}
           <Text style={[styles.userHandle, { color: theme.textSecondary }]}>{getUsername()}</Text>
 
-          {/* Role Badge */}
           {home && (
             <View style={[styles.roleBadge, { backgroundColor: theme.surface }]}>
               <Text style={[styles.roleBadgeText, { color: theme.textSecondary }]}>
@@ -217,7 +213,6 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          {/* Invite Code */}
           {home && home.invite_code && (
             <TouchableOpacity
               style={[styles.inviteCodeContainer, { backgroundColor: theme.surface }]}
@@ -240,7 +235,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Menu Items - matches PDF exactly */}
+        {/* Menu Items */}
         <View style={styles.menuSection}>
           {MENU_ITEMS.map((item, index) => {
             const Icon = item.icon;
@@ -309,31 +304,22 @@ export default function ProfileScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
             <Globe size={12} color={theme.textSecondary} /> LANGUAGE
           </Text>
-          <View style={styles.languageGrid}>
-            {availableLanguages.map((lang) => (
-              <TouchableOpacity
-                key={lang}
-                style={[
-                  styles.languageOption,
-                  { backgroundColor: theme.surface },
-                  language === lang && { backgroundColor: theme.accent.purple },
-                ]}
-                onPress={() => setLanguage(lang)}
-              >
-                <Text
-                  style={[
-                    styles.languageOptionText,
-                    { color: language === lang ? "#1C1C1E" : theme.textSecondary },
-                  ]}
-                >
-                  {languageNames[lang]}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <TouchableOpacity
+            style={[styles.languageSelector, { backgroundColor: theme.surface }]}
+            onPress={() => setShowLanguageModal(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.languageSelectorContent}>
+             
+              <Text style={[styles.languageSelectorText, { color: theme.text }]}>
+                {languageNames[language]}
+              </Text>
+            </View>
+            <ChevronRight size={20} color={theme.textSecondary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Home Actions - only show if no home */}
+        {/* Home Actions */}
         {!home && (
           <View style={styles.homeActions}>
             <Button
@@ -351,7 +337,7 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Logout Button - matches PDF exactly */}
+        {/* Logout Button */}
         <TouchableOpacity
           style={[styles.logoutButton, { backgroundColor: theme.accent.dangerLight }]}
           onPress={handleLogout}
@@ -406,6 +392,43 @@ export default function ProfileScreen() {
             style={styles.modalButton}
           />
         </View>
+      </Modal>
+
+      {/* Language Modal */}
+      <Modal
+        visible={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+        title="Select Language"
+        height="full"
+      >
+        <ScrollView style={styles.languageModalContent} showsVerticalScrollIndicator={false}>
+          {availableLanguages.map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              style={[
+                styles.languageModalItem,
+                { backgroundColor: theme.surface },
+                language === lang && { backgroundColor: theme.accent.purple },
+              ]}
+              onPress={() => {
+                setLanguage(lang);
+                setShowLanguageModal(false);
+              }}
+              activeOpacity={0.7}
+            >
+             
+              <Text
+                style={[
+                  styles.languageModalText,
+                  { color: language === lang ? "#1C1C1E" : theme.text },
+                ]}
+              >
+                {languageNames[lang]}
+              </Text>
+            
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </Modal>
     </View>
   );
@@ -536,18 +559,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts[600],
   },
-  languageGrid: {
+  languageSelector: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 16,
+  },
+  languageSelectorContent: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
-  languageOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+  languageFlagImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
-  languageOptionText: {
-    fontSize: 14,
+  languageSelectorText: {
+    fontSize: 16,
     fontFamily: fonts[600],
   },
   homeActions: {
@@ -573,5 +603,39 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     marginTop: "auto",
+  },
+  languageModalContent: {
+    flex: 1,
+  },
+  languageModalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 10,
+  },
+  languageModalFlagImage: {
+    width: 40,
+    height: 40,
+    // borderRadius: 20,
+    marginRight: 16,
+  },
+  languageModalText: {
+    flex: 1,
+    fontSize: 17,
+    fontFamily: fonts[600],
+  },
+  languageCheckmark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#1C1C1E",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  languageCheckmarkText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontFamily: fonts[700],
   },
 });
