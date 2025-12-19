@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Plus, Check, Users, X } from "lucide-react-native";
+import { Plus, Check, Users, X, Eye, EyeOff } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -39,6 +39,7 @@ export default function PollsScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollType, setPollType] = useState<"public" | "anonymous">("public");
   const [creating, setCreating] = useState(false);
 
   const loadPolls = useCallback(async () => {
@@ -80,11 +81,13 @@ export default function PollsScreen() {
     try {
       await pollApi.create(home.id, {
         question: pollQuestion.trim(),
-        options: validOptions.map((opt) => opt.trim()),
+        type: pollType,
+        options: validOptions.map((opt) => ({ title: opt.trim() })),
       });
 
       setPollQuestion("");
       setPollOptions(["", ""]);
+      setPollType("public");
       setShowCreateModal(false);
       await loadPolls();
     } catch (error) {
@@ -220,7 +223,7 @@ export default function PollsScreen() {
                             isSelected && styles.optionTextSelected,
                           ]}
                         >
-                          {option.option_text}
+                          {option.title}
                         </Text>
                         <View style={styles.optionRight}>
                           {isSelected && <Check size={16} color="#FFFFFF" />}
@@ -270,6 +273,51 @@ export default function PollsScreen() {
               value={pollQuestion}
               onChangeText={setPollQuestion}
             />
+
+            {/* Poll Type Selection */}
+            <View style={styles.typeSection}>
+              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+                {t.polls.pollType || "POLL TYPE"}
+              </Text>
+              <View style={styles.typeButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    { backgroundColor: theme.surface },
+                    pollType === "public" && { backgroundColor: theme.accent.purple },
+                  ]}
+                  onPress={() => setPollType("public")}
+                >
+                  <Eye size={18} color={pollType === "public" ? "#1C1C1E" : theme.textSecondary} />
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      { color: pollType === "public" ? "#1C1C1E" : theme.textSecondary },
+                    ]}
+                  >
+                    {t.polls.public || "Public"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    { backgroundColor: theme.surface },
+                    pollType === "anonymous" && { backgroundColor: theme.accent.purple },
+                  ]}
+                  onPress={() => setPollType("anonymous")}
+                >
+                  <EyeOff size={18} color={pollType === "anonymous" ? "#1C1C1E" : theme.textSecondary} />
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      { color: pollType === "anonymous" ? "#1C1C1E" : theme.textSecondary },
+                    ]}
+                  >
+                    {t.polls.anonymous || "Anonymous"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             <View style={styles.optionsSection}>
               <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>{t.polls.options}</Text>
@@ -445,6 +493,27 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     flex: 1,
+  },
+  typeSection: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  typeButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  typeButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  typeButtonText: {
+    fontSize: 14,
+    fontFamily: fonts[600],
   },
   optionsSection: {
     marginTop: 8,

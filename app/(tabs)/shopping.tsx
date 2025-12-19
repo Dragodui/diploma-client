@@ -160,6 +160,7 @@ export default function ShoppingScreen() {
       await shoppingApi.createCategory(home.id, {
         name: newCategoryName.trim(),
         icon: selectedIcon,
+        color: selectedColor,
       });
 
       setNewCategoryName("");
@@ -244,7 +245,7 @@ export default function ShoppingScreen() {
   // List detail view
   if (activeCategory) {
     const categoryItems = getActiveItems();
-    const colorIndex = categories.findIndex((c) => c.id === activeCategory.id) % CATEGORY_COLORS.length;
+    const categoryColor = activeCategory.color || CATEGORY_COLORS[0];
 
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -262,7 +263,7 @@ export default function ShoppingScreen() {
               <ArrowLeft size={22} color={theme.text} />
             </TouchableOpacity>
             <Text style={[styles.detailTitle, { color: theme.text }]}>{activeCategory.name}</Text>
-            <View style={[styles.detailIcon, { backgroundColor: CATEGORY_COLORS[colorIndex] }]}>
+            <View style={[styles.detailIcon, { backgroundColor: categoryColor }]}>
               {getCategoryIcon(activeCategory)}
             </View>
           </View>
@@ -375,14 +376,14 @@ export default function ShoppingScreen() {
 
         {/* Category Grid - matches PDF layout */}
         <View style={styles.grid}>
-          {categories.map((category, index) => {
-            const colorIndex = index % CATEGORY_COLORS.length;
+          {categories.map((category) => {
+            const categoryColor = category.color || CATEGORY_COLORS[0];
             const itemCount = items[category.id]?.length || 0;
 
             return (
               <TouchableOpacity
                 key={category.id}
-                style={[styles.categoryCard, { backgroundColor: CATEGORY_COLORS[colorIndex] }]}
+                style={[styles.categoryCard, { backgroundColor: categoryColor }]}
                 onPress={() => setActiveCategory(category)}
                 activeOpacity={0.9}
               >

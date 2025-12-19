@@ -87,6 +87,7 @@ export interface ShoppingCategory {
   home_id: number;
   name: string;
   icon?: string;
+  color: string;
   created_at: string;
   items?: ShoppingItem[];
 }
@@ -218,6 +219,7 @@ export interface CreatePollForm {
 export interface CreateCategoryForm {
   name: string;
   icon?: string;
+  color?: string;
 }
 
 export interface CreateItemForm {

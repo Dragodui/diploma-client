@@ -38,6 +38,9 @@ function RootLayoutNav() {
         <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
         <Stack.Screen name="rooms" options={{ headerShown: false }} />
         <Stack.Screen name="polls" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false }} />
+        <Stack.Screen name="security" options={{ headerShown: false }} />
       </Stack>
     </>
   );

@@ -156,20 +156,20 @@ export default function ProfileScreen() {
     {
       icon: Settings,
       label: t.profile.settings,
-      color: theme.surface,
-      onPress: () => { },
+      color: theme.accent.purple,
+      onPress: () => router.push("/settings"),
     },
     {
       icon: Bell,
       label: t.profile.notifications,
-      color: theme.surface,
-      onPress: () => { },
+      color: theme.accent.cyan,
+      onPress: () => router.push("/notifications"),
     },
     {
       icon: Shield,
       label: t.profile.security,
       color: theme.accent.pink,
-      onPress: () => { },
+      onPress: () => router.push("/security"),
     },
   ];
 
