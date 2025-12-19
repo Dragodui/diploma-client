@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Plus, Home, Trash2, DoorOpen } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n, interpolate } from "@/contexts/I18nContext";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
@@ -22,6 +23,7 @@ export default function RoomsScreen() {
   const router = useRouter();
   const { home, rooms, isAdmin, createRoom, deleteRoom } = useHome();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomName, setRoomName] = useState("");
@@ -38,20 +40,20 @@ export default function RoomsScreen() {
       setShowCreateModal(false);
       setRoomName("");
     } else {
-      Alert.alert("Error", result.error || "Failed to create room");
+      Alert.alert(t.common.error, result.error || t.rooms.failedToCreate);
     }
   };
 
   const handleDeleteRoom = (roomId: number, roomName: string) => {
-    Alert.alert("Delete Room", `Are you sure you want to delete "${roomName}"?`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.rooms.deleteRoom, interpolate(t.rooms.deleteRoomConfirm, { name: roomName }), [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Delete",
+        text: t.common.delete,
         style: "destructive",
         onPress: async () => {
           const result = await deleteRoom(roomId);
           if (!result.success) {
-            Alert.alert("Error", result.error || "Failed to delete room");
+            Alert.alert(t.common.error, result.error || t.rooms.failedToDelete);
           }
         },
       },
@@ -65,11 +67,11 @@ export default function RoomsScreen() {
           <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: theme.surface }]}>
             <ArrowLeft size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.text }]}>Rooms</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t.rooms.title}</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>Join a home to manage rooms</Text>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>{t.rooms.joinHomeToManage}</Text>
         </View>
       </View>
     );
@@ -87,7 +89,7 @@ export default function RoomsScreen() {
           <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: theme.surface }]}>
             <ArrowLeft size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.text }]}>Rooms</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t.rooms.title}</Text>
           {isAdmin ? (
             <TouchableOpacity
               onPress={() => setShowCreateModal(true)}
@@ -106,11 +108,11 @@ export default function RoomsScreen() {
             <View style={[styles.emptyIconContainer, { backgroundColor: theme.surface }]}>
               <DoorOpen size={48} color={theme.textSecondary} />
             </View>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>No Rooms Yet</Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>{t.rooms.noRooms}</Text>
             <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
               {isAdmin
-                ? "Create your first room to organize tasks by location"
-                : "Ask your home admin to create rooms"}
+                ? t.rooms.noRoomsAdminHint
+                : t.rooms.noRoomsMemberHint}
             </Text>
           </View>
         ) : (
@@ -143,7 +145,7 @@ export default function RoomsScreen() {
                   </View>
                   <Text style={[styles.roomName, { color: finalTextColor }]}>{room.name}</Text>
                   <Text style={[styles.roomDate, { color: finalTextColor, opacity: 0.6 }]}>
-                    Added {new Date(room.created_at).toLocaleDateString()}
+                    {interpolate(t.rooms.added, { date: new Date(room.created_at).toLocaleDateString() })}
                   </Text>
                   {isAdmin && (
                     <TouchableOpacity
@@ -164,18 +166,18 @@ export default function RoomsScreen() {
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="New Room"
+        title={t.rooms.newRoom}
         height="full"
       >
         <View style={styles.modalContent}>
           <Input
-            label="Room Name"
-            placeholder="e.g., Kitchen, Living Room"
+            label={t.rooms.roomName}
+            placeholder={t.rooms.roomNamePlaceholder}
             value={roomName}
             onChangeText={setRoomName}
           />
           <Button
-            title="Create Room"
+            title={t.rooms.createRoom}
             onPress={handleCreateRoom}
             loading={isLoading}
             disabled={!roomName.trim() || isLoading}

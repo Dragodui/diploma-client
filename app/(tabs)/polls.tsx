@@ -15,6 +15,7 @@ import { Plus, Check, Users, X } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { pollApi } from "@/lib/api";
 import { Poll, PollOption } from "@/lib/types";
 import fonts from "@/constants/fonts";
@@ -28,6 +29,7 @@ export default function PollsScreen() {
   const { user } = useAuth();
   const { home, isAdmin } = useHome();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const [polls, setPolls] = useState<Poll[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +72,7 @@ export default function PollsScreen() {
 
     const validOptions = pollOptions.filter((opt) => opt.trim());
     if (validOptions.length < 2) {
-      Alert.alert("Error", "Please add at least 2 options");
+      Alert.alert(t.common.error, t.polls.addAtLeastTwoOptions);
       return;
     }
 
@@ -87,7 +89,7 @@ export default function PollsScreen() {
       await loadPolls();
     } catch (error) {
       console.error("Error creating poll:", error);
-      Alert.alert("Error", "Failed to create poll");
+      Alert.alert(t.common.error, t.polls.failedToCreate);
     } finally {
       setCreating(false);
     }
@@ -101,7 +103,7 @@ export default function PollsScreen() {
       await loadPolls();
     } catch (error) {
       console.error("Error voting:", error);
-      Alert.alert("Error", "Failed to submit vote");
+      Alert.alert(t.common.error, t.polls.failedToVote);
     }
   };
 
@@ -163,12 +165,12 @@ export default function PollsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={[styles.title, { color: theme.text }]}>Polls</Text>
+        <Text style={[styles.title, { color: theme.text }]}>{t.polls.title}</Text>
 
         {/* Poll Cards */}
         {polls.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No active polls</Text>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>{t.polls.noActivePolls}</Text>
           </View>
         ) : (
           polls.map((poll) => {
@@ -228,7 +230,7 @@ export default function PollsScreen() {
                               isSelected && styles.optionVotesSelected,
                             ]}
                           >
-                            {voteCount} vote{voteCount !== 1 ? "s" : ""}
+                            {voteCount} {voteCount !== 1 ? t.polls.votes : t.polls.vote}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -248,7 +250,7 @@ export default function PollsScreen() {
         >
           <Plus size={24} color={theme.textSecondary} />
           <Text style={[styles.createPollText, { color: theme.textSecondary }]}>
-            Create New Poll
+            {t.polls.newPoll}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -257,25 +259,25 @@ export default function PollsScreen() {
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Poll"
+        title={t.polls.createPoll}
         height="full"
       >
         <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.modalContent}>
             <Input
-              label="Question"
-              placeholder="What do you want to ask?"
+              label={t.polls.question}
+              placeholder={t.polls.questionPlaceholder}
               value={pollQuestion}
               onChangeText={setPollQuestion}
             />
 
             <View style={styles.optionsSection}>
-              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>OPTIONS</Text>
+              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>{t.polls.options}</Text>
               {pollOptions.map((option, index) => (
                 <View key={index} style={styles.optionInputRow}>
                   <View style={styles.optionInputWrapper}>
                     <Input
-                      placeholder={`Option ${index + 1}`}
+                      placeholder={t.polls.optionPlaceholder.replace("{index}", String(index + 1))}
                       value={option}
                       onChangeText={(text) => updateOption(index, text)}
                     />
@@ -298,7 +300,7 @@ export default function PollsScreen() {
                 >
                   <Plus size={20} color={theme.accent.purple} />
                   <Text style={[styles.addOptionText, { color: theme.accent.purple }]}>
-                    Add Option
+                    {t.polls.addOption}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -308,7 +310,7 @@ export default function PollsScreen() {
 
         <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
           <Button
-            title="Create Poll"
+            title={t.polls.createPoll}
             onPress={handleCreatePoll}
             loading={creating}
             disabled={

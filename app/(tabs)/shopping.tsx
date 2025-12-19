@@ -18,6 +18,7 @@ import {
 } from "lucide-react-native";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { shoppingApi } from "@/lib/api";
 import { ShoppingCategory, ShoppingItem } from "@/lib/types";
 import fonts from "@/constants/fonts";
@@ -96,6 +97,7 @@ export default function ShoppingScreen() {
   const insets = useSafeAreaInsets();
   const { home } = useHome();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const [categories, setCategories] = useState<ShoppingCategory[]>([]);
   const [items, setItems] = useState<Record<number, ShoppingItem[]>>({});
@@ -321,19 +323,19 @@ export default function ShoppingScreen() {
         <Modal
           visible={showItemModal}
           onClose={() => setShowItemModal(false)}
-          title="Add Item"
+          title={t.shopping.addItem}
           height="full"
         >
           <View style={styles.modalContent}>
             <Input
-              label="Item Name"
-              placeholder="e.g., Milk"
+              label={t.shopping.itemName}
+              placeholder={t.shopping.itemNamePlaceholder}
               value={newItemName}
               onChangeText={setNewItemName}
             />
 
             <Button
-              title="Add Item"
+              title={t.shopping.addItem}
               onPress={handleCreateItem}
               loading={creatingItem}
               disabled={!newItemName.trim() || creatingItem}
@@ -360,8 +362,8 @@ export default function ShoppingScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.title, { color: theme.text }]}>Shopping</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>My Lists</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t.shopping.title}</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t.shopping.myLists}</Text>
           </View>
           <TouchableOpacity
             style={[styles.searchButton, { backgroundColor: theme.accent.cyan }]}
@@ -389,7 +391,7 @@ export default function ShoppingScreen() {
                 </View>
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{category.name}</Text>
-                  <Text style={styles.categoryCount}>{itemCount} Items</Text>
+                  <Text style={styles.categoryCount}>{itemCount} {t.common.items}</Text>
                 </View>
                 <View style={styles.categoryArrow}>
                   <View style={styles.arrowCircle}>
@@ -419,7 +421,7 @@ export default function ShoppingScreen() {
       <Modal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        title="New List"
+        title={t.shopping.newList}
         height="full"
       >
         <View style={styles.modalContent}>
@@ -432,7 +434,7 @@ export default function ShoppingScreen() {
 
           {/* Title Input */}
           <Input
-            placeholder="Title"
+            placeholder={t.shopping.title_input}
             value={newCategoryName}
             onChangeText={setNewCategoryName}
           />

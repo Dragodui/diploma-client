@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import fonts from "@/constants/fonts";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login, googleSignIn } = useAuth();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,21 +52,21 @@ export default function LoginScreen() {
           if (result.success) {
             router.replace("/(tabs)/home");
           } else {
-            setError(result.error || "Google Sign-In failed");
+            setError(result.error || t.auth.googleSignInFailed);
           }
         } else {
-          setError("Failed to get user info from Google");
+          setError(t.auth.failedToGetUserInfo);
         }
       }
       setIsGoogleLoading(false);
     } else if (response?.type === "error") {
-      setError("Google Sign-In was cancelled or failed");
+      setError(t.auth.googleSignInCancelled);
     }
   };
 
   const handleGoogleSignIn = async () => {
     if (!isReady) {
-      setError("Google Sign-In is not ready yet");
+      setError(t.auth.googleSignInNotReady);
       return;
     }
     await promptAsync();
@@ -72,7 +74,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError("Please fill in all fields");
+      setError(t.auth.fillAllFields);
       return;
     }
 
@@ -87,7 +89,7 @@ export default function LoginScreen() {
     } else if (result.needsVerification) {
       router.push({ pathname: "/verify", params: { email } });
     } else {
-      setError(result.error || "Login failed");
+      setError(result.error || t.auth.loginFailed);
     }
   };
 
@@ -103,15 +105,15 @@ export default function LoginScreen() {
       >
         {/* Brand Header - matches PDF exactly */}
         <View style={styles.header}>
-          <Text style={[styles.brand, { color: theme.text }]}>HŌME</Text>
-          <Text style={[styles.tagline, { color: theme.textSecondary }]}>Co-living made bold.</Text>
+          <Text style={[styles.brand, { color: theme.text }]}>{t.auth.brand}</Text>
+          <Text style={[styles.tagline, { color: theme.textSecondary }]}>{t.auth.tagline}</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
           <Input
-            label="EMAIL"
-            placeholder="hello@gome.app"
+            label={t.auth.email}
+            placeholder={t.auth.emailPlaceholder}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -123,8 +125,8 @@ export default function LoginScreen() {
           />
 
           <Input
-            label="PASSWORD"
-            placeholder="Enter your password"
+            label={t.auth.password}
+            placeholder={t.auth.passwordPlaceholder}
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -136,7 +138,7 @@ export default function LoginScreen() {
           />
 
           <Button
-            title="Get Started"
+            title={t.auth.getStarted}
             onPress={handleLogin}
             loading={isLoading}
             disabled={isLoading || isGoogleLoading}
@@ -146,7 +148,7 @@ export default function LoginScreen() {
 
           <View style={styles.divider}>
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>or</Text>
+            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>{t.common.or}</Text>
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
           </View>
 
@@ -157,16 +159,16 @@ export default function LoginScreen() {
           >
             <Ionicons name="logo-google" size={20} color={theme.text} />
             <Text style={[styles.googleButtonText, { color: theme.text }]}>
-              {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+              {isGoogleLoading ? t.auth.signingIn : t.auth.continueWithGoogle}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.footerText, { color: theme.textSecondary }]}>New here? </Text>
+          <Text style={[styles.footerText, { color: theme.textSecondary }]}>{t.auth.newHere} </Text>
           <TouchableOpacity onPress={() => router.push("/register")}>
-            <Text style={[styles.link, { color: theme.text }]}>Create Account</Text>
+            <Text style={[styles.link, { color: theme.text }]}>{t.auth.createAccount}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

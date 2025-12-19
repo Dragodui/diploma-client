@@ -15,6 +15,7 @@ import Svg, { Circle, G } from "react-native-svg";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { billApi, billCategoryApi } from "@/lib/api";
 import { Bill, BillCategory } from "@/lib/types";
 import fonts from "@/constants/fonts";
@@ -72,6 +73,7 @@ export default function BudgetScreen() {
   const { home } = useHome();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useI18n();
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [categories, setCategories] = useState<BillCategory[]>([]);
@@ -140,7 +142,7 @@ export default function BudgetScreen() {
       await loadData();
     } catch (error) {
       console.error("Error creating category:", error);
-      Alert.alert("Error", "Could not create category.");
+      Alert.alert(t.common.error, t.budget.failedToCreate);
     } finally {
       setCreatingCategory(false);
     }
@@ -149,12 +151,12 @@ export default function BudgetScreen() {
   const handleDeleteCategory = async (categoryId: number) => {
     if (!home) return;
     Alert.alert(
-      "Delete Category?",
-      "This will not delete existing bills, but they will lose their category.",
+      t.budget.deleteCategory,
+      t.budget.deleteCategoryConfirm,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t.common.cancel, style: "cancel" },
         {
-          text: "Delete",
+          text: t.common.delete,
           style: "destructive",
           onPress: async () => {
             try {
@@ -162,7 +164,7 @@ export default function BudgetScreen() {
               await loadData();
             } catch (error) {
               console.error(error);
-              Alert.alert("Error", "Failed to delete category.");
+              Alert.alert(t.common.error, t.budget.failedToDelete);
             }
           },
         },
@@ -196,7 +198,7 @@ export default function BudgetScreen() {
       await loadData();
     } catch (error) {
       console.error("Error creating bill:", error);
-      Alert.alert("Error", "Could not create bill.");
+      Alert.alert(t.common.error, t.budget.failedToCreate);
     } finally {
       setCreating(false);
     }
@@ -204,10 +206,10 @@ export default function BudgetScreen() {
 
   const handleDeleteBill = async (billId: number) => {
     if (!home) return;
-    Alert.alert("Delete Bill?", "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.budget.deleteBill, t.budget.deleteBillConfirm, [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Delete",
+        text: t.common.delete,
         style: "destructive",
         onPress: async () => {
           try {
@@ -215,7 +217,7 @@ export default function BudgetScreen() {
             await loadData();
           } catch (error) {
             console.error(error);
-            Alert.alert("Error", "Failed to delete bill.");
+            Alert.alert(t.common.error, t.budget.failedToDelete);
           }
         },
       },
@@ -249,7 +251,7 @@ export default function BudgetScreen() {
     chartData.push({
       value: total,
       color: theme.textSecondary,
-      name: 'Uncategorized'
+      name: t.budget.uncategorized
     });
   }
 
@@ -270,13 +272,13 @@ export default function BudgetScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />}
       >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Expenses</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t.budget.title}</Text>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: theme.surface }]}
               onPress={() => setShowCategoryModal(true)}
             >
-              <Text style={{ fontSize: 12, color: theme.text, fontFamily: fonts[600] }}>+ Category</Text>
+              <Text style={{ fontSize: 12, color: theme.text, fontFamily: fonts[600] }}>+ {t.budget.category}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: theme.accent.pink }]}
@@ -296,7 +298,7 @@ export default function BudgetScreen() {
 
         {/* Categories List (Horizontal) */}
         <View style={{ marginBottom: 24 }}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Categories</Text>
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{t.budget.categories}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
             {categories.map(cat => (
               <TouchableOpacity
@@ -309,7 +311,7 @@ export default function BudgetScreen() {
               </TouchableOpacity>
             ))}
             {categories.length === 0 && (
-              <Text style={{ color: theme.textSecondary, fontStyle: 'italic' }}>No categories yet</Text>
+              <Text style={{ color: theme.textSecondary, fontStyle: 'italic' }}>{t.budget.noCategories}</Text>
             )}
           </ScrollView>
         </View>
@@ -351,7 +353,7 @@ export default function BudgetScreen() {
   
   {bills.length === 0 && (
     <Text style={{ textAlign: "center", color: theme.textSecondary, marginTop: 40 }}>
-      No expenses recorded yet.
+      {t.budget.noExpenses}
     </Text>
   )}
 </View>
@@ -361,11 +363,11 @@ export default function BudgetScreen() {
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Add Expense"
+        title={t.budget.addExpense}
         height="full"
       >
         <View style={styles.modalContent}>
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Category</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>{t.budget.category}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               {categories.map(cat => (
@@ -385,15 +387,15 @@ export default function BudgetScreen() {
           </ScrollView>
 
           <Input
-            label="Amount"
-            placeholder="0.00"
+            label={t.budget.amount}
+            placeholder={t.budget.amountPlaceholder}
             value={newBillAmount}
             onChangeText={setNewBillAmount}
             keyboardType="numeric"
           />
 
           <Button
-            title="Add Expense"
+            title={t.budget.addExpense}
             onPress={handleCreateBill}
             loading={creating}
             disabled={!newBillAmount || !selectedCategoryId}
@@ -407,18 +409,18 @@ export default function BudgetScreen() {
       <Modal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        title="New Category"
+        title={t.budget.newCategory}
         height="full"
       >
         <View style={styles.modalContent}>
           <Input
-            label="Category Name"
-            placeholder="e.g. Groceries, Internet"
+            label={t.budget.categoryName}
+            placeholder={t.budget.categoryNamePlaceholder}
             value={newCategoryName}
             onChangeText={setNewCategoryName}
           />
 
-          <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>Color</Text>
+          <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>{t.budget.color}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
             {COLOR_OPTIONS.map((color) => (
               <TouchableOpacity
@@ -433,7 +435,7 @@ export default function BudgetScreen() {
           </View>
 
           <Button
-            title="Create Category"
+            title={t.budget.createCategory}
             onPress={handleCreateCategory}
             loading={creatingCategory}
             disabled={!newCategoryName.trim()}

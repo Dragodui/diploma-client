@@ -12,6 +12,7 @@ import Button from "@/components/ui/button";
 import Colors from "@/constants/colors";
 import fonts from "@/constants/fonts";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { Mail, CheckCircle, XCircle, ArrowLeft } from "lucide-react-native";
 
 export default function VerifyEmailScreen() {
@@ -19,6 +20,7 @@ export default function VerifyEmailScreen() {
   const insets = useSafeAreaInsets();
   const { token, email: paramEmail } = useLocalSearchParams<{ token?: string; email?: string }>();
   const { verifyEmail, resendVerification } = useAuth();
+  const { t } = useI18n();
 
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -38,7 +40,7 @@ export default function VerifyEmailScreen() {
       if (result.success) {
         setVerified(true);
       } else {
-        setError(result.error || "Verification failed");
+        setError(result.error || t.verify.verificationFailed);
       }
     };
 
@@ -47,7 +49,7 @@ export default function VerifyEmailScreen() {
 
   const handleResend = async () => {
     if (!email) {
-      setError("Email is required");
+      setError(t.verify.emailRequired);
       return;
     }
 
@@ -59,7 +61,7 @@ export default function VerifyEmailScreen() {
     if (result.success) {
       setSent(true);
     } else {
-      setError(result.error || "Failed to send verification email");
+      setError(result.error || t.verify.failedToSend);
     }
   };
 
@@ -82,18 +84,18 @@ export default function VerifyEmailScreen() {
                   )}
                 </View>
                 <Text style={styles.title}>
-                  {verified ? "Email Verified!" : "Verification Failed"}
+                  {verified ? t.verify.emailVerified : t.verify.verificationFailed}
                 </Text>
                 <Text style={styles.subtitle}>
                   {verified
-                    ? "Your email has been successfully verified. You can now log in."
-                    : error || "The verification link may have expired."}
+                    ? t.verify.verifiedMessage
+                    : error || t.verify.linkExpired}
                 </Text>
               </>
             )}
 
             <Button
-              title={verified ? "Continue to Login" : "Try Again"}
+              title={verified ? t.verify.continueToLogin : t.verify.tryAgain}
               onPress={() => router.replace("/login")}
               variant={verified ? "purple" : "primary"}
               style={styles.button}
@@ -118,18 +120,18 @@ export default function VerifyEmailScreen() {
             <Mail size={48} color={Colors.black} />
           </View>
 
-          <Text style={styles.title}>Verify Your Email</Text>
+          <Text style={styles.title}>{t.verify.title}</Text>
           <Text style={styles.subtitle}>
             {sent
-              ? `A new verification link has been sent to ${email}`
-              : `We've sent a verification link to ${email}. Check your inbox and click the link to verify.`}
+              ? interpolate(t.verify.sentMessage, { email })
+              : interpolate(t.verify.checkInbox, { email })}
           </Text>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           {!sent && (
             <Button
-              title="Resend Verification Email"
+              title={t.verify.resendEmail}
               onPress={handleResend}
               loading={loading}
               disabled={loading}
@@ -139,7 +141,7 @@ export default function VerifyEmailScreen() {
           )}
 
           <Button
-            title="Back to Login"
+            title={t.verify.backToLogin}
             onPress={() => router.replace("/login")}
             variant="primary"
             style={styles.button}

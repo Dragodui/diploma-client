@@ -18,6 +18,7 @@ import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HomeProvider } from "@/contexts/HomeContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { I18nProvider } from "@/contexts/I18nContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -79,9 +80,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
+      <I18nProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

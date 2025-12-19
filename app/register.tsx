@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import fonts from "@/constants/fonts";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const { register, googleSignIn } = useAuth();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,21 +54,21 @@ export default function RegisterScreen() {
           if (result.success) {
             router.replace("/(tabs)/home");
           } else {
-            setError(result.error || "Google Sign-In failed");
+            setError(result.error || t.auth.googleSignInFailed);
           }
         } else {
-          setError("Failed to get user info from Google");
+          setError(t.auth.failedToGetUserInfo);
         }
       }
       setIsGoogleLoading(false);
     } else if (response?.type === "error") {
-      setError("Google Sign-In was cancelled or failed");
+      setError(t.auth.googleSignInCancelled);
     }
   };
 
   const handleGoogleSignIn = async () => {
     if (!isReady) {
-      setError("Google Sign-In is not ready yet");
+      setError(t.auth.googleSignInNotReady);
       return;
     }
     await promptAsync();
@@ -74,12 +76,12 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      setError("Please fill in all fields");
+      setError(t.auth.fillAllFields);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t.auth.passwordMinLength);
       return;
     }
 
@@ -92,7 +94,7 @@ export default function RegisterScreen() {
     if (result.success) {
       router.push({ pathname: "/verify", params: { email } });
     } else {
-      setError(result.error || "Registration failed");
+      setError(result.error || t.auth.registrationFailed);
     }
   };
 
@@ -108,15 +110,15 @@ export default function RegisterScreen() {
       >
         {/* Header - matches PDF */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Join HŌME</Text>
-          <Text style={[styles.tagline, { color: theme.textSecondary }]}>Smart living starts here.</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t.auth.joinHome}</Text>
+          <Text style={[styles.tagline, { color: theme.textSecondary }]}>{t.auth.joinTagline}</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
           <Input
-            label="FULL NAME"
-            placeholder="Alex Doe"
+            label={t.auth.fullName}
+            placeholder={t.auth.fullNamePlaceholder}
             value={name}
             onChangeText={(text) => {
               setName(text);
@@ -127,8 +129,8 @@ export default function RegisterScreen() {
           />
 
           <Input
-            label="EMAIL"
-            placeholder="hello@gome.app"
+            label={t.auth.email}
+            placeholder={t.auth.emailPlaceholder}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -140,8 +142,8 @@ export default function RegisterScreen() {
           />
 
           <Input
-            label="PASSWORD"
-            placeholder="Create a password"
+            label={t.auth.password}
+            placeholder={t.auth.createPassword}
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -153,7 +155,7 @@ export default function RegisterScreen() {
           />
 
           <Button
-            title="Create Account"
+            title={t.auth.createAccount}
             onPress={handleRegister}
             loading={isLoading}
             disabled={isLoading || isGoogleLoading}
@@ -163,7 +165,7 @@ export default function RegisterScreen() {
 
           <View style={styles.divider}>
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>or</Text>
+            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>{t.common.or}</Text>
             <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
           </View>
 
@@ -174,16 +176,16 @@ export default function RegisterScreen() {
           >
             <Ionicons name="logo-google" size={20} color={theme.text} />
             <Text style={[styles.googleButtonText, { color: theme.text }]}>
-              {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+              {isGoogleLoading ? t.auth.signingIn : t.auth.continueWithGoogle}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.footerText, { color: theme.textSecondary }]}>Already a member? </Text>
+          <Text style={[styles.footerText, { color: theme.textSecondary }]}>{t.auth.alreadyMember} </Text>
           <TouchableOpacity onPress={() => router.replace("/login")}>
-            <Text style={[styles.link, { color: theme.text }]}>Log In</Text>
+            <Text style={[styles.link, { color: theme.text }]}>{t.auth.logIn}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

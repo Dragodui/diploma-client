@@ -2,10 +2,12 @@ import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import { Home, CheckCircle, ShoppingBag, Clock, User, ChartColumn } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n } from "@/contexts/I18nContext";
 import fonts from "@/constants/fonts";
 
 export default function TabLayout() {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <Tabs
@@ -41,7 +43,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t.tabs.home,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <Home size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
@@ -52,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: "Tasks",
+          title: t.tabs.tasks,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <CheckCircle size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
@@ -63,7 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="shopping"
         options={{
-          title: "Shopping",
+          title: t.tabs.shopping,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <ShoppingBag size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
@@ -74,7 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="budget"
         options={{
-          title: "Budget",
+          title: t.tabs.budget,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <Clock size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
@@ -85,7 +87,7 @@ export default function TabLayout() {
        <Tabs.Screen
         name="polls"
         options={{
-          title: "Polls",
+          title: t.tabs.polls,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <ChartColumn size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
@@ -96,7 +98,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t.tabs.profile,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
               <User size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />

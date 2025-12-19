@@ -15,6 +15,7 @@ import { Zap, ArrowRight, Home as HomeIcon, BarChart2, User } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { taskApi, pollApi, billApi } from "@/lib/api";
 import { TaskAssignment, Poll } from "@/lib/types";
 import fonts from "@/constants/fonts";
@@ -26,6 +27,7 @@ export default function HomeScreen() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { home, rooms, isLoading: homeLoading } = useHome();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const [nextAssignment, setNextAssignment] = useState<TaskAssignment | null>(null);
   const [polls, setPolls] = useState<Poll[]>([]);
@@ -35,9 +37,9 @@ export default function HomeScreen() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning,";
-    if (hour < 18) return "Good Afternoon,";
-    return "Good Evening,";
+    if (hour < 12) return t.home.goodMorning;
+    if (hour < 18) return t.home.goodAfternoon;
+    return t.home.goodEvening;
   };
 
   const loadDashboardData = useCallback(async () => {
@@ -109,16 +111,16 @@ export default function HomeScreen() {
         <View style={[styles.emptyIconContainer, { backgroundColor: theme.accent.yellow }]}>
           <HomeIcon size={48} color="#1C1C1E" />
         </View>
-        <Text style={[styles.emptyTitle, { color: theme.text }]}>No Home Yet</Text>
+        <Text style={[styles.emptyTitle, { color: theme.text }]}>{t.home.noHome}</Text>
         <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-          Create or join a home to start managing tasks with your roommates
+          {t.home.noHomeDescription}
         </Text>
         <TouchableOpacity
           style={[styles.emptyButton, { backgroundColor: theme.text }]}
           onPress={() => router.push("/(tabs)/profile")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.emptyButtonText, { color: theme.background }]}>Get Started</Text>
+          <Text style={[styles.emptyButtonText, { color: theme.background }]}>{t.auth.getStarted}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -131,15 +133,15 @@ export default function HomeScreen() {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
     if (date.toDateString() === today.toDateString()) {
-      return `Today, ${timeStr}`;
+      return `${t.common.today}, ${timeStr}`;
     }
     if (date.toDateString() === tomorrow.toDateString()) {
-      return `Tomorrow, ${timeStr}`;
+      return `${t.common.tomorrow}, ${timeStr}`;
     }
-    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
   };
 
   return (
@@ -184,14 +186,14 @@ export default function HomeScreen() {
           style={styles.heroCard}
         >
           <View style={styles.heroHeader}>
-            <Text style={styles.heroLabel}>UP NEXT</Text>
+            <Text style={styles.heroLabel}>{t.home.upNext}</Text>
             <View style={styles.zapContainer}>
               <Zap size={24} color="#1C1C1E" fill="#1C1C1E" />
             </View>
           </View>
           {nextAssignment ? (
             <>
-              <Text style={styles.heroTitle}>{nextAssignment.task?.name || " Current Task"}</Text>
+              <Text style={styles.heroTitle}>{nextAssignment.task?.name || t.home.currentTask}</Text>
               <View style={styles.heroFooter}>
                 <View style={styles.heroBadge}>
                   <Text style={styles.heroBadgeText}>
@@ -203,10 +205,10 @@ export default function HomeScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.heroTitle}>All caught up!</Text>
+              <Text style={styles.heroTitle}>{t.home.allCaughtUp}</Text>
               <View style={styles.heroFooter}>
                 <View style={styles.heroBadge}>
-                  <Text style={styles.heroBadgeText}>No pending tasks</Text>
+                  <Text style={styles.heroBadgeText}>{t.home.noPendingTasks}</Text>
                 </View>
                 <ArrowRight size={24} color="#1C1C1E" />
               </View>
@@ -228,8 +230,8 @@ export default function HomeScreen() {
               <HomeIcon size={22} color={theme.text} />
             </View>
             <View style={styles.gridContent}>
-              <Text style={[styles.gridTitle, { color: theme.text }]}>My{"\n"}Rooms</Text>
-              <Text style={[styles.gridSubtitle, { color: theme.textSecondary }]}>{rooms.length} spaces</Text>
+              <Text style={[styles.gridTitle, { color: theme.text }]}>{t.home.myRooms}</Text>
+              <Text style={[styles.gridSubtitle, { color: theme.textSecondary }]}>{interpolate(t.home.spaces, { count: rooms.length })}</Text>
             </View>
           </Card>
 
@@ -245,8 +247,8 @@ export default function HomeScreen() {
               <BarChart2 size={22} color="#1C1C1E" />
             </View>
             <View style={styles.gridContent}>
-              <Text style={styles.gridTitleDark}>Active{"\n"}Polls</Text>
-              <Text style={styles.gridSubtitleDark}>{polls.length} Pending</Text>
+              <Text style={styles.gridTitleDark}>{t.home.activePolls}</Text>
+              <Text style={styles.gridSubtitleDark}>{interpolate(t.home.pending, { count: polls.length })}</Text>
             </View>
           </Card>
         </View>
@@ -260,7 +262,7 @@ export default function HomeScreen() {
           style={styles.budgetCard}
         >
           <View style={styles.budgetHeader}>
-            <Text style={styles.budgetLabel}>MONTHLY SPEND</Text>
+            <Text style={styles.budgetLabel}>{t.home.monthlySpend}</Text>
             {/* <View style={styles.budgetBadge}>
               <Text style={styles.budgetBadgeText}>+12%</Text>
             </View> */}
@@ -268,7 +270,7 @@ export default function HomeScreen() {
           <Text style={styles.budgetAmount}>${monthlySpend.toFixed(0)}</Text>
           <View style={styles.budgetFooter}>
             <View style={styles.budgetProgress}>
-              <Text style={styles.budgetProgressText}>Total expenses this month</Text>
+              <Text style={styles.budgetProgressText}>{t.home.totalExpenses}</Text>
             </View>
             <ArrowRight size={24} color="#1C1C1E" />
           </View>

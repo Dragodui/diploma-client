@@ -20,6 +20,7 @@ import {
   Sun,
   Moon,
   Copy,
+  Globe,
 } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,6 +35,8 @@ import Button from "@/components/ui/button";
 
 import * as ImagePicker from "expo-image-picker";
 import { imageApi } from "@/lib/api";
+import { useI18n } from "@/contexts/I18nContext";
+import { Language } from "@/lib/i18n";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -41,6 +44,7 @@ export default function ProfileScreen() {
   const { user, logout, updateUser } = useAuth();
   const { home, isAdmin, createHome, joinHome, leaveHome } = useHome();
   const { theme, themeMode, setThemeMode } = useTheme();
+  const { t, language, setLanguage, languageNames, availableLanguages } = useI18n();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -91,10 +95,10 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.auth.logOut, t.auth.logOutConfirm, [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Log Out",
+        text: t.auth.logOut,
         style: "destructive",
         onPress: async () => {
           await logout();
@@ -145,25 +149,25 @@ export default function ProfileScreen() {
   const MENU_ITEMS = [
     {
       icon: HomeIcon,
-      label: "Home Settings",
+      label: t.profile.homeSettings,
       color: theme.accent.yellow,
       onPress: () => router.push("/rooms"),
     },
     {
       icon: Settings,
-      label: "Settings",
+      label: t.profile.settings,
       color: theme.surface,
       onPress: () => { },
     },
     {
       icon: Bell,
-      label: "Notifications",
+      label: t.profile.notifications,
       color: theme.surface,
       onPress: () => { },
     },
     {
       icon: Shield,
-      label: "Security",
+      label: t.profile.security,
       color: theme.accent.pink,
       onPress: () => { },
     },
@@ -208,7 +212,7 @@ export default function ProfileScreen() {
           {home && (
             <View style={[styles.roleBadge, { backgroundColor: theme.surface }]}>
               <Text style={[styles.roleBadgeText, { color: theme.textSecondary }]}>
-                {isAdmin ? "Home Admin" : "Member"}
+                {isAdmin ? t.profile.homeAdmin : t.profile.member}
               </Text>
             </View>
           )}
@@ -219,12 +223,12 @@ export default function ProfileScreen() {
               style={[styles.inviteCodeContainer, { backgroundColor: theme.surface }]}
               onPress={async () => {
                 await Clipboard.setStringAsync(home.invite_code);
-                Alert.alert("Copied!", "Invite code copied to clipboard");
+                Alert.alert(t.common.copied, t.profile.inviteCodeCopied);
               }}
               activeOpacity={0.7}
             >
               <Text style={[styles.inviteCodeLabel, { color: theme.textSecondary }]}>
-                Home Code
+                {t.profile.homeCode}
               </Text>
               <View style={styles.inviteCodeRow}>
                 <Text style={[styles.inviteCodeText, { color: theme.text }]}>
@@ -259,7 +263,7 @@ export default function ProfileScreen() {
 
         {/* Theme Toggle */}
         <View style={styles.themeSection}>
-          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>THEME</Text>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{t.profile.theme}</Text>
           <View style={styles.themeToggle}>
             <TouchableOpacity
               style={[
@@ -276,7 +280,7 @@ export default function ProfileScreen() {
                   { color: themeMode === "light" ? "#1C1C1E" : theme.textSecondary },
                 ]}
               >
-                Light
+                {t.profile.light}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -294,9 +298,38 @@ export default function ProfileScreen() {
                   { color: themeMode === "dark" ? "#1C1C1E" : theme.textSecondary },
                 ]}
               >
-                Dark
+                {t.profile.dark}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Language Selector */}
+        <View style={styles.themeSection}>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+            <Globe size={12} color={theme.textSecondary} /> LANGUAGE
+          </Text>
+          <View style={styles.languageGrid}>
+            {availableLanguages.map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageOption,
+                  { backgroundColor: theme.surface },
+                  language === lang && { backgroundColor: theme.accent.purple },
+                ]}
+                onPress={() => setLanguage(lang)}
+              >
+                <Text
+                  style={[
+                    styles.languageOptionText,
+                    { color: language === lang ? "#1C1C1E" : theme.textSecondary },
+                  ]}
+                >
+                  {languageNames[lang]}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -304,13 +337,13 @@ export default function ProfileScreen() {
         {!home && (
           <View style={styles.homeActions}>
             <Button
-              title="Create Home"
+              title={t.profile.createHome}
               onPress={() => setShowCreateModal(true)}
               variant="yellow"
               style={styles.homeButton}
             />
             <Button
-              title="Join Home"
+              title={t.profile.joinHome}
               onPress={() => setShowJoinModal(true)}
               variant="purple"
               style={styles.homeButton}
@@ -324,7 +357,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t.auth.logOut}</Text>
           <LogOut size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </ScrollView>
@@ -333,18 +366,18 @@ export default function ProfileScreen() {
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Home"
+        title={t.profile.createHome}
         height="full"
       >
         <View style={styles.modalContent}>
           <Input
-            label="Home Name"
-            placeholder="e.g., Our Apartment"
+            label={t.profile.homeName}
+            placeholder={t.profile.homeNamePlaceholder}
             value={homeName}
             onChangeText={setHomeName}
           />
           <Button
-            title="Create Home"
+            title={t.profile.createHome}
             onPress={handleCreateHome}
             loading={isLoading}
             disabled={!homeName.trim() || isLoading}
@@ -355,17 +388,17 @@ export default function ProfileScreen() {
       </Modal>
 
       {/* Join Home Modal */}
-      <Modal visible={showJoinModal} onClose={() => setShowJoinModal(false)} title="Join Home">
+      <Modal visible={showJoinModal} onClose={() => setShowJoinModal(false)} title={t.profile.joinHome}>
         <View style={styles.modalContent}>
           <Input
-            label="Invite Code"
-            placeholder="Enter invite code"
+            label={t.profile.inviteCode}
+            placeholder={t.profile.inviteCodePlaceholder}
             value={inviteCode}
             onChangeText={setInviteCode}
             autoCapitalize="characters"
           />
           <Button
-            title="Join Home"
+            title={t.profile.joinHome}
             onPress={handleJoinHome}
             loading={isLoading}
             disabled={!inviteCode.trim() || isLoading}
@@ -500,6 +533,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   themeOptionText: {
+    fontSize: 14,
+    fontFamily: fonts[600],
+  },
+  languageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  languageOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  languageOptionText: {
     fontSize: 14,
     fontFamily: fonts[600],
   },

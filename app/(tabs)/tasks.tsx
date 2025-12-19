@@ -16,6 +16,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker"; // <--- И
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { taskApi } from "@/lib/api";
 import { Task, TaskAssignment } from "@/lib/types";
 import fonts from "@/constants/fonts";
@@ -31,6 +32,7 @@ export default function TasksScreen() {
   const { user } = useAuth();
   const { home, rooms } = useHome();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   // State
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -98,12 +100,12 @@ export default function TasksScreen() {
     if (!home) return;
 
     Alert.alert(
-      "Delete Task?",
-      "This action cannot be undone.",
+      t.tasks.deleteTask,
+      t.tasks.deleteTaskConfirm,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t.common.cancel, style: "cancel" },
         {
-          text: "Delete",
+          text: t.common.delete,
           style: "destructive",
           onPress: async () => {
             try {
@@ -111,7 +113,7 @@ export default function TasksScreen() {
               await loadTasks();
             } catch (error) {
               console.error(error);
-              Alert.alert("Error", "Failed to delete task.");
+              Alert.alert(t.common.error, t.tasks.failedToDelete);
             }
           },
         },
@@ -136,24 +138,24 @@ export default function TasksScreen() {
           await loadTasks();
         } catch (error) {
           console.error("Error uncompleting task:", error);
-          Alert.alert("Error", "Failed to uncomplete task.");
+          Alert.alert(t.common.error, t.tasks.failedToUncomplete);
         }
       }
     } else {
       Alert.alert(
-        "Complete Task?",
-        "Are you sure you want to mark this task as completed?",
+        t.tasks.completeTask,
+        t.tasks.completeTaskConfirm,
         [
-          { text: "Cancel", style: "cancel" },
+          { text: t.common.cancel, style: "cancel" },
           {
-            text: "Complete",
+            text: t.tasks.complete,
             onPress: async () => {
               try {
                 await taskApi.completeTask(home.id, task.id);
                 await loadTasks();
               } catch (error) {
                 console.error("Error completing task:", error);
-                Alert.alert("Error", "Failed to complete task.");
+                Alert.alert(t.common.error, t.tasks.failedToComplete);
               }
             },
           },
@@ -186,7 +188,7 @@ export default function TasksScreen() {
       await loadTasks();
     } catch (error) {
       console.error("Error creating task:", error);
-      Alert.alert("Error", "Could not create task.");
+      Alert.alert(t.common.error, t.tasks.couldNotCreate);
     } finally {
       setCreating(false);
     }
@@ -214,9 +216,9 @@ export default function TasksScreen() {
 
   const getTaskAssignee = (task: Task) => {
     if (task.assignments && task.assignments.length > 0) {
-      return task.assignments[0].user?.name || "Assigned";
+      return task.assignments[0].user?.name || t.tasks.assigned;
     }
-    return "Unassigned";
+    return t.tasks.unassigned;
   };
 
   const getTaskDueText = (task: Task) => {
@@ -224,7 +226,7 @@ export default function TasksScreen() {
       const date = new Date(task.due_date);
       return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    return "No due date";
+    return t.tasks.noDueDate;
   };
 
   const getTaskCompletedDate = (task: Task) => {
@@ -349,9 +351,9 @@ export default function TasksScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.title, { color: theme.text }]}>Tasks</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t.tasks.title}</Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              {getMyTasksCount()} assigned to you
+              {interpolate(t.tasks.assignedToYou, { count: getMyTasksCount() })}
             </Text>
           </View>
           <TouchableOpacity
@@ -365,25 +367,29 @@ export default function TasksScreen() {
 
         {/* Filter Tabs */}
         <View style={styles.filterContainer}>
-          {(["All", "My", "By Room"] as FilterType[]).map((filter) => (
+          {([
+            { key: "All" as FilterType, label: t.tasks.filters.all },
+            { key: "My" as FilterType, label: t.tasks.filters.my },
+            { key: "By Room" as FilterType, label: t.tasks.filters.byRoom },
+          ]).map((filter) => (
             <TouchableOpacity
-              key={filter}
+              key={filter.key}
               style={[
                 styles.filterButton,
                 { backgroundColor: theme.surface, borderColor: theme.border },
-                activeFilter === filter && styles.filterButtonActive,
+                activeFilter === filter.key && styles.filterButtonActive,
               ]}
-              onPress={() => setActiveFilter(filter)}
+              onPress={() => setActiveFilter(filter.key)}
               activeOpacity={0.8}
             >
               <Text
                 style={[
                   styles.filterText,
                   { color: theme.textSecondary },
-                  activeFilter === filter && styles.filterTextActive,
+                  activeFilter === filter.key && styles.filterTextActive,
                 ]}
               >
-                {filter}
+                {filter.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -392,9 +398,9 @@ export default function TasksScreen() {
         {/* Tasks List */}
         {tasks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No tasks yet</Text>
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>{t.tasks.noTasks}</Text>
             <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
-              Tap the + button to create your first task
+              {t.tasks.noTasksHint}
             </Text>
           </View>
         ) : (
@@ -408,20 +414,20 @@ export default function TasksScreen() {
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="New Task"
+        title={t.tasks.newTask}
         height="full"
       >
         <View style={styles.modalContent}>
           <Input
-            label="Task Name"
-            placeholder="e.g., Clean Kitchen"
+            label={t.tasks.taskName}
+            placeholder={t.tasks.taskNamePlaceholder}
             value={newTaskName}
             onChangeText={setNewTaskName}
           />
 
           <Input
-            label="Description (Optional)"
-            placeholder="Add details..."
+            label={t.tasks.description}
+            placeholder={t.tasks.descriptionPlaceholder}
             value={newTaskDescription}
             onChangeText={setNewTaskDescription}
             multiline
@@ -429,12 +435,12 @@ export default function TasksScreen() {
           />
 
           {/* --- НОВЫЙ КОМПОНЕНТ ДАТЫ --- */}
-          <View style={{ marginBottom: 24 }}> 
+          <View style={{ marginBottom: 24 }}>
             <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>
-              Due Date
+              {t.tasks.dueDate}
             </Text>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={showDatePicker}
               style={{
                 backgroundColor: theme.surface,
@@ -446,14 +452,14 @@ export default function TasksScreen() {
                 justifyContent: 'center'
               }}
             >
-              <Text style={{ 
+              <Text style={{
                 color: selectedDate ? theme.text : theme.textSecondary,
                 fontSize: 16,
                 fontFamily: fonts[600]
               }}>
-                {selectedDate 
-                  ? selectedDate.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) 
-                  : "Select Date & Time"}
+                {selectedDate
+                  ? selectedDate.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'})
+                  : t.tasks.selectDateTime}
               </Text>
             </TouchableOpacity>
 
@@ -470,7 +476,7 @@ export default function TasksScreen() {
 
           {rooms.length > 0 && (
             <View style={styles.roomPicker}>
-              <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>Room (Optional)</Text>
+              <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>{t.tasks.room}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.roomOptions}>
                   <TouchableOpacity
@@ -488,7 +494,7 @@ export default function TasksScreen() {
                         !selectedRoomId && { color: theme.background },
                       ]}
                     >
-                      None
+                      {t.common.none}
                     </Text>
                   </TouchableOpacity>
                   {rooms.map((room) => (
@@ -518,7 +524,7 @@ export default function TasksScreen() {
           )}
 
           <Button
-            title="Create Task"
+            title={t.tasks.createTask}
             onPress={handleCreateTask}
             loading={creating}
             disabled={!newTaskName.trim() || creating}
