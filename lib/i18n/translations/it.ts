@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Aggiungi almeno 2 opzioni",
     failedToCreate: "Impossibile creare il sondaggio",
     failedToVote: "Voto fallito",
+    pollType: "TIPO DI SONDAGGIO",
+    public: "Pubblico",
+    anonymous: "Anonimo",
+  },
+
+  // Settings
+  settings: {
+    appearance: "ASPETTO",
+    language: "LINGUA",
+    selectLanguage: "Seleziona lingua",
+    homeSettings: "IMPOSTAZIONI CASA",
+    homeName: "Nome casa",
+    yourRole: "Il tuo ruolo",
+    deleteHome: "Elimina casa",
+    leaveHome: "Lascia casa",
+    deleteHomeConfirmTitle: "Eliminare la casa?",
+    leaveHomeConfirmTitle: "Lasciare la casa?",
+    deleteHomeConfirmText: "Questa azione non può essere annullata. Tutti i dati verranno eliminati definitivamente.",
+    leaveHomeConfirmText: "Non avrai più accesso a questa casa.",
+    leave: "Lascia",
+    leaveHomeFailed: "Impossibile lasciare la casa",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Nessuna notifica",
+    noNotificationsText: "Sei aggiornato!",
+    justNow: "Adesso",
+    minutesAgo: "min fa",
+    hoursAgo: "ore fa",
+    daysAgo: "giorni fa",
+  },
+
+  // Security
+  security: {
+    account: "ACCOUNT",
+    email: "Email",
+    verified: "Verificato",
+    unverified: "Non verificato",
+    password: "PASSWORD",
+    changePassword: "Cambia password",
+    lastChanged: "Aggiorna regolarmente la password per la sicurezza",
+    tips: "SUGGERIMENTI DI SICUREZZA",
+    tip1: "Usa una password forte e unica",
+    tip2: "Non condividere mai la tua password con altri",
+    tip3: "Abilita la verifica email per maggiore sicurezza",
+    currentPassword: "Password attuale",
+    newPassword: "Nuova password",
+    confirmPassword: "Conferma password",
+    fillAllFields: "Compila tutti i campi",
+    passwordsMismatch: "Le password non corrispondono",
+    passwordTooShort: "La password deve avere almeno 6 caratteri",
+    passwordChanged: "Password cambiata con successo",
+    passwordChangeFailed: "Cambio password fallito",
   },
 
   // Profile

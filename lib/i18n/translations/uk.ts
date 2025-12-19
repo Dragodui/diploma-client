@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Додайте як мінімум 2 варіанти",
     failedToCreate: "Не вдалося створити опитування",
     failedToVote: "Не вдалося віддати голос",
+    pollType: "ТИП ОПИТУВАННЯ",
+    public: "Публічне",
+    anonymous: "Анонімне",
+  },
+
+  // Settings
+  settings: {
+    appearance: "ВИГЛЯД",
+    language: "МОВА",
+    selectLanguage: "Виберіть мову",
+    homeSettings: "НАЛАШТУВАННЯ ДОМУ",
+    homeName: "Назва дому",
+    yourRole: "Ваша роль",
+    deleteHome: "Видалити дім",
+    leaveHome: "Покинути дім",
+    deleteHomeConfirmTitle: "Видалити дім?",
+    leaveHomeConfirmTitle: "Покинути дім?",
+    deleteHomeConfirmText: "Цю дію неможливо скасувати. Всі дані будуть безповоротно видалені.",
+    leaveHomeConfirmText: "Ви більше не матимете доступу до цього дому.",
+    leave: "Покинути",
+    leaveHomeFailed: "Не вдалося покинути дім",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Немає сповіщень",
+    noNotificationsText: "Ви все переглянули!",
+    justNow: "Щойно",
+    minutesAgo: "хв тому",
+    hoursAgo: "год тому",
+    daysAgo: "д тому",
+  },
+
+  // Security
+  security: {
+    account: "АКАУНТ",
+    email: "Електронна пошта",
+    verified: "Підтверджено",
+    unverified: "Не підтверджено",
+    password: "ПАРОЛЬ",
+    changePassword: "Змінити пароль",
+    lastChanged: "Регулярно оновлюйте пароль для безпеки",
+    tips: "ПОРАДИ ЩОДО БЕЗПЕКИ",
+    tip1: "Використовуйте надійний унікальний пароль",
+    tip2: "Ніколи не діліться паролем з іншими",
+    tip3: "Увімкніть підтвердження електронної пошти для додаткової безпеки",
+    currentPassword: "Поточний пароль",
+    newPassword: "Новий пароль",
+    confirmPassword: "Підтвердіть пароль",
+    fillAllFields: "Заповніть усі поля",
+    passwordsMismatch: "Паролі не збігаються",
+    passwordTooShort: "Пароль повинен містити мінімум 6 символів",
+    passwordChanged: "Пароль успішно змінено",
+    passwordChangeFailed: "Не вдалося змінити пароль",
   },
 
   // Profile

@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Dodaj co najmniej 2 opcje",
     failedToCreate: "Nie udało się utworzyć ankiety",
     failedToVote: "Nie udało się oddać głosu",
+    pollType: "TYP ANKIETY",
+    public: "Publiczna",
+    anonymous: "Anonimowa",
+  },
+
+  // Settings
+  settings: {
+    appearance: "WYGLĄD",
+    language: "JĘZYK",
+    selectLanguage: "Wybierz język",
+    homeSettings: "USTAWIENIA DOMU",
+    homeName: "Nazwa domu",
+    yourRole: "Twoja rola",
+    deleteHome: "Usuń dom",
+    leaveHome: "Opuść dom",
+    deleteHomeConfirmTitle: "Usunąć dom?",
+    leaveHomeConfirmTitle: "Opuścić dom?",
+    deleteHomeConfirmText: "Ta akcja jest nieodwracalna. Wszystkie dane zostaną trwale usunięte.",
+    leaveHomeConfirmText: "Nie będziesz mieć już dostępu do tego domu.",
+    leave: "Opuść",
+    leaveHomeFailed: "Nie udało się opuścić domu",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Brak powiadomień",
+    noNotificationsText: "Wszystko przeczytane!",
+    justNow: "Przed chwilą",
+    minutesAgo: "min temu",
+    hoursAgo: "godz. temu",
+    daysAgo: "dni temu",
+  },
+
+  // Security
+  security: {
+    account: "KONTO",
+    email: "Email",
+    verified: "Zweryfikowany",
+    unverified: "Niezweryfikowany",
+    password: "HASŁO",
+    changePassword: "Zmień hasło",
+    lastChanged: "Regularnie aktualizuj hasło dla bezpieczeństwa",
+    tips: "WSKAZÓWKI BEZPIECZEŃSTWA",
+    tip1: "Używaj silnego, unikalnego hasła",
+    tip2: "Nigdy nie udostępniaj swojego hasła innym",
+    tip3: "Włącz weryfikację email dla dodatkowego bezpieczeństwa",
+    currentPassword: "Aktualne hasło",
+    newPassword: "Nowe hasło",
+    confirmPassword: "Potwierdź hasło",
+    fillAllFields: "Wypełnij wszystkie pola",
+    passwordsMismatch: "Hasła nie są zgodne",
+    passwordTooShort: "Hasło musi mieć co najmniej 6 znaków",
+    passwordChanged: "Hasło zostało zmienione",
+    passwordChangeFailed: "Nie udało się zmienić hasła",
   },
 
   // Profile

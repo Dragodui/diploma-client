@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Veuillez ajouter au moins 2 options",
     failedToCreate: "Impossible de créer le sondage",
     failedToVote: "Échec du vote",
+    pollType: "TYPE DE SONDAGE",
+    public: "Public",
+    anonymous: "Anonyme",
+  },
+
+  // Settings
+  settings: {
+    appearance: "APPARENCE",
+    language: "LANGUE",
+    selectLanguage: "Sélectionner la langue",
+    homeSettings: "PARAMÈTRES DU FOYER",
+    homeName: "Nom du foyer",
+    yourRole: "Votre rôle",
+    deleteHome: "Supprimer le foyer",
+    leaveHome: "Quitter le foyer",
+    deleteHomeConfirmTitle: "Supprimer le foyer ?",
+    leaveHomeConfirmTitle: "Quitter le foyer ?",
+    deleteHomeConfirmText: "Cette action ne peut pas être annulée. Toutes les données seront définitivement supprimées.",
+    leaveHomeConfirmText: "Vous n'aurez plus accès à ce foyer.",
+    leave: "Quitter",
+    leaveHomeFailed: "Impossible de quitter le foyer",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Aucune notification",
+    noNotificationsText: "Vous êtes à jour !",
+    justNow: "À l'instant",
+    minutesAgo: "min",
+    hoursAgo: "h",
+    daysAgo: "j",
+  },
+
+  // Security
+  security: {
+    account: "COMPTE",
+    email: "E-mail",
+    verified: "Vérifié",
+    unverified: "Non vérifié",
+    password: "MOT DE PASSE",
+    changePassword: "Changer le mot de passe",
+    lastChanged: "Mettez à jour votre mot de passe régulièrement pour plus de sécurité",
+    tips: "CONSEILS DE SÉCURITÉ",
+    tip1: "Utilisez un mot de passe fort et unique",
+    tip2: "Ne partagez jamais votre mot de passe avec d'autres",
+    tip3: "Activez la vérification par e-mail pour plus de sécurité",
+    currentPassword: "Mot de passe actuel",
+    newPassword: "Nouveau mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    fillAllFields: "Veuillez remplir tous les champs",
+    passwordsMismatch: "Les mots de passe ne correspondent pas",
+    passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
+    passwordChanged: "Mot de passe changé avec succès",
+    passwordChangeFailed: "Échec du changement de mot de passe",
   },
 
   // Profile

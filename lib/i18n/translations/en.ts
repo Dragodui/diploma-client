@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Please add at least 2 options",
     failedToCreate: "Failed to create poll",
     failedToVote: "Failed to submit vote",
+    pollType: "POLL TYPE",
+    public: "Public",
+    anonymous: "Anonymous",
+  },
+
+  // Settings
+  settings: {
+    appearance: "APPEARANCE",
+    language: "LANGUAGE",
+    selectLanguage: "Select Language",
+    homeSettings: "HOME SETTINGS",
+    homeName: "Home Name",
+    yourRole: "Your Role",
+    deleteHome: "Delete Home",
+    leaveHome: "Leave Home",
+    deleteHomeConfirmTitle: "Delete Home?",
+    leaveHomeConfirmTitle: "Leave Home?",
+    deleteHomeConfirmText: "This action cannot be undone. All data will be permanently deleted.",
+    leaveHomeConfirmText: "You will no longer have access to this home.",
+    leave: "Leave",
+    leaveHomeFailed: "Failed to leave home",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "No notifications",
+    noNotificationsText: "You're all caught up!",
+    justNow: "Just now",
+    minutesAgo: "min ago",
+    hoursAgo: "h ago",
+    daysAgo: "d ago",
+  },
+
+  // Security
+  security: {
+    account: "ACCOUNT",
+    email: "Email",
+    verified: "Verified",
+    unverified: "Unverified",
+    password: "PASSWORD",
+    changePassword: "Change Password",
+    lastChanged: "Update your password regularly for security",
+    tips: "SECURITY TIPS",
+    tip1: "Use a strong, unique password",
+    tip2: "Never share your password with others",
+    tip3: "Enable email verification for extra security",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm Password",
+    fillAllFields: "Please fill all fields",
+    passwordsMismatch: "Passwords don't match",
+    passwordTooShort: "Password must be at least 6 characters",
+    passwordChanged: "Password changed successfully",
+    passwordChangeFailed: "Failed to change password",
   },
 
   // Profile

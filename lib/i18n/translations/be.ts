@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Дадайце як мінімум 2 варыянты",
     failedToCreate: "Не атрымалася стварыць апытанне",
     failedToVote: "Не атрымалася аддаць голас",
+    pollType: "ТЫП АПЫТАННЯ",
+    public: "Публічнае",
+    anonymous: "Ананімнае",
+  },
+
+  // Settings
+  settings: {
+    appearance: "ВЫГЛЯД",
+    language: "МОВА",
+    selectLanguage: "Абярыце мову",
+    homeSettings: "НАЛАДЫ ДОМА",
+    homeName: "Назва дома",
+    yourRole: "Ваша роля",
+    deleteHome: "Выдаліць дом",
+    leaveHome: "Пакінуць дом",
+    deleteHomeConfirmTitle: "Выдаліць дом?",
+    leaveHomeConfirmTitle: "Пакінуць дом?",
+    deleteHomeConfirmText: "Гэта дзеянне нельга адмяніць. Усе дадзеныя будуць незваротна выдалены.",
+    leaveHomeConfirmText: "Вы больш не будзеце мець доступ да гэтага дома.",
+    leave: "Пакінуць",
+    leaveHomeFailed: "Не атрымалася пакінуць дом",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Няма апавяшчэнняў",
+    noNotificationsText: "Вы ўсё прагледзелі!",
+    justNow: "Толькі што",
+    minutesAgo: "хв таму",
+    hoursAgo: "гадз таму",
+    daysAgo: "дзён таму",
+  },
+
+  // Security
+  security: {
+    account: "АКАЎНТ",
+    email: "Электронная пошта",
+    verified: "Пацверджана",
+    unverified: "Не пацверджана",
+    password: "ПАРОЛЬ",
+    changePassword: "Змяніць пароль",
+    lastChanged: "Рэгулярна абнаўляйце пароль для бяспекі",
+    tips: "ПАРАДЫ ПА БЯСПЕЦЫ",
+    tip1: "Выкарыстоўвайце надзейны ўнікальны пароль",
+    tip2: "Ніколі не дзяліцеся паролем з іншымі",
+    tip3: "Уключыце пацверджанне электроннай пошты для дадатковай бяспекі",
+    currentPassword: "Бягучы пароль",
+    newPassword: "Новы пароль",
+    confirmPassword: "Пацвердзіце пароль",
+    fillAllFields: "Запоўніце ўсе палі",
+    passwordsMismatch: "Паролі не супадаюць",
+    passwordTooShort: "Пароль павінен мець мінімум 6 сімвалаў",
+    passwordChanged: "Пароль паспяхова зменены",
+    passwordChangeFailed: "Не атрымалася змяніць пароль",
   },
 
   // Profile

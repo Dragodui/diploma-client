@@ -199,6 +199,60 @@ export default {
     addAtLeastTwoOptions: "Bitte mindestens 2 Optionen hinzufügen",
     failedToCreate: "Umfrage konnte nicht erstellt werden",
     failedToVote: "Abstimmung fehlgeschlagen",
+    pollType: "UMFRAGETYP",
+    public: "Öffentlich",
+    anonymous: "Anonym",
+  },
+
+  // Settings
+  settings: {
+    appearance: "ERSCHEINUNG",
+    language: "SPRACHE",
+    selectLanguage: "Sprache auswählen",
+    homeSettings: "HEIM-EINSTELLUNGEN",
+    homeName: "Heim-Name",
+    yourRole: "Ihre Rolle",
+    deleteHome: "Heim löschen",
+    leaveHome: "Heim verlassen",
+    deleteHomeConfirmTitle: "Heim löschen?",
+    leaveHomeConfirmTitle: "Heim verlassen?",
+    deleteHomeConfirmText: "Diese Aktion kann nicht rückgängig gemacht werden. Alle Daten werden dauerhaft gelöscht.",
+    leaveHomeConfirmText: "Sie haben keinen Zugriff mehr auf dieses Heim.",
+    leave: "Verlassen",
+    leaveHomeFailed: "Heim verlassen fehlgeschlagen",
+  },
+
+  // Notifications
+  notifications: {
+    noNotifications: "Keine Benachrichtigungen",
+    noNotificationsText: "Sie sind auf dem neuesten Stand!",
+    justNow: "Gerade eben",
+    minutesAgo: "Min. her",
+    hoursAgo: "Std. her",
+    daysAgo: "Tage her",
+  },
+
+  // Security
+  security: {
+    account: "KONTO",
+    email: "E-Mail",
+    verified: "Verifiziert",
+    unverified: "Nicht verifiziert",
+    password: "PASSWORT",
+    changePassword: "Passwort ändern",
+    lastChanged: "Aktualisieren Sie Ihr Passwort regelmäßig für mehr Sicherheit",
+    tips: "SICHERHEITSTIPPS",
+    tip1: "Verwenden Sie ein starkes, einzigartiges Passwort",
+    tip2: "Teilen Sie Ihr Passwort niemals mit anderen",
+    tip3: "Aktivieren Sie die E-Mail-Verifizierung für zusätzliche Sicherheit",
+    currentPassword: "Aktuelles Passwort",
+    newPassword: "Neues Passwort",
+    confirmPassword: "Passwort bestätigen",
+    fillAllFields: "Bitte alle Felder ausfüllen",
+    passwordsMismatch: "Passwörter stimmen nicht überein",
+    passwordTooShort: "Passwort muss mindestens 6 Zeichen haben",
+    passwordChanged: "Passwort erfolgreich geändert",
+    passwordChangeFailed: "Passwort ändern fehlgeschlagen",
   },
 
   // Profile
