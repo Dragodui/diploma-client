@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Veuillez ajouter au moins 2 options",
     failedToCreate: "Impossible de créer le sondage",
     failedToVote: "Échec du vote",
+    failedToUnvote: "Impossible de retirer le vote",
     pollType: "TYPE DE SONDAGE",
     public: "Public",
     anonymous: "Anonyme",
+    settings: "PARAMÈTRES",
+    allowRevote: "Autoriser le changement de vote",
+    endDate: "DATE DE FIN",
+    setEndDate: "Définir la date de fin",
+    noEndDate: "Sans limite",
+    ended: "Terminé",
+    removeVote: "Retirer le vote",
   },
 
   // Settings

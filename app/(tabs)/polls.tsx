@@ -8,10 +8,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Switch,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Plus, Check, Users, X, Eye, EyeOff } from "lucide-react-native";
+import { Plus, Check, Users, X, Eye, EyeOff, Calendar, RotateCcw } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -40,6 +43,11 @@ export default function PollsScreen() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollType, setPollType] = useState<"public" | "anonymous">("public");
+  const [allowRevote, setAllowRevote] = useState(false);
+  const [hasEndDate, setHasEndDate] = useState(false);
+  const [endsAt, setEndsAt] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Default: tomorrow
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [creating, setCreating] = useState(false);
 
   const loadPolls = useCallback(async () => {
@@ -83,11 +91,16 @@ export default function PollsScreen() {
         question: pollQuestion.trim(),
         type: pollType,
         options: validOptions.map((opt) => ({ title: opt.trim() })),
+        allow_revote: allowRevote,
+        ends_at: hasEndDate ? endsAt.toISOString() : undefined,
       });
 
       setPollQuestion("");
       setPollOptions(["", ""]);
       setPollType("public");
+      setAllowRevote(false);
+      setHasEndDate(false);
+      setEndsAt(new Date(Date.now() + 24 * 60 * 60 * 1000));
       setShowCreateModal(false);
       await loadPolls();
     } catch (error) {
@@ -95,6 +108,18 @@ export default function PollsScreen() {
       Alert.alert(t.common.error, t.polls.failedToCreate);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleUnvote = async (pollId: number) => {
+    if (!home) return;
+
+    try {
+      await pollApi.unvote(home.id, pollId);
+      await loadPolls();
+    } catch (error: any) {
+      console.error("Error removing vote:", error);
+      Alert.alert(t.common.error, t.polls.failedToUnvote || "Failed to remove vote");
     }
   };
 
@@ -144,9 +169,40 @@ export default function PollsScreen() {
     return null;
   };
 
-  const getTimeRemaining = () => {
-    // Demo - in real app, calculate from poll data
-    return "Closing in 2h";
+  const getTimeRemaining = (poll: Poll) => {
+    if (!poll.ends_at) {
+      return t.polls.noEndDate || "No end date";
+    }
+
+    const now = new Date();
+    const endDate = new Date(poll.ends_at);
+    const diff = endDate.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      return t.polls.ended || "Ended";
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
+  const formatDateTime = (date: Date) => {
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (isLoading) {
@@ -188,12 +244,17 @@ export default function PollsScreen() {
                 {/* Poll Header */}
                 <View style={styles.pollHeader}>
                   <View style={styles.pollBadge}>
-                    <Text style={styles.pollBadgeText}>{getTimeRemaining()}</Text>
+                    <Text style={styles.pollBadgeText}>{getTimeRemaining(poll)}</Text>
                   </View>
-                  <View style={styles.pollUsers}>
-                    <Users size={16} color="#1C1C1E" />
-                    <Users size={16} color="#1C1C1E" style={{ marginLeft: -8 }} />
-                    <Users size={16} color="#1C1C1E" style={{ marginLeft: -8 }} />
+                  <View style={styles.pollHeaderRight}>
+                    {poll.allow_revote && (
+                      <View style={styles.revoteBadge}>
+                        <RotateCcw size={12} color="#1C1C1E" />
+                      </View>
+                    )}
+                    <View style={styles.pollUsers}>
+                      <Users size={16} color="#1C1C1E" />
+                    </View>
                   </View>
                 </View>
 
@@ -240,6 +301,20 @@ export default function PollsScreen() {
                     );
                   })}
                 </View>
+
+                {/* Unvote button */}
+                {voted && poll.allow_revote && (
+                  <TouchableOpacity
+                    style={styles.unvoteButton}
+                    onPress={() => handleUnvote(poll.id)}
+                    activeOpacity={0.8}
+                  >
+                    <RotateCcw size={16} color="#1C1C1E" />
+                    <Text style={styles.unvoteButtonText}>
+                      {t.polls.removeVote || "Remove Vote"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             );
           })
@@ -353,6 +428,113 @@ export default function PollsScreen() {
                 </TouchableOpacity>
               )}
             </View>
+
+            {/* Allow Revote Toggle */}
+            <View style={styles.settingSection}>
+              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+                {t.polls.settings || "SETTINGS"}
+              </Text>
+              <View style={[styles.settingRow, { backgroundColor: theme.surfaceLight }]}>
+                <View style={styles.settingInfo}>
+                  <RotateCcw size={20} color={theme.text} />
+                  <Text style={[styles.settingText, { color: theme.text }]}>
+                    {t.polls.allowRevote || "Allow Revote"}
+                  </Text>
+                </View>
+                <Switch
+                  value={allowRevote}
+                  onValueChange={setAllowRevote}
+                  trackColor={{ false: theme.border, true: theme.accent.purple }}
+                  thumbColor={theme.isDark ? "#FFFFFF" : "#FFFFFF"}
+                />
+              </View>
+            </View>
+
+            {/* End Date Toggle and Picker */}
+            <View style={styles.settingSection}>
+              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+                {t.polls.endDate || "END DATE"}
+              </Text>
+              <View style={[styles.settingRow, { backgroundColor: theme.surfaceLight }]}>
+                <View style={styles.settingInfo}>
+                  <Calendar size={20} color={theme.text} />
+                  <Text style={[styles.settingText, { color: theme.text }]}>
+                    {t.polls.setEndDate || "Set End Date"}
+                  </Text>
+                </View>
+                <Switch
+                  value={hasEndDate}
+                  onValueChange={setHasEndDate}
+                  trackColor={{ false: theme.border, true: theme.accent.purple }}
+                  thumbColor={theme.isDark ? "#FFFFFF" : "#FFFFFF"}
+                />
+              </View>
+
+              {hasEndDate && (
+                <TouchableOpacity
+                  style={[styles.datePickerButton, { backgroundColor: theme.surfaceLight }]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={[styles.datePickerText, { color: theme.text }]}>
+                    {formatDateTime(endsAt)}
+                  </Text>
+                  <Calendar size={18} color={theme.textSecondary} />
+                </TouchableOpacity>
+              )}
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={endsAt}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  minimumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(Platform.OS === "ios");
+                    if (selectedDate) {
+                      setEndsAt(selectedDate);
+                      if (Platform.OS !== "ios") {
+                        setShowTimePicker(true);
+                      }
+                    }
+                  }}
+                />
+              )}
+
+              {showTimePicker && Platform.OS !== "ios" && (
+                <DateTimePicker
+                  value={endsAt}
+                  mode="time"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowTimePicker(false);
+                    if (selectedDate) {
+                      setEndsAt(selectedDate);
+                    }
+                  }}
+                />
+              )}
+
+              {showDatePicker && Platform.OS === "ios" && (
+                <View style={styles.iosPickerContainer}>
+                  <DateTimePicker
+                    value={endsAt}
+                    mode="datetime"
+                    display="spinner"
+                    minimumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) {
+                        setEndsAt(selectedDate);
+                      }
+                    }}
+                  />
+                  <Button
+                    title={t.common.done}
+                    onPress={() => setShowDatePicker(false)}
+                    variant="purple"
+                  />
+                </View>
+              )}
+            </View>
           </View>
         </ScrollView>
 
@@ -430,6 +612,31 @@ const styles = StyleSheet.create({
   pollUsers: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  pollHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  revoteBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    padding: 6,
+    borderRadius: 8,
+  },
+  unvoteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    borderRadius: 12,
+  },
+  unvoteButtonText: {
+    fontSize: 14,
+    fontFamily: fonts[600],
+    color: "#1C1C1E",
   },
   pollQuestion: {
     fontSize: 22,
@@ -556,6 +763,44 @@ const styles = StyleSheet.create({
   addOptionText: {
     fontSize: 14,
     fontFamily: fonts[700],
+  },
+  settingSection: {
+    marginTop: 16,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  settingInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  settingText: {
+    fontSize: 15,
+    fontFamily: fonts[500],
+  },
+  datePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  datePickerText: {
+    fontSize: 15,
+    fontFamily: fonts[500],
+  },
+  iosPickerContainer: {
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 12,
   },
   modalFooter: {
     paddingTop: 16,

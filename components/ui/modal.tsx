@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import fonts from "@/constants/fonts";
 
 interface ModalProps {
@@ -25,6 +25,7 @@ interface ModalProps {
 
 const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "auto" }) => {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   const getHeightStyle = () => {
     if (height === "full") {
@@ -39,18 +40,18 @@ const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "au
   return (
     <RNModal visible={visible} animationType="slide" transparent statusBarTranslucent>
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.backdrop} />
+        <View style={[styles.backdrop, { backgroundColor: theme.isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.5)" }]} />
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
-        <View style={[styles.container, getHeightStyle(), { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.container, getHeightStyle(), { paddingBottom: insets.bottom + 16, backgroundColor: theme.surface }]}>
           <View style={styles.header}>
-            {title && <Text style={styles.title}>{title}</Text>}
-            <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
-              <X size={24} color={Colors.white} />
+            {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
+            <TouchableOpacity style={[styles.closeButton, { backgroundColor: theme.background }]} onPress={onClose} activeOpacity={0.7}>
+              <X size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
@@ -71,14 +72,12 @@ const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "au
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
   },
   keyboardView: {
     flex: 1,
     justifyContent: "flex-end",
   },
   container: {
-    backgroundColor: Colors.secondaryDark,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     paddingTop: 32,
@@ -93,13 +92,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts[700],
-    color: Colors.white,
   },
   closeButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.primaryDark,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Bitte mindestens 2 Optionen hinzufügen",
     failedToCreate: "Umfrage konnte nicht erstellt werden",
     failedToVote: "Abstimmung fehlgeschlagen",
+    failedToUnvote: "Stimme konnte nicht entfernt werden",
     pollType: "UMFRAGETYP",
     public: "Öffentlich",
     anonymous: "Anonym",
+    settings: "EINSTELLUNGEN",
+    allowRevote: "Erneutes Abstimmen erlauben",
+    endDate: "ENDDATUM",
+    setEndDate: "Enddatum festlegen",
+    noEndDate: "Kein Enddatum",
+    ended: "Beendet",
+    removeVote: "Stimme entfernen",
   },
 
   // Settings

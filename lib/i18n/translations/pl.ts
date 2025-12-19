@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Dodaj co najmniej 2 opcje",
     failedToCreate: "Nie udało się utworzyć ankiety",
     failedToVote: "Nie udało się oddać głosu",
+    failedToUnvote: "Nie udało się cofnąć głosu",
     pollType: "TYP ANKIETY",
     public: "Publiczna",
     anonymous: "Anonimowa",
+    settings: "USTAWIENIA",
+    allowRevote: "Zezwól na zmianę głosu",
+    endDate: "DATA ZAKOŃCZENIA",
+    setEndDate: "Ustaw datę zakończenia",
+    noEndDate: "Bez ograniczenia",
+    ended: "Zakończona",
+    removeVote: "Cofnij głos",
   },
 
   // Settings

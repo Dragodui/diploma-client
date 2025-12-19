@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Дадайце як мінімум 2 варыянты",
     failedToCreate: "Не атрымалася стварыць апытанне",
     failedToVote: "Не атрымалася аддаць голас",
+    failedToUnvote: "Не атрымалася скасаваць голас",
     pollType: "ТЫП АПЫТАННЯ",
     public: "Публічнае",
     anonymous: "Ананімнае",
+    settings: "НАЛАДЫ",
+    allowRevote: "Дазволіць перагаласаванне",
+    endDate: "ДАТА ЗАКАНЧЭННЯ",
+    setEndDate: "Усталяваць дату заканчэння",
+    noEndDate: "Без абмежавання",
+    ended: "Скончана",
+    removeVote: "Скасаваць голас",
   },
 
   // Settings

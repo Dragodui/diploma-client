@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Please add at least 2 options",
     failedToCreate: "Failed to create poll",
     failedToVote: "Failed to submit vote",
+    failedToUnvote: "Failed to remove vote",
     pollType: "POLL TYPE",
     public: "Public",
     anonymous: "Anonymous",
+    settings: "SETTINGS",
+    allowRevote: "Allow Revote",
+    endDate: "END DATE",
+    setEndDate: "Set End Date",
+    noEndDate: "No end date",
+    ended: "Ended",
+    removeVote: "Remove Vote",
   },
 
   // Settings

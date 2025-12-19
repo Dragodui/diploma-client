@@ -120,6 +120,8 @@ export interface Poll {
   question: string;
   type: "public" | "anonymous";
   status: "open" | "closed";
+  allow_revote: boolean;
+  ends_at?: string;
   created_at: string;
   options?: PollOption[];
 }
@@ -214,6 +216,8 @@ export interface CreatePollForm {
   question: string;
   type: "public" | "anonymous";
   options: { title: string }[];
+  allow_revote: boolean;
+  ends_at?: string;
 }
 
 export interface CreateCategoryForm {

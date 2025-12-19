@@ -415,6 +415,11 @@ export const pollApi = {
     });
     return { message: response.data.message };
   },
+
+  unvote: async (homeId: number, pollId: number): Promise<{ message: string }> => {
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/polls/${pollId}/vote`);
+    return { message: response.data.message };
+  },
 };
 
 // ============ Notification API ============

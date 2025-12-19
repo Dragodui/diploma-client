@@ -199,9 +199,17 @@ export default {
     addAtLeastTwoOptions: "Додайте як мінімум 2 варіанти",
     failedToCreate: "Не вдалося створити опитування",
     failedToVote: "Не вдалося віддати голос",
+    failedToUnvote: "Не вдалося скасувати голос",
     pollType: "ТИП ОПИТУВАННЯ",
     public: "Публічне",
     anonymous: "Анонімне",
+    settings: "НАЛАШТУВАННЯ",
+    allowRevote: "Дозволити перегосування",
+    endDate: "ДАТА ЗАВЕРШЕННЯ",
+    setEndDate: "Встановити дату завершення",
+    noEndDate: "Без обмеження",
+    ended: "Завершено",
+    removeVote: "Скасувати голос",
   },
 
   // Settings
