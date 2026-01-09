@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -21,7 +20,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { pollApi } from "@/lib/api";
 import { Poll, PollOption } from "@/lib/types";
-import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -207,29 +205,36 @@ export default function PollsScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: insets.top + 24 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
         }
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={[styles.title, { color: theme.text }]}>{t.polls.title}</Text>
+        <Text
+          className="text-4xl font-manrope-bold mb-6"
+          style={{ color: theme.text }}
+        >
+          {t.polls.title}
+        </Text>
 
         {/* Poll Cards */}
         {polls.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>{t.polls.noActivePolls}</Text>
+          <View className="flex-1 justify-center items-center py-15">
+            <Text className="text-base font-manrope" style={{ color: theme.textSecondary }}>
+              {t.polls.noActivePolls}
+            </Text>
           </View>
         ) : (
           polls.map((poll) => {
@@ -239,30 +244,35 @@ export default function PollsScreen() {
             return (
               <View
                 key={poll.id}
-                style={[styles.pollCard, { backgroundColor: theme.accent.purple }]}
+                className="rounded-3xl p-6 mb-4"
+                style={{ backgroundColor: theme.accent.purple }}
               >
                 {/* Poll Header */}
-                <View style={styles.pollHeader}>
-                  <View style={styles.pollBadge}>
-                    <Text style={styles.pollBadgeText}>{getTimeRemaining(poll)}</Text>
+                <View className="flex-row justify-between items-center mb-4">
+                  <View className="bg-white/60 px-3 py-1.5 rounded-xl">
+                    <Text className="text-xs font-manrope-semibold text-[#1C1C1E]">
+                      {getTimeRemaining(poll)}
+                    </Text>
                   </View>
-                  <View style={styles.pollHeaderRight}>
+                  <View className="flex-row items-center gap-2">
                     {poll.allow_revote && (
-                      <View style={styles.revoteBadge}>
+                      <View className="bg-white/60 p-1.5 rounded-lg">
                         <RotateCcw size={12} color="#1C1C1E" />
                       </View>
                     )}
-                    <View style={styles.pollUsers}>
+                    <View className="flex-row items-center">
                       <Users size={16} color="#1C1C1E" />
                     </View>
                   </View>
                 </View>
 
                 {/* Poll Question */}
-                <Text style={styles.pollQuestion}>{poll.question}</Text>
+                <Text className="text-[22px] font-manrope-bold text-[#1C1C1E] leading-7 mb-5">
+                  {poll.question}
+                </Text>
 
                 {/* Poll Options */}
-                <View style={styles.optionsList}>
+                <View className="gap-2.5">
                   {poll.options?.map((option) => {
                     const isSelected = userVote === option.id;
                     const voteCount = option.votes?.length || 0;
@@ -270,29 +280,26 @@ export default function PollsScreen() {
                     return (
                       <TouchableOpacity
                         key={option.id}
-                        style={[
-                          styles.optionButton,
-                          isSelected && styles.optionButtonSelected,
-                        ]}
+                        className={`rounded-xl p-4 flex-row justify-between items-center ${
+                          isSelected ? "bg-[#1C1C1E]" : "bg-white/60"
+                        }`}
                         onPress={() => !voted && handleVote(poll.id, option.id)}
                         disabled={voted}
                         activeOpacity={voted ? 1 : 0.8}
                       >
                         <Text
-                          style={[
-                            styles.optionText,
-                            isSelected && styles.optionTextSelected,
-                          ]}
+                          className={`text-[15px] font-manrope-semibold ${
+                            isSelected ? "text-white" : "text-[#1C1C1E]"
+                          }`}
                         >
                           {option.title}
                         </Text>
-                        <View style={styles.optionRight}>
+                        <View className="flex-row items-center gap-2">
                           {isSelected && <Check size={16} color="#FFFFFF" />}
                           <Text
-                            style={[
-                              styles.optionVotes,
-                              isSelected && styles.optionVotesSelected,
-                            ]}
+                            className={`text-[13px] font-manrope-medium ${
+                              isSelected ? "text-white/70" : "text-black/50"
+                            }`}
                           >
                             {voteCount} {voteCount !== 1 ? t.polls.votes : t.polls.vote}
                           </Text>
@@ -305,12 +312,12 @@ export default function PollsScreen() {
                 {/* Unvote button */}
                 {voted && poll.allow_revote && (
                   <TouchableOpacity
-                    style={styles.unvoteButton}
+                    className="flex-row items-center justify-center gap-2 py-3 mt-3 bg-white/60 rounded-xl"
                     onPress={() => handleUnvote(poll.id)}
                     activeOpacity={0.8}
                   >
                     <RotateCcw size={16} color="#1C1C1E" />
-                    <Text style={styles.unvoteButtonText}>
+                    <Text className="text-sm font-manrope-semibold text-[#1C1C1E]">
                       {t.polls.removeVote || "Remove Vote"}
                     </Text>
                   </TouchableOpacity>
@@ -322,12 +329,13 @@ export default function PollsScreen() {
 
         {/* Create New Poll Button */}
         <TouchableOpacity
-          style={[styles.createPollButton, { borderColor: theme.textSecondary }]}
+          className="flex-row items-center justify-center gap-2.5 py-5 rounded-2xl border-2 border-dashed mt-2"
+          style={{ borderColor: theme.textSecondary }}
           onPress={() => setShowCreateModal(true)}
           activeOpacity={0.8}
         >
           <Plus size={24} color={theme.textSecondary} />
-          <Text style={[styles.createPollText, { color: theme.textSecondary }]}>
+          <Text className="text-base font-manrope-semibold" style={{ color: theme.textSecondary }}>
             {t.polls.newPoll}
           </Text>
         </TouchableOpacity>
@@ -340,8 +348,8 @@ export default function PollsScreen() {
         title={t.polls.createPoll}
         height="full"
       >
-        <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
-          <View style={styles.modalContent}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="flex-1">
             <Input
               label={t.polls.question}
               placeholder={t.polls.questionPlaceholder}
@@ -350,43 +358,36 @@ export default function PollsScreen() {
             />
 
             {/* Poll Type Selection */}
-            <View style={styles.typeSection}>
-              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+            <View className="mt-4 mb-2">
+              <Text
+                className="text-xs font-manrope-bold tracking-widest mb-3 ml-1"
+                style={{ color: theme.textSecondary }}
+              >
                 {t.polls.pollType || "POLL TYPE"}
               </Text>
-              <View style={styles.typeButtons}>
+              <View className="flex-row gap-3">
                 <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    { backgroundColor: theme.surface },
-                    pollType === "public" && { backgroundColor: theme.accent.purple },
-                  ]}
+                  className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-xl"
+                  style={{ backgroundColor: pollType === "public" ? theme.accent.purple : theme.surface }}
                   onPress={() => setPollType("public")}
                 >
                   <Eye size={18} color={pollType === "public" ? "#1C1C1E" : theme.textSecondary} />
                   <Text
-                    style={[
-                      styles.typeButtonText,
-                      { color: pollType === "public" ? "#1C1C1E" : theme.textSecondary },
-                    ]}
+                    className="text-sm font-manrope-semibold"
+                    style={{ color: pollType === "public" ? "#1C1C1E" : theme.textSecondary }}
                   >
                     {t.polls.public || "Public"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    { backgroundColor: theme.surface },
-                    pollType === "anonymous" && { backgroundColor: theme.accent.purple },
-                  ]}
+                  className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-xl"
+                  style={{ backgroundColor: pollType === "anonymous" ? theme.accent.purple : theme.surface }}
                   onPress={() => setPollType("anonymous")}
                 >
                   <EyeOff size={18} color={pollType === "anonymous" ? "#1C1C1E" : theme.textSecondary} />
                   <Text
-                    style={[
-                      styles.typeButtonText,
-                      { color: pollType === "anonymous" ? "#1C1C1E" : theme.textSecondary },
-                    ]}
+                    className="text-sm font-manrope-semibold"
+                    style={{ color: pollType === "anonymous" ? "#1C1C1E" : theme.textSecondary }}
                   >
                     {t.polls.anonymous || "Anonymous"}
                   </Text>
@@ -394,11 +395,16 @@ export default function PollsScreen() {
               </View>
             </View>
 
-            <View style={styles.optionsSection}>
-              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>{t.polls.options}</Text>
+            <View className="mt-2">
+              <Text
+                className="text-xs font-manrope-bold tracking-widest mb-3 ml-1"
+                style={{ color: theme.textSecondary }}
+              >
+                {t.polls.options}
+              </Text>
               {pollOptions.map((option, index) => (
-                <View key={index} style={styles.optionInputRow}>
-                  <View style={styles.optionInputWrapper}>
+                <View key={index} className="flex-row items-center gap-2 mb-2">
+                  <View className="flex-1">
                     <Input
                       placeholder={t.polls.optionPlaceholder.replace("{index}", String(index + 1))}
                       value={option}
@@ -407,7 +413,8 @@ export default function PollsScreen() {
                   </View>
                   {pollOptions.length > 2 && (
                     <TouchableOpacity
-                      style={[styles.removeOptionButton, { backgroundColor: theme.surface }]}
+                      className="w-11 h-11 rounded-xl justify-center items-center mb-4"
+                      style={{ backgroundColor: theme.surface }}
                       onPress={() => removeOption(index)}
                     >
                       <X size={20} color={theme.textSecondary} />
@@ -418,11 +425,12 @@ export default function PollsScreen() {
 
               {pollOptions.length < 6 && (
                 <TouchableOpacity
-                  style={[styles.addOptionButton, { borderColor: theme.accent.purple }]}
+                  className="flex-row items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed mt-2"
+                  style={{ borderColor: theme.accent.purple }}
                   onPress={addOption}
                 >
                   <Plus size={20} color={theme.accent.purple} />
-                  <Text style={[styles.addOptionText, { color: theme.accent.purple }]}>
+                  <Text className="text-sm font-manrope-bold" style={{ color: theme.accent.purple }}>
                     {t.polls.addOption}
                   </Text>
                 </TouchableOpacity>
@@ -430,14 +438,20 @@ export default function PollsScreen() {
             </View>
 
             {/* Allow Revote Toggle */}
-            <View style={styles.settingSection}>
-              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+            <View className="mt-4">
+              <Text
+                className="text-xs font-manrope-bold tracking-widest mb-3 ml-1"
+                style={{ color: theme.textSecondary }}
+              >
                 {t.polls.settings || "SETTINGS"}
               </Text>
-              <View style={[styles.settingRow, { backgroundColor: theme.surfaceLight }]}>
-                <View style={styles.settingInfo}>
+              <View
+                className="flex-row items-center justify-between py-3.5 px-4 rounded-xl"
+                style={{ backgroundColor: theme.surfaceLight }}
+              >
+                <View className="flex-row items-center gap-3">
                   <RotateCcw size={20} color={theme.text} />
-                  <Text style={[styles.settingText, { color: theme.text }]}>
+                  <Text className="text-[15px] font-manrope-medium" style={{ color: theme.text }}>
                     {t.polls.allowRevote || "Allow Revote"}
                   </Text>
                 </View>
@@ -451,14 +465,20 @@ export default function PollsScreen() {
             </View>
 
             {/* End Date Toggle and Picker */}
-            <View style={styles.settingSection}>
-              <Text style={[styles.optionsLabel, { color: theme.textSecondary }]}>
+            <View className="mt-4">
+              <Text
+                className="text-xs font-manrope-bold tracking-widest mb-3 ml-1"
+                style={{ color: theme.textSecondary }}
+              >
                 {t.polls.endDate || "END DATE"}
               </Text>
-              <View style={[styles.settingRow, { backgroundColor: theme.surfaceLight }]}>
-                <View style={styles.settingInfo}>
+              <View
+                className="flex-row items-center justify-between py-3.5 px-4 rounded-xl"
+                style={{ backgroundColor: theme.surfaceLight }}
+              >
+                <View className="flex-row items-center gap-3">
                   <Calendar size={20} color={theme.text} />
-                  <Text style={[styles.settingText, { color: theme.text }]}>
+                  <Text className="text-[15px] font-manrope-medium" style={{ color: theme.text }}>
                     {t.polls.setEndDate || "Set End Date"}
                   </Text>
                 </View>
@@ -472,10 +492,11 @@ export default function PollsScreen() {
 
               {hasEndDate && (
                 <TouchableOpacity
-                  style={[styles.datePickerButton, { backgroundColor: theme.surfaceLight }]}
+                  className="flex-row items-center justify-between py-3.5 px-4 rounded-xl mt-2"
+                  style={{ backgroundColor: theme.surfaceLight }}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <Text style={[styles.datePickerText, { color: theme.text }]}>
+                  <Text className="text-[15px] font-manrope-medium" style={{ color: theme.text }}>
                     {formatDateTime(endsAt)}
                   </Text>
                   <Calendar size={18} color={theme.textSecondary} />
@@ -515,7 +536,7 @@ export default function PollsScreen() {
               )}
 
               {showDatePicker && Platform.OS === "ios" && (
-                <View style={styles.iosPickerContainer}>
+                <View className="mt-2 p-4 rounded-xl">
                   <DateTimePicker
                     value={endsAt}
                     mode="datetime"
@@ -538,7 +559,7 @@ export default function PollsScreen() {
           </View>
         </ScrollView>
 
-        <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
+        <View className="pt-4 border-t" style={{ borderTopColor: theme.border }}>
           <Button
             title={t.polls.createPoll}
             onPress={handleCreatePoll}
@@ -555,255 +576,3 @@ export default function PollsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 36,
-    fontFamily: fonts[700],
-    marginBottom: 24,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-  },
-  pollCard: {
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 16,
-  },
-  pollHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  pollBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  pollBadgeText: {
-    fontSize: 12,
-    fontFamily: fonts[600],
-    color: "#1C1C1E",
-  },
-  pollUsers: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  pollHeaderRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  revoteBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    padding: 6,
-    borderRadius: 8,
-  },
-  unvoteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-    marginTop: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    borderRadius: 12,
-  },
-  unvoteButtonText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-    color: "#1C1C1E",
-  },
-  pollQuestion: {
-    fontSize: 22,
-    fontFamily: fonts[700],
-    color: "#1C1C1E",
-    lineHeight: 28,
-    marginBottom: 20,
-  },
-  optionsList: {
-    gap: 10,
-  },
-  optionButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  optionButtonSelected: {
-    backgroundColor: "#1C1C1E",
-  },
-  optionText: {
-    fontSize: 15,
-    fontFamily: fonts[600],
-    color: "#1C1C1E",
-  },
-  optionTextSelected: {
-    color: "#FFFFFF",
-  },
-  optionRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  optionVotes: {
-    fontSize: 13,
-    fontFamily: fonts[500],
-    color: "rgba(0, 0, 0, 0.5)",
-  },
-  optionVotesSelected: {
-    color: "rgba(255, 255, 255, 0.7)",
-  },
-  createPollButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 20,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    marginTop: 8,
-  },
-  createPollText: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-  },
-  modalScrollView: {
-    flex: 1,
-  },
-  modalContent: {
-    flex: 1,
-  },
-  typeSection: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  typeButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  typeButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  typeButtonText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-  },
-  optionsSection: {
-    marginTop: 8,
-  },
-  optionsLabel: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  optionInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  optionInputWrapper: {
-    flex: 1,
-  },
-  removeOptionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  addOptionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    marginTop: 8,
-  },
-  addOptionText: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-  },
-  settingSection: {
-    marginTop: 16,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  settingInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  settingText: {
-    fontSize: 15,
-    fontFamily: fonts[500],
-  },
-  datePickerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  datePickerText: {
-    fontSize: 15,
-    fontFamily: fonts[500],
-  },
-  iosPickerContainer: {
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 12,
-  },
-  modalFooter: {
-    paddingTop: 16,
-    borderTopWidth: 1,
-  },
-});

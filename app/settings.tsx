@@ -2,10 +2,8 @@ import { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,7 +19,6 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useHome } from "@/contexts/HomeContext";
-import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Button from "@/components/ui/button";
 
@@ -56,70 +53,68 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, paddingTop: insets.top + 16 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View className="flex-row items-center mb-8">
           <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: theme.surface }]}
+            className="w-12 h-12 rounded-16 justify-center items-center"
+            style={{ backgroundColor: theme.surface }}
             onPress={() => router.back()}
           >
             <ArrowLeft size={22} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.text }]}>
+          <Text className="flex-1 text-2xl font-manrope-bold text-center" style={{ color: theme.text }}>
             {t.profile.settings}
           </Text>
-          <View style={styles.placeholder} />
+          <View className="w-12" />
         </View>
 
         {/* Appearance Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+        <View className="mb-8">
+          <Text
+            className="text-xs font-manrope-bold mb-3 ml-1"
+            style={{ color: theme.textSecondary, letterSpacing: 1 }}
+          >
             {t.settings.appearance || "APPEARANCE"}
           </Text>
 
           {/* Theme Toggle */}
-          <View style={[styles.card, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+          <View className="p-5 rounded-20" style={{ backgroundColor: theme.surface }}>
+            <Text className="text-base font-manrope-semibold mb-4" style={{ color: theme.text }}>
               {t.profile.theme}
             </Text>
-            <View style={styles.themeOptions}>
+            <View className="flex-row gap-3">
               <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  { backgroundColor: theme.background },
-                  themeMode === "light" && { backgroundColor: theme.accent.yellow },
-                ]}
+                className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-14"
+                style={{
+                  backgroundColor: themeMode === "light" ? theme.accent.yellow : theme.background,
+                }}
                 onPress={() => setThemeMode("light")}
               >
                 <Sun size={20} color={themeMode === "light" ? "#1C1C1E" : theme.textSecondary} />
                 <Text
-                  style={[
-                    styles.themeOptionText,
-                    { color: themeMode === "light" ? "#1C1C1E" : theme.textSecondary },
-                  ]}
+                  className="text-sm font-manrope-semibold"
+                  style={{ color: themeMode === "light" ? "#1C1C1E" : theme.textSecondary }}
                 >
                   {t.profile.light}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  { backgroundColor: theme.background },
-                  themeMode === "dark" && { backgroundColor: theme.accent.purple },
-                ]}
+                className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-14"
+                style={{
+                  backgroundColor: themeMode === "dark" ? theme.accent.purple : theme.background,
+                }}
                 onPress={() => setThemeMode("dark")}
               >
                 <Moon size={20} color={themeMode === "dark" ? "#1C1C1E" : theme.textSecondary} />
                 <Text
-                  style={[
-                    styles.themeOptionText,
-                    { color: themeMode === "dark" ? "#1C1C1E" : theme.textSecondary },
-                  ]}
+                  className="text-sm font-manrope-semibold"
+                  style={{ color: themeMode === "dark" ? "#1C1C1E" : theme.textSecondary }}
                 >
                   {t.profile.dark}
                 </Text>
@@ -129,18 +124,25 @@ export default function SettingsScreen() {
         </View>
 
         {/* Language Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+        <View className="mb-8">
+          <Text
+            className="text-xs font-manrope-bold mb-3 ml-1"
+            style={{ color: theme.textSecondary, letterSpacing: 1 }}
+          >
             {t.settings.language || "LANGUAGE"}
           </Text>
           <TouchableOpacity
-            style={[styles.menuItem, { backgroundColor: theme.surface }]}
+            className="flex-row items-center p-4 rounded-20 gap-3.5"
+            style={{ backgroundColor: theme.surface }}
             onPress={() => setShowLanguageModal(true)}
           >
-            <View style={[styles.menuIcon, { backgroundColor: theme.accent.purple }]}>
+            <View
+              className="w-11 h-11 rounded-14 justify-center items-center"
+              style={{ backgroundColor: theme.accent.purple }}
+            >
               <Globe size={20} color="#1C1C1E" />
             </View>
-            <Text style={[styles.menuLabel, { color: theme.text }]}>
+            <Text className="flex-1 text-base font-manrope-semibold" style={{ color: theme.text }}>
               {languageNames[language]}
             </Text>
             <ChevronRight size={20} color={theme.textSecondary} />
@@ -149,24 +151,27 @@ export default function SettingsScreen() {
 
         {/* Home Settings Section */}
         {home && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          <View className="mb-8">
+            <Text
+              className="text-xs font-manrope-bold mb-3 ml-1"
+              style={{ color: theme.textSecondary, letterSpacing: 1 }}
+            >
               {t.settings.homeSettings || "HOME SETTINGS"}
             </Text>
-            <View style={[styles.card, { backgroundColor: theme.surface }]}>
-              <View style={styles.cardRow}>
-                <Text style={[styles.cardLabel, { color: theme.text }]}>
+            <View className="p-5 rounded-20" style={{ backgroundColor: theme.surface }}>
+              <View className="flex-row justify-between items-center py-3">
+                <Text className="text-15 font-manrope-medium" style={{ color: theme.text }}>
                   {t.settings.homeName || "Home Name"}
                 </Text>
-                <Text style={[styles.cardValue, { color: theme.textSecondary }]}>
+                <Text className="text-15 font-manrope" style={{ color: theme.textSecondary }}>
                   {home.name}
                 </Text>
               </View>
-              <View style={styles.cardRow}>
-                <Text style={[styles.cardLabel, { color: theme.text }]}>
+              <View className="flex-row justify-between items-center py-3">
+                <Text className="text-15 font-manrope-medium" style={{ color: theme.text }}>
                   {t.settings.yourRole || "Your Role"}
                 </Text>
-                <Text style={[styles.cardValue, { color: theme.textSecondary }]}>
+                <Text className="text-15 font-manrope" style={{ color: theme.textSecondary }}>
                   {isAdmin ? t.profile.homeAdmin : t.profile.member}
                 </Text>
               </View>
@@ -174,11 +179,12 @@ export default function SettingsScreen() {
 
             {/* Leave/Delete Home */}
             <TouchableOpacity
-              style={[styles.dangerButton, { backgroundColor: theme.accent.dangerLight }]}
+              className="flex-row items-center justify-center gap-2.5 py-4 rounded-16 mt-4"
+              style={{ backgroundColor: theme.accent.dangerLight }}
               onPress={() => setShowDeleteConfirm(true)}
             >
               <Trash2 size={20} color="#FFFFFF" />
-              <Text style={styles.dangerButtonText}>
+              <Text className="text-base font-manrope-semibold text-white">
                 {isAdmin
                   ? (t.settings.deleteHome || "Delete Home")
                   : (t.settings.leaveHome || "Leave Home")}
@@ -195,25 +201,22 @@ export default function SettingsScreen() {
         title={t.settings.selectLanguage || "Select Language"}
         height="full"
       >
-        <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {availableLanguages.map((lang) => (
             <TouchableOpacity
               key={lang}
-              style={[
-                styles.languageItem,
-                { backgroundColor: theme.surface },
-                language === lang && { backgroundColor: theme.accent.purple },
-              ]}
+              className="p-4.5 rounded-16 mb-2.5"
+              style={{
+                backgroundColor: language === lang ? theme.accent.purple : theme.surface,
+              }}
               onPress={() => {
                 setLanguage(lang);
                 setShowLanguageModal(false);
               }}
             >
               <Text
-                style={[
-                  styles.languageText,
-                  { color: language === lang ? "#1C1C1E" : theme.text },
-                ]}
+                className="text-17 font-manrope-semibold"
+                style={{ color: language === lang ? "#1C1C1E" : theme.text }}
               >
                 {languageNames[lang]}
               </Text>
@@ -230,25 +233,28 @@ export default function SettingsScreen() {
           ? (t.settings.deleteHomeConfirmTitle || "Delete Home?")
           : (t.settings.leaveHomeConfirmTitle || "Leave Home?")}
       >
-        <View style={styles.confirmContent}>
-          <Text style={[styles.confirmText, { color: theme.textSecondary }]}>
+        <View className="pt-2.5">
+          <Text
+            className="text-15 font-manrope mb-6"
+            style={{ color: theme.textSecondary, lineHeight: 22 }}
+          >
             {isAdmin
               ? (t.settings.deleteHomeConfirmText || "This action cannot be undone. All data will be permanently deleted.")
               : (t.settings.leaveHomeConfirmText || "You will no longer have access to this home.")}
           </Text>
-          <View style={styles.confirmButtons}>
+          <View className="flex-row gap-3">
             <Button
               title={t.common.cancel}
               onPress={() => setShowDeleteConfirm(false)}
               variant="surface"
-              style={styles.confirmButton}
+              style={{ flex: 1 }}
             />
             <Button
               title={isAdmin ? (t.common.delete || "Delete") : (t.settings.leave || "Leave")}
               onPress={handleLeaveHome}
               variant="danger"
               loading={isLeaving}
-              style={styles.confirmButton}
+              style={{ flex: 1 }}
             />
           </View>
         </View>
@@ -256,148 +262,3 @@ export default function SettingsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    flex: 1,
-    fontSize: 24,
-    fontFamily: fonts[700],
-    textAlign: "center",
-  },
-  placeholder: {
-    width: 48,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  card: {
-    padding: 20,
-    borderRadius: 20,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-    marginBottom: 16,
-  },
-  cardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  cardLabel: {
-    fontSize: 15,
-    fontFamily: fonts[500],
-  },
-  cardValue: {
-    fontSize: 15,
-    fontFamily: fonts[400],
-  },
-  themeOptions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  themeOption: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 14,
-  },
-  themeOptionText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 20,
-    gap: 14,
-  },
-  menuIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuLabel: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: fonts[600],
-  },
-  dangerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 16,
-  },
-  dangerButtonText: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-    color: "#FFFFFF",
-  },
-  languageList: {
-    flex: 1,
-  },
-  languageItem: {
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 10,
-  },
-  languageText: {
-    fontSize: 17,
-    fontFamily: fonts[600],
-  },
-  confirmContent: {
-    paddingTop: 10,
-  },
-  confirmText: {
-    fontSize: 15,
-    fontFamily: fonts[400],
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  confirmButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  confirmButton: {
-    flex: 1,
-  },
-});

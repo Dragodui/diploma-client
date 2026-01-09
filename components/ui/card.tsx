@@ -1,8 +1,15 @@
 import { FC, ReactNode } from "react";
-import { View, StyleSheet, ViewStyle, TouchableOpacity } from "react-native";
+import { View, ViewStyle, TouchableOpacity } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 
-type CardVariant = "default" | "surface" | "yellow" | "purple" | "pink" | "mint" | "white";
+type CardVariant =
+  | "default"
+  | "surface"
+  | "yellow"
+  | "purple"
+  | "pink"
+  | "mint"
+  | "white";
 
 interface CardProps {
   children: ReactNode;
@@ -11,6 +18,7 @@ interface CardProps {
   onPress?: () => void;
   padding?: number;
   borderRadius?: number;
+  className?: string;
 }
 
 const Card: FC<CardProps> = ({
@@ -20,50 +28,52 @@ const Card: FC<CardProps> = ({
   onPress,
   padding = 24,
   borderRadius = 32,
+  className,
 }) => {
   const { theme } = useTheme();
 
-  const getCardStyle = () => {
+  const getVariantClasses = () => {
     switch (variant) {
       case "surface":
-        return { backgroundColor: theme.surface };
+        return theme.isDark ? "bg-surface-dark" : "bg-surface";
       case "yellow":
-        return { backgroundColor: theme.accent.yellow };
+        return "bg-accent-yellow";
       case "purple":
-        return { backgroundColor: theme.accent.purple };
+        return "bg-accent-purple";
       case "pink":
-        return { backgroundColor: theme.accent.pink };
+        return "bg-accent-pink";
       case "mint":
-        return { backgroundColor: theme.accent.mint };
+        return "bg-accent-mint";
       case "white":
-        return { backgroundColor: "#FFFFFF" };
+        return "bg-white";
       default:
-        return { backgroundColor: theme.surface };
+        return theme.isDark ? "bg-surface-dark" : "bg-surface";
     }
   };
 
-  const cardStyles = [
-    styles.card,
-    getCardStyle(),
-    { padding, borderRadius },
-    style,
-  ];
+  const combinedClassName = `overflow-hidden ${getVariantClasses()} ${className || ""}`;
 
   if (onPress) {
     return (
-      <TouchableOpacity style={cardStyles} onPress={onPress} activeOpacity={0.95}>
+      <TouchableOpacity
+        className={combinedClassName}
+        style={[{ padding, borderRadius }, style]}
+        onPress={onPress}
+        activeOpacity={0.95}
+      >
         {children}
       </TouchableOpacity>
     );
   }
 
-  return <View style={cardStyles}>{children}</View>;
+  return (
+    <View
+      className={combinedClassName}
+      style={[{ padding, borderRadius }, style]}
+    >
+      {children}
+    </View>
+  );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    overflow: "hidden",
-  },
-});
 
 export default Card;

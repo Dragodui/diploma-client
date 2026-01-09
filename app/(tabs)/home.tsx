@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -11,14 +10,19 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Zap, ArrowRight, Home as HomeIcon, BarChart2, User } from "lucide-react-native";
+import {
+  Zap,
+  ArrowRight,
+  Home as HomeIcon,
+  BarChart2,
+  User,
+} from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { taskApi, pollApi, billApi } from "@/lib/api";
 import { TaskAssignment, Poll } from "@/lib/types";
-import fonts from "@/constants/fonts";
 import Card from "@/components/ui/card";
 
 export default function HomeScreen() {
@@ -29,7 +33,9 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const { t } = useI18n();
 
-  const [nextAssignment, setNextAssignment] = useState<TaskAssignment | null>(null);
+  const [nextAssignment, setNextAssignment] = useState<TaskAssignment | null>(
+    null
+  );
   const [polls, setPolls] = useState<Poll[]>([]);
   const [monthlySpend, setMonthlySpend] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,20 +64,21 @@ export default function HomeScreen() {
       setNextAssignment(assignmentData);
       setPolls(pollsData.filter((p) => p.status === "open") || []);
 
-      // Calculate monthly spend
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
 
       const total = (billsData || []).reduce((sum, bill) => {
         const billDate = new Date(bill.created_at);
-        if (billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear) {
+        if (
+          billDate.getMonth() === currentMonth &&
+          billDate.getFullYear() === currentYear
+        ) {
           return sum + bill.total_amount;
         }
         return sum;
       }, 0);
       setMonthlySpend(total);
-
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -98,7 +105,10 @@ export default function HomeScreen() {
 
   if (authLoading || homeLoading || isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View
+        className="flex-1 justify-center items-center"
+        style={{ backgroundColor: theme.background }}
+      >
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
@@ -107,25 +117,41 @@ export default function HomeScreen() {
   // No home state
   if (!home) {
     return (
-      <View style={[styles.emptyContainer, { backgroundColor: theme.background, paddingTop: insets.top + 40 }]}>
-        <View style={[styles.emptyIconContainer, { backgroundColor: theme.accent.yellow }]}>
+      <View
+        className="flex-1 justify-center items-center p-10"
+        style={{ backgroundColor: theme.background, paddingTop: insets.top + 40 }}
+      >
+        <View className="w-24 h-24 rounded-48 justify-center items-center mb-6 bg-accent-yellow">
           <HomeIcon size={48} color="#1C1C1E" />
         </View>
-        <Text style={[styles.emptyTitle, { color: theme.text }]}>{t.home.noHome}</Text>
-        <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+        <Text
+          className="text-2xl font-manrope-bold mb-3"
+          style={{ color: theme.text }}
+        >
+          {t.home.noHome}
+        </Text>
+        <Text
+          className="text-base font-manrope text-center mb-8 leading-6"
+          style={{ color: theme.textSecondary }}
+        >
           {t.home.noHomeDescription}
         </Text>
         <TouchableOpacity
-          style={[styles.emptyButton, { backgroundColor: theme.text }]}
+          className="px-10 py-4.5 rounded-20"
+          style={{ backgroundColor: theme.text }}
           onPress={() => router.push("/(tabs)/profile")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.emptyButtonText, { color: theme.background }]}>{t.auth.getStarted}</Text>
+          <Text
+            className="text-base font-manrope-bold"
+            style={{ color: theme.background }}
+          >
+            {t.auth.getStarted}
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
-  console.log(nextAssignment)
 
   const formatTaskTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -133,7 +159,10 @@ export default function HomeScreen() {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const timeStr = date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
 
     if (date.toDateString() === today.toDateString()) {
       return `${t.common.today}, ${timeStr}`;
@@ -141,14 +170,18 @@ export default function HomeScreen() {
     if (date.toDateString() === tomorrow.toDateString()) {
       return `${t.common.tomorrow}, ${timeStr}`;
     }
-    return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    return date.toLocaleDateString([], {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: insets.top + 24 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -158,18 +191,37 @@ export default function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header - matches PDF exactly */}
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={[styles.greeting, { color: theme.textSecondary }]}>{getGreeting()}</Text>
-            <Text style={[styles.userName, { color: theme.text }]}>{user?.name?.split(" ")[0] || "there"}</Text>
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <View className="flex-1">
+            <Text
+              className="text-lg font-manrope italic mb-1"
+              style={{ color: theme.textSecondary }}
+            >
+              {getGreeting()}
+            </Text>
+            <Text
+              className="text-4xl font-manrope-bold"
+              style={{ color: theme.text }}
+            >
+              {user?.name?.split(" ")[0] || "there"}
+            </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} activeOpacity={0.8}>
-            <View style={[styles.avatarContainer, { borderColor: theme.accent.purple }]}>
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/profile")}
+            activeOpacity={0.8}
+          >
+            <View
+              className="w-14 h-14 rounded-28 border-2 overflow-hidden justify-center items-center"
+              style={{ borderColor: theme.accent.purple }}
+            >
               {user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                <Image source={{ uri: user.avatar }} className="w-full h-full" />
               ) : (
-                <View style={[styles.avatarPlaceholder, { backgroundColor: theme.surface }]}>
+                <View
+                  className="w-full h-full justify-center items-center"
+                  style={{ backgroundColor: theme.surface }}
+                >
                   <User size={28} color={theme.textSecondary} />
                 </View>
               )}
@@ -177,26 +229,30 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Hero Card - Up Next Task (Yellow card from PDF) */}
+        {/* Hero Card - Up Next Task */}
         <Card
           variant="yellow"
           borderRadius={32}
           padding={28}
           onPress={() => router.push("/(tabs)/tasks")}
-          style={styles.heroCard}
+          className="mb-4"
         >
-          <View style={styles.heroHeader}>
-            <Text style={styles.heroLabel}>{t.home.upNext}</Text>
-            <View style={styles.zapContainer}>
+          <View className="flex-row justify-between items-start mb-4">
+            <Text className="text-xs font-manrope-bold tracking-widest text-black/40">
+              {t.home.upNext}
+            </Text>
+            <View className="w-12 h-12 rounded-24 bg-black/[0.08] justify-center items-center">
               <Zap size={24} color="#1C1C1E" fill="#1C1C1E" />
             </View>
           </View>
           {nextAssignment ? (
             <>
-              <Text style={styles.heroTitle}>{nextAssignment.task?.name || t.home.currentTask}</Text>
-              <View style={styles.heroFooter}>
-                <View style={styles.heroBadge}>
-                  <Text style={styles.heroBadgeText}>
+              <Text className="text-2xl font-manrope-extrabold text-primary leading-[34px] mb-6">
+                {nextAssignment.task?.name || t.home.currentTask}
+              </Text>
+              <View className="flex-row justify-between items-center">
+                <View className="bg-black/[0.08] px-4 py-3 rounded-14">
+                  <Text className="text-sm font-manrope-semibold text-primary">
                     {formatTaskTime(nextAssignment.assigned_date)}
                   </Text>
                 </View>
@@ -205,10 +261,14 @@ export default function HomeScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.heroTitle}>{t.home.allCaughtUp}</Text>
-              <View style={styles.heroFooter}>
-                <View style={styles.heroBadge}>
-                  <Text style={styles.heroBadgeText}>{t.home.noPendingTasks}</Text>
+              <Text className="text-2xl font-manrope-extrabold text-primary leading-[34px] mb-6">
+                {t.home.allCaughtUp}
+              </Text>
+              <View className="flex-row justify-between items-center">
+                <View className="bg-black/[0.08] px-4 py-3 rounded-14">
+                  <Text className="text-sm font-manrope-semibold text-primary">
+                    {t.home.noPendingTasks}
+                  </Text>
                 </View>
                 <ArrowRight size={24} color="#1C1C1E" />
               </View>
@@ -216,61 +276,81 @@ export default function HomeScreen() {
           )}
         </Card>
 
-        {/* Grid Cards - My Rooms (dark) and Active Polls (purple) */}
-        <View style={styles.grid}>
-          {/* Rooms Card - Dark */}
+        {/* Grid Cards */}
+        <View className="flex-row gap-3 mb-4">
+          {/* Rooms Card */}
           <Card
             variant="surface"
             borderRadius={28}
             padding={20}
             onPress={() => router.push("/rooms")}
-            style={styles.gridCard}
+            style={{ flex: 1, height: 180, justifyContent: "space-between" }}
           >
-            <View style={[styles.gridIconContainer, { borderColor: theme.borderLight }]}>
+            <View
+              className="w-11 h-11 rounded-22 border-2 justify-center items-center"
+              style={{ borderColor: theme.borderLight }}
+            >
               <HomeIcon size={22} color={theme.text} />
             </View>
-            <View style={styles.gridContent}>
-              <Text style={[styles.gridTitle, { color: theme.text }]}>{t.home.myRooms}</Text>
-              <Text style={[styles.gridSubtitle, { color: theme.textSecondary }]}>{interpolate(t.home.spaces, { count: rooms.length })}</Text>
+            <View className="flex-1 justify-end">
+              <Text
+                className="text-xl font-manrope-bold leading-[26px]"
+                style={{ color: theme.text }}
+              >
+                {t.home.myRooms}
+              </Text>
+              <Text
+                className="text-sm font-manrope mt-1"
+                style={{ color: theme.textSecondary }}
+              >
+                {interpolate(t.home.spaces, { count: rooms.length })}
+              </Text>
             </View>
           </Card>
 
-          {/* Polls Card - Purple */}
+          {/* Polls Card */}
           <Card
             variant="purple"
             borderRadius={28}
             padding={20}
             onPress={() => router.push("/polls")}
-            style={styles.gridCard}
+            style={{ flex: 1, height: 180, justifyContent: "space-between" }}
           >
-            <View style={styles.gridIconContainerDark}>
+            <View className="w-11 h-11 rounded-22 border-2 border-black/10 justify-center items-center">
               <BarChart2 size={22} color="#1C1C1E" />
             </View>
-            <View style={styles.gridContent}>
-              <Text style={styles.gridTitleDark}>{t.home.activePolls}</Text>
-              <Text style={styles.gridSubtitleDark}>{interpolate(t.home.pending, { count: polls.length })}</Text>
+            <View className="flex-1 justify-end">
+              <Text className="text-xl font-manrope-bold text-primary leading-[26px]">
+                {t.home.activePolls}
+              </Text>
+              <Text className="text-sm font-manrope text-black/50 mt-1">
+                {interpolate(t.home.pending, { count: polls.length })}
+              </Text>
             </View>
           </Card>
         </View>
 
-        {/* Budget Card - White card with Monthly Spend */}
+        {/* Budget Card */}
         <Card
           variant="white"
           borderRadius={32}
           padding={28}
           onPress={() => router.push("/(tabs)/budget")}
-          style={styles.budgetCard}
+          className="mb-6"
         >
-          <View style={styles.budgetHeader}>
-            <Text style={styles.budgetLabel}>{t.home.monthlySpend}</Text>
-            {/* <View style={styles.budgetBadge}>
-              <Text style={styles.budgetBadgeText}>+12%</Text>
-            </View> */}
+          <View className="flex-row justify-between items-start mb-2">
+            <Text className="text-xs font-manrope-semibold text-muted tracking-widest">
+              {t.home.monthlySpend}
+            </Text>
           </View>
-          <Text style={styles.budgetAmount}>${monthlySpend.toFixed(0)}</Text>
-          <View style={styles.budgetFooter}>
-            <View style={styles.budgetProgress}>
-              <Text style={styles.budgetProgressText}>{t.home.totalExpenses}</Text>
+          <Text className="text-5xl font-manrope-extrabold text-primary mb-5">
+            ${monthlySpend.toFixed(0)}
+          </Text>
+          <View className="flex-row justify-between items-center">
+            <View className="bg-accent-pink/15 px-4 py-3 rounded-14">
+              <Text className="text-[13px] font-manrope-bold text-accent-pink">
+                {t.home.totalExpenses}
+              </Text>
             </View>
             <ArrowRight size={24} color="#1C1C1E" />
           </View>
@@ -279,241 +359,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-  },
-  emptyIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 28,
-    fontFamily: fonts[700],
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  emptyButton: {
-    paddingHorizontal: 40,
-    paddingVertical: 18,
-    borderRadius: 20,
-  },
-  emptyButtonText: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  headerText: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 18,
-    fontFamily: fonts[400],
-    fontStyle: "italic",
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 36,
-    fontFamily: fonts[700],
-  },
-  avatarContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
-  },
-  avatarPlaceholder: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heroCard: {
-    marginBottom: 16,
-  },
-  heroHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  heroLabel: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    color: "rgba(0, 0, 0, 0.4)",
-    letterSpacing: 1.5,
-  },
-  zapContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontFamily: fonts[800],
-    color: "#1C1C1E",
-    lineHeight: 34,
-    marginBottom: 24,
-  },
-  heroFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  heroBadge: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  heroBadgeText: {
-    fontSize: 14,
-    fontFamily: fonts[600],
-    color: "#1C1C1E",
-  },
-  grid: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  gridCard: {
-    flex: 1,
-    height: 180,
-    justifyContent: "space-between",
-  },
-  gridIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gridIconContainerDark: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gridContent: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  gridTitle: {
-    fontSize: 22,
-    fontFamily: fonts[700],
-    lineHeight: 26,
-  },
-  gridTitleDark: {
-    fontSize: 22,
-    fontFamily: fonts[700],
-    color: "#1C1C1E",
-    lineHeight: 26,
-  },
-  gridSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    marginTop: 4,
-  },
-  gridSubtitleDark: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-    color: "rgba(0, 0, 0, 0.5)",
-    marginTop: 4,
-  },
-  budgetCard: {
-    marginBottom: 24,
-  },
-  budgetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  budgetLabel: {
-    fontSize: 12,
-    fontFamily: fonts[600],
-    color: "#8E8E93",
-    letterSpacing: 1.5,
-  },
-  budgetBadge: {
-    backgroundColor: "rgba(255, 116, 118, 0.15)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  budgetBadgeText: {
-    fontSize: 13,
-    fontFamily: fonts[700],
-    color: "#FF7476",
-  },
-  budgetAmount: {
-    fontSize: 48,
-    fontFamily: fonts[800],
-    color: "#1C1C1E",
-    marginBottom: 20,
-  },
-  budgetFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  budgetProgress: {
-    backgroundColor: "rgba(255, 116, 118, 0.15)",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  budgetProgressText: {
-    fontSize: 13,
-    fontFamily: fonts[700],
-    color: "#FF7476",
-  },
-});

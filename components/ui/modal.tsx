@@ -2,7 +2,6 @@ import { FC, ReactNode } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Modal as RNModal,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -13,7 +12,6 @@ import {
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/contexts/ThemeContext";
-import fonts from "@/constants/fonts";
 
 interface ModalProps {
   visible: boolean;
@@ -23,7 +21,13 @@ interface ModalProps {
   height?: "auto" | "full" | number;
 }
 
-const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "auto" }) => {
+const Modal: FC<ModalProps> = ({
+  visible,
+  onClose,
+  title,
+  children,
+  height = "auto",
+}) => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
 
@@ -38,26 +42,59 @@ const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "au
   };
 
   return (
-    <RNModal visible={visible} animationType="slide" transparent statusBarTranslucent>
+    <RNModal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+    >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.backdrop, { backgroundColor: theme.isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.5)" }]} />
+        <View
+          className="absolute inset-0"
+          style={{
+            backgroundColor: theme.isDark
+              ? "rgba(0, 0, 0, 0.8)"
+              : "rgba(0, 0, 0, 0.5)",
+          }}
+        />
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
+        className="flex-1 justify-end"
       >
-        <View style={[styles.container, getHeightStyle(), { paddingBottom: insets.bottom + 16, backgroundColor: theme.surface }]}>
-          <View style={styles.header}>
-            {title && <Text style={[styles.title, { color: theme.text }]}>{title}</Text>}
-            <TouchableOpacity style={[styles.closeButton, { backgroundColor: theme.background }]} onPress={onClose} activeOpacity={0.7}>
+        <View
+          className="rounded-t-40 pt-8 px-6"
+          style={[
+            getHeightStyle(),
+            {
+              paddingBottom: insets.bottom + 16,
+              backgroundColor: theme.surface,
+            },
+          ]}
+        >
+          <View className="flex-row justify-between items-center mb-6">
+            {title && (
+              <Text
+                className="text-2xl font-manrope-bold"
+                style={{ color: theme.text }}
+              >
+                {title}
+              </Text>
+            )}
+            <TouchableOpacity
+              className="w-12 h-12 rounded-24 justify-center items-center"
+              style={{ backgroundColor: theme.background }}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
               <X size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView
-            style={styles.content}
-            contentContainerStyle={styles.contentContainer}
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 16 }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
@@ -68,44 +105,5 @@ const Modal: FC<ModalProps> = ({ visible, onClose, title, children, height = "au
     </RNModal>
   );
 };
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  keyboardView: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  container: {
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    paddingTop: 32,
-    paddingHorizontal: 24,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontFamily: fonts[700],
-  },
-  closeButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 16,
-  },
-});
 
 export default Modal;

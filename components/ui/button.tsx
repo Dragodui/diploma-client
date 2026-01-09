@@ -2,15 +2,20 @@ import { FC } from "react";
 import {
   TouchableOpacity,
   Text,
-  StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
-import fonts from "@/constants/fonts";
 
-type ButtonVariant = "primary" | "secondary" | "yellow" | "purple" | "pink" | "outline" | "danger";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "yellow"
+  | "purple"
+  | "pink"
+  | "outline"
+  | "danger";
 
 interface ButtonProps {
   title: string;
@@ -21,6 +26,7 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  className?: string;
 }
 
 const Button: FC<ButtonProps> = ({
@@ -32,45 +38,43 @@ const Button: FC<ButtonProps> = ({
   style,
   textStyle,
   icon,
+  className,
 }) => {
   const { theme } = useTheme();
 
-  const getButtonStyle = () => {
+  const getVariantClasses = () => {
     switch (variant) {
       case "yellow":
-        return { backgroundColor: theme.accent.yellow };
+        return "bg-accent-yellow";
       case "purple":
-        return { backgroundColor: theme.accent.purple };
+        return "bg-accent-purple";
       case "pink":
-        return { backgroundColor: theme.accent.pink };
+        return "bg-accent-pink";
       case "secondary":
-        return { backgroundColor: theme.surface };
+        return theme.isDark ? "bg-surface-dark" : "bg-surface";
       case "outline":
-        return {
-          backgroundColor: "transparent",
-          borderWidth: 2,
-          borderColor: theme.border,
-          borderStyle: "dashed" as const,
-        };
+        return `bg-transparent border-2 border-dashed ${
+          theme.isDark ? "border-gray-700" : "border-gray-100"
+        }`;
       case "danger":
-        return { backgroundColor: theme.accent.dangerLight };
+        return "bg-accent-danger-light";
       default:
-        return { backgroundColor: theme.isDark ? theme.text : theme.background };
+        return theme.isDark ? "bg-white" : "bg-primary";
     }
   };
 
-  const getTextColor = () => {
+  const getTextColorClass = () => {
     switch (variant) {
       case "yellow":
       case "purple":
       case "pink":
-        return "#1C1C1E"; // Always dark text on accent colors
+        return "text-primary";
       case "outline":
-        return theme.textSecondary;
+        return "text-muted";
       case "danger":
-        return "#FFFFFF";
+        return "text-white";
       default:
-        return theme.isDark ? "#1C1C1E" : "#FFFFFF";
+        return theme.isDark ? "text-primary" : "text-white";
     }
   };
 
@@ -87,12 +91,10 @@ const Button: FC<ButtonProps> = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        getButtonStyle(),
-        disabled && styles.disabled,
-        style,
-      ]}
+      className={`h-16 rounded-20 justify-center items-center flex-row gap-2 px-6 ${getVariantClasses()} ${
+        disabled ? "opacity-50" : ""
+      } ${className || ""}`}
+      style={style}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
@@ -102,30 +104,16 @@ const Button: FC<ButtonProps> = ({
       ) : (
         <>
           {icon}
-          <Text style={[styles.text, { color: getTextColor() }, textStyle]}>{title}</Text>
+          <Text
+            className={`text-base font-manrope-bold ${getTextColorClass()}`}
+            style={textStyle}
+          >
+            {title}
+          </Text>
         </>
       )}
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    height: 64,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 24,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    fontSize: 16,
-    fontFamily: fonts[700],
-  },
-});
 
 export default Button;

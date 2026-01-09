@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -11,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DollarSign, Plus, Trash } from "lucide-react-native";
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +31,7 @@ const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data
   let currentAngle = -90;
 
   return (
-    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+    <View className="justify-center items-center" style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
         {data.map((item, index) => {
           const percentage = item.value / total;
@@ -60,9 +59,9 @@ const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data
           return circle;
         })}
       </Svg>
-      <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 24, fontFamily: fonts[700], color: theme.text }}>${total.toFixed(0)}</Text>
-        <Text style={{ fontSize: 12, fontFamily: fonts[400], color: theme.textSecondary }}>Total</Text>
+      <View className="absolute justify-center items-center">
+        <Text className="text-2xl font-manrope-bold" style={{ color: theme.text }}>${total.toFixed(0)}</Text>
+        <Text className="text-xs font-manrope" style={{ color: theme.textSecondary }}>Total</Text>
       </View>
     </View>
   );
@@ -259,29 +258,31 @@ export default function BudgetScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, paddingTop: insets.top + 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />}
       >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>{t.budget.title}</Text>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-3xl font-manrope-bold" style={{ color: theme.text }}>{t.budget.title}</Text>
+          <View className="flex-row gap-2.5">
             <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: theme.surface }]}
+              className="px-4 py-2 rounded-xl justify-center items-center"
+              style={{ backgroundColor: theme.surface }}
               onPress={() => setShowCategoryModal(true)}
             >
-              <Text style={{ fontSize: 12, color: theme.text, fontFamily: fonts[600] }}>+ {t.budget.category}</Text>
+              <Text className="text-xs font-manrope-semibold" style={{ color: theme.text }}>+ {t.budget.category}</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: theme.accent.pink }]}
+              className="px-4 py-2 rounded-xl justify-center items-center"
+              style={{ backgroundColor: theme.accent.pink }}
               onPress={() => setShowCreateModal(true)}
             >
               <Plus size={24} color="#FFFFFF" />
@@ -291,72 +292,71 @@ export default function BudgetScreen() {
 
         {/* Chart */}
         {totalSpend > 0 && (
-          <View style={{ alignItems: 'center', marginBottom: 32 }}>
+          <View className="items-center mb-8">
             <DonutChart data={chartData} total={totalSpend} theme={theme} />
           </View>
         )}
 
         {/* Categories List (Horizontal) */}
-        <View style={{ marginBottom: 24 }}>
-          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>{t.budget.categories}</Text>
+        <View className="mb-6">
+          <Text className="text-sm font-manrope-bold uppercase mb-3" style={{ color: theme.textSecondary }}>{t.budget.categories}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
             {categories.map(cat => (
               <TouchableOpacity
                 key={cat.id}
-                style={[styles.categoryChip, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                className="flex-row items-center px-3 py-2 rounded-2xl border gap-2"
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
                 onLongPress={() => handleDeleteCategory(cat.id)}
               >
-                <View style={[styles.categoryDot, { backgroundColor: cat.color || theme.accent.yellow }]} />
-                <Text style={[styles.categoryText, { color: theme.text }]}>{cat.name}</Text>
+                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color || theme.accent.yellow }} />
+                <Text className="font-manrope-semibold text-sm" style={{ color: theme.text }}>{cat.name}</Text>
               </TouchableOpacity>
             ))}
             {categories.length === 0 && (
-              <Text style={{ color: theme.textSecondary, fontStyle: 'italic' }}>{t.budget.noCategories}</Text>
+              <Text className="italic" style={{ color: theme.textSecondary }}>{t.budget.noCategories}</Text>
             )}
           </ScrollView>
         </View>
 
         {/* Bills List */}
-       <View style={styles.billsList}>
-  {bills.map((bill) => (
-    <View key={bill.id} style={[styles.billCard, { backgroundColor: theme.surface }]}>
-      
-      <View style={styles.billHeader}>
-        
-        <View style={[styles.billIcon, { backgroundColor: getCategoryColor(bill.bill_category_id) }]}>
-          <DollarSign size={20} color="#1C1C1E" />
+        <View className="gap-3">
+          {bills.map((bill) => (
+            <View key={bill.id} className="p-4 rounded-2xl" style={{ backgroundColor: theme.surface }}>
+
+              <View className="flex-row items-center gap-3">
+
+                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: getCategoryColor(bill.bill_category_id) }}>
+                  <DollarSign size={20} color="#1C1C1E" />
+                </View>
+
+                <View className="flex-1">
+                  <Text className="text-base font-manrope-semibold mb-0.5" style={{ color: theme.text }}>{getCategoryName(bill)}</Text>
+                  <Text className="text-xs" style={{ color: theme.textSecondary }}>
+                    {new Date(bill.created_at).toLocaleDateString("pl-PL")} {new Date(bill.created_at).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </View>
+
+                <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
+                  ${bill.total_amount.toFixed(2)}
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => handleDeleteBill(bill.id)}
+                  className="p-0.5"
+                >
+                  <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
+                </TouchableOpacity>
+
+              </View>
+            </View>
+          ))}
+
+          {bills.length === 0 && (
+            <Text className="text-center mt-10" style={{ color: theme.textSecondary }}>
+              {t.budget.noExpenses}
+            </Text>
+          )}
         </View>
-
-        <View style={styles.billInfo}>
-          <Text style={[styles.billType, { color: theme.text }]}>{getCategoryName(bill)}</Text>
-          <Text style={[styles.billDate, { color: theme.textSecondary }]}>
-   {new Date(bill.created_at).toLocaleDateString("pl-PL")} {new Date(bill.created_at).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
-          </Text>
-        </View>
-
-        <Text style={[styles.billAmount, { color: theme.text }]}>
-          ${bill.total_amount.toFixed(2)}
-        </Text>
-
-        <TouchableOpacity
-          onPress={() => handleDeleteBill(bill.id)}
-          style={{       
-            padding: 1         
-          }}
-        >
-          <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
-        </TouchableOpacity>
-
-      </View>
-    </View>
-  ))}
-  
-  {bills.length === 0 && (
-    <Text style={{ textAlign: "center", color: theme.textSecondary, marginTop: 40 }}>
-      {t.budget.noExpenses}
-    </Text>
-  )}
-</View>
       </ScrollView>
 
       {/* Create Bill Modal */}
@@ -366,15 +366,15 @@ export default function BudgetScreen() {
         title={t.budget.addExpense}
         height="full"
       >
-        <View style={styles.modalContent}>
-          <Text style={[styles.label, { color: theme.textSecondary }]}>{t.budget.category}</Text>
+        <View className="pt-2.5">
+          <Text className="text-xs font-manrope-bold uppercase mb-2" style={{ color: theme.textSecondary }}>{t.budget.category}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View className="flex-row gap-2.5">
               {categories.map(cat => (
                 <TouchableOpacity
                   key={cat.id}
+                  className="px-4 py-2.5 rounded-xl border"
                   style={[
-                    styles.categoryOption,
                     { backgroundColor: theme.surface, borderColor: theme.border },
                     selectedCategoryId === cat.id && { borderColor: theme.accent.pink, backgroundColor: theme.accent.pinkLight }
                   ]}
@@ -412,7 +412,7 @@ export default function BudgetScreen() {
         title={t.budget.newCategory}
         height="full"
       >
-        <View style={styles.modalContent}>
+        <View className="pt-2.5">
           <Input
             label={t.budget.categoryName}
             placeholder={t.budget.categoryNamePlaceholder}
@@ -420,13 +420,14 @@ export default function BudgetScreen() {
             onChangeText={setNewCategoryName}
           />
 
-          <Text style={[styles.label, { color: theme.textSecondary, marginTop: 20 }]}>{t.budget.color}</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+          <Text className="text-xs font-manrope-bold uppercase mb-2 mt-5" style={{ color: theme.textSecondary }}>{t.budget.color}</Text>
+          <View className="flex-row flex-wrap gap-3 mb-5">
             {COLOR_OPTIONS.map((color) => (
               <TouchableOpacity
                 key={color}
+                className="w-8 h-8 rounded-full"
                 style={[
-                  { width: 32, height: 32, borderRadius: 16, backgroundColor: color },
+                  { backgroundColor: color },
                   selectedColor === color && { borderWidth: 2, borderColor: theme.text }
                 ]}
                 onPress={() => setSelectedColor(color)}
@@ -447,108 +448,3 @@ export default function BudgetScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: fonts[700],
-  },
-  addButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 8,
-  },
-  categoryDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  categoryText: {
-    fontFamily: fonts[600],
-    fontSize: 14,
-  },
-  billsList: {
-    gap: 12,
-  },
-  billCard: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  billHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  billIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  billInfo: {
-    flex: 1,
-  },
-  billType: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-    marginBottom: 2,
-  },
-  billDate: {
-    fontSize: 12,
-  },
-  billAmount: {
-    fontSize: 18,
-    fontFamily: fonts[700],
-  },
-  modalContent: {
-    paddingTop: 10,
-  },
-  label: {
-    fontSize: 12,
-    fontFamily: fonts[700],
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  categoryOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-  }
-});

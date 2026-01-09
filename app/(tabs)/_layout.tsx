@@ -1,6 +1,13 @@
 import { Tabs } from "expo-router";
-import { View, StyleSheet } from "react-native";
-import { Home, CheckCircle, ShoppingBag, Clock, User, ChartColumn } from "lucide-react-native";
+import { View } from "react-native";
+import {
+  Home,
+  CheckCircle,
+  ShoppingBag,
+  Clock,
+  User,
+  ChartColumn,
+} from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import fonts from "@/constants/fonts";
@@ -45,8 +52,20 @@ export default function TabLayout() {
         options={{
           title: t.tabs.home,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <Home size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <Home
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
@@ -56,8 +75,20 @@ export default function TabLayout() {
         options={{
           title: t.tabs.tasks,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <CheckCircle size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <CheckCircle
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
@@ -67,8 +98,20 @@ export default function TabLayout() {
         options={{
           title: t.tabs.shopping,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <ShoppingBag size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <ShoppingBag
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
@@ -78,19 +121,43 @@ export default function TabLayout() {
         options={{
           title: t.tabs.budget,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <Clock size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <Clock
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
       />
-       <Tabs.Screen
+      <Tabs.Screen
         name="polls"
         options={{
           title: t.tabs.polls,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <ChartColumn size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <ChartColumn
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
@@ -100,8 +167,20 @@ export default function TabLayout() {
         options={{
           title: t.tabs.profile,
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.tabIcon, focused && { backgroundColor: theme.isDark ? "#FFFFFF" : theme.accent.purple }]}>
-              <User size={22} color={focused ? "#1C1C1E" : color} strokeWidth={focused ? 2.5 : 2} />
+            <View
+              className={`w-12 h-12 rounded-16 justify-center items-center ${
+                focused
+                  ? theme.isDark
+                    ? "bg-white"
+                    : "bg-accent-purple"
+                  : ""
+              }`}
+            >
+              <User
+                size={22}
+                color={focused ? "#1C1C1E" : color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             </View>
           ),
         }}
@@ -109,13 +188,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -21,7 +20,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { shoppingApi } from "@/lib/api";
 import { ShoppingCategory, ShoppingItem } from "@/lib/types";
-import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -236,7 +234,7 @@ export default function ShoppingScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
@@ -248,38 +246,47 @@ export default function ShoppingScreen() {
     const categoryColor = activeCategory.color || CATEGORY_COLORS[0];
 
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View className="flex-1" style={{ backgroundColor: theme.background }}>
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: insets.top + 16 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Detail Header */}
-          <View style={styles.detailHeader}>
+          <View className="flex-row items-center mb-8 gap-3">
             <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: theme.surface }]}
+              className="w-12 h-12 rounded-2xl justify-center items-center"
+              style={{ backgroundColor: theme.surface }}
               onPress={() => setActiveCategory(null)}
             >
               <ArrowLeft size={22} color={theme.text} />
             </TouchableOpacity>
-            <Text style={[styles.detailTitle, { color: theme.text }]}>{activeCategory.name}</Text>
-            <View style={[styles.detailIcon, { backgroundColor: categoryColor }]}>
+            <Text
+              className="flex-1 text-2xl font-manrope-bold"
+              style={{ color: theme.text }}
+            >
+              {activeCategory.name}
+            </Text>
+            <View
+              className="w-14 h-14 rounded-[18px] justify-center items-center"
+              style={{ backgroundColor: categoryColor }}
+            >
               {getCategoryIcon(activeCategory)}
             </View>
           </View>
 
           {/* Items List */}
-          <View style={styles.itemsList}>
+          <View className="gap-4">
             {categoryItems.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.itemRow}
+                className="flex-row items-center gap-4 py-2"
                 onPress={() => toggleItemBought(item.id)}
                 activeOpacity={0.95}
               >
                 <View
+                  className="w-8 h-8 rounded-full border-2 justify-center items-center"
                   style={[
-                    styles.itemCheckbox,
                     { borderColor: theme.textSecondary },
                     item.is_bought && {
                       backgroundColor: theme.accent.purple,
@@ -290,17 +297,14 @@ export default function ShoppingScreen() {
                   {item.is_bought && <Check size={16} color="#1C1C1E" strokeWidth={3} />}
                 </View>
                 <Text
-                  style={[
-                    styles.itemName,
-                    { color: theme.text },
-                    item.is_bought && styles.itemNameBought,
-                  ]}
+                  className={`flex-1 text-lg font-manrope-semibold ${item.is_bought ? "line-through opacity-50" : ""}`}
+                  style={{ color: theme.text }}
                 >
                   {item.name}
                 </Text>
                 {item.is_bought && (
                   <TouchableOpacity
-                    style={styles.deleteButton}
+                    className="p-2"
                     onPress={() => handleDeleteItem(item.id)}
                   >
                     <Trash2 size={18} color={theme.textSecondary} />
@@ -313,7 +317,8 @@ export default function ShoppingScreen() {
 
         {/* Add Item FAB */}
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: theme.accent.purple }]}
+          className="absolute bottom-[120px] right-6 w-14 h-14 rounded-[18px] justify-center items-center shadow-lg"
+          style={{ backgroundColor: theme.accent.purple }}
           onPress={() => setShowItemModal(true)}
           activeOpacity={0.8}
         >
@@ -327,7 +332,7 @@ export default function ShoppingScreen() {
           title={t.shopping.addItem}
           height="full"
         >
-          <View style={styles.modalContent}>
+          <View className="flex-1">
             <Input
               label={t.shopping.itemName}
               placeholder={t.shopping.itemNamePlaceholder}
@@ -341,7 +346,7 @@ export default function ShoppingScreen() {
               loading={creatingItem}
               disabled={!newItemName.trim() || creatingItem}
               variant="purple"
-              style={styles.modalButton}
+              style={{ marginTop: "auto" }}
             />
           </View>
         </Modal>
@@ -351,23 +356,34 @@ export default function ShoppingScreen() {
 
   // Main shopping lists view - matches PDF exactly
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: insets.top + 24 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
         }
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View className="flex-row justify-between items-start mb-6">
           <View>
-            <Text style={[styles.title, { color: theme.text }]}>{t.shopping.title}</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t.shopping.myLists}</Text>
+            <Text
+              className="text-4xl font-manrope-bold mb-1"
+              style={{ color: theme.text }}
+            >
+              {t.shopping.title}
+            </Text>
+            <Text
+              className="text-base font-manrope"
+              style={{ color: theme.textSecondary }}
+            >
+              {t.shopping.myLists}
+            </Text>
           </View>
           <TouchableOpacity
-            style={[styles.searchButton, { backgroundColor: theme.accent.cyan }]}
+            className="w-14 h-14 rounded-[18px] justify-center items-center"
+            style={{ backgroundColor: theme.accent.cyan }}
             activeOpacity={0.8}
           >
             <Search size={24} color="#1C1C1E" />
@@ -375,7 +391,7 @@ export default function ShoppingScreen() {
         </View>
 
         {/* Category Grid - matches PDF layout */}
-        <View style={styles.grid}>
+        <View className="flex-row flex-wrap gap-3">
           {categories.map((category) => {
             const categoryColor = category.color || CATEGORY_COLORS[0];
             const itemCount = items[category.id]?.length || 0;
@@ -383,19 +399,24 @@ export default function ShoppingScreen() {
             return (
               <TouchableOpacity
                 key={category.id}
-                style={[styles.categoryCard, { backgroundColor: categoryColor }]}
+                className="w-[47%] rounded-3xl p-[18px] justify-between"
+                style={{ backgroundColor: categoryColor, aspectRatio: 0.9 }}
                 onPress={() => setActiveCategory(category)}
                 activeOpacity={0.9}
               >
-                <View style={styles.categoryIconContainer}>
+                <View className="w-10 h-10 rounded-xl bg-black/5 justify-center items-center">
                   {getCategoryIcon(category)}
                 </View>
-                <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{category.name}</Text>
-                  <Text style={styles.categoryCount}>{itemCount} {t.common.items}</Text>
+                <View className="flex-1 justify-end">
+                  <Text className="text-xl font-manrope-bold text-[#1C1C1E] mb-1">
+                    {category.name}
+                  </Text>
+                  <Text className="text-[13px] font-manrope-medium text-black/50">
+                    {itemCount} {t.common.items}
+                  </Text>
                 </View>
-                <View style={styles.categoryArrow}>
-                  <View style={styles.arrowCircle}>
+                <View className="absolute bottom-[18px] right-[18px]">
+                  <View className="w-8 h-8 rounded-full bg-black/10 justify-center items-center">
                     <ArrowLeft
                       size={16}
                       color="rgba(0,0,0,0.3)"
@@ -409,7 +430,8 @@ export default function ShoppingScreen() {
 
           {/* Add New List Card - Dashed border */}
           <TouchableOpacity
-            style={[styles.addCard, { borderColor: theme.textSecondary }]}
+            className="w-[47%] rounded-3xl border-2 border-dashed justify-center items-center"
+            style={{ borderColor: theme.textSecondary, aspectRatio: 0.9 }}
             onPress={() => setShowCategoryModal(true)}
             activeOpacity={0.8}
           >
@@ -425,10 +447,13 @@ export default function ShoppingScreen() {
         title={t.shopping.newList}
         height="full"
       >
-        <View style={styles.modalContent}>
+        <View className="flex-1">
           {/* Icon Preview */}
-          <View style={styles.iconPreview}>
-            <View style={[styles.iconPreviewCircle, { backgroundColor: selectedColor }]}>
+          <View className="items-center mb-6">
+            <View
+              className="w-20 h-20 rounded-3xl justify-center items-center"
+              style={{ backgroundColor: selectedColor }}
+            >
               {getIconComponent(selectedIcon, 32, "#1C1C1E")}
             </View>
           </View>
@@ -441,29 +466,23 @@ export default function ShoppingScreen() {
           />
 
           {/* Color Picker */}
-          <View style={styles.colorPicker}>
-            <View style={styles.colorRow}>
+          <View className="mb-6 gap-3">
+            <View className="flex-row justify-center gap-2.5">
               {COLOR_OPTIONS.slice(0, 7).map((color) => (
                 <TouchableOpacity
                   key={color}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: color },
-                    selectedColor === color && styles.colorOptionSelected,
-                  ]}
+                  className={`w-9 h-9 rounded-full ${selectedColor === color ? "border-[3px] border-black/30" : ""}`}
+                  style={{ backgroundColor: color }}
                   onPress={() => setSelectedColor(color)}
                 />
               ))}
             </View>
-            <View style={styles.colorRow}>
+            <View className="flex-row justify-center gap-2.5">
               {COLOR_OPTIONS.slice(7).map((color) => (
                 <TouchableOpacity
                   key={color}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: color },
-                    selectedColor === color && styles.colorOptionSelected,
-                  ]}
+                  className={`w-9 h-9 rounded-full ${selectedColor === color ? "border-[3px] border-black/30" : ""}`}
+                  style={{ backgroundColor: color }}
                   onPress={() => setSelectedColor(color)}
                 />
               ))}
@@ -471,18 +490,17 @@ export default function ShoppingScreen() {
           </View>
 
           {/* Icon Picker */}
-          <ScrollView style={styles.iconPickerScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.iconPicker}>
+          <ScrollView className="max-h-[220px]" showsVerticalScrollIndicator={false}>
+            <View className="gap-3">
               {[0, 1, 2, 3].map((row) => (
-                <View key={row} style={styles.iconRow}>
+                <View key={row} className="flex-row justify-center gap-2.5">
                   {ICON_OPTIONS.slice(row * 6, row * 6 + 6).map((icon) => (
                     <TouchableOpacity
                       key={icon.id}
-                      style={[
-                        styles.iconOption,
-                        { backgroundColor: theme.surface },
-                        selectedIcon === icon.id && { backgroundColor: selectedColor },
-                      ]}
+                      className="w-12 h-12 rounded-full justify-center items-center"
+                      style={{
+                        backgroundColor: selectedIcon === icon.id ? selectedColor : theme.surface,
+                      }}
                       onPress={() => setSelectedIcon(icon.id)}
                     >
                       {getIconComponent(icon.id, 20, selectedIcon === icon.id ? "#1C1C1E" : theme.textSecondary)}
@@ -494,9 +512,10 @@ export default function ShoppingScreen() {
           </ScrollView>
         </View>
 
-        <View style={styles.modalActions}>
+        <View className="flex-row gap-3 pt-4">
           <TouchableOpacity
-            style={[styles.modalCancelButton, { backgroundColor: theme.surface }]}
+            className="w-14 h-14 rounded-full justify-center items-center"
+            style={{ backgroundColor: theme.surface }}
             onPress={() => setShowCategoryModal(false)}
           >
             <ArrowLeft
@@ -506,11 +525,8 @@ export default function ShoppingScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.modalConfirmButton,
-              { backgroundColor: theme.textSecondary },
-              newCategoryName && { backgroundColor: theme.text },
-            ]}
+            className="flex-1 h-14 rounded-full justify-center items-center"
+            style={{ backgroundColor: newCategoryName ? theme.text : theme.textSecondary }}
             onPress={handleCreateCategory}
             disabled={!newCategoryName.trim() || creatingCategory}
           >
@@ -521,243 +537,3 @@ export default function ShoppingScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 36,
-    fontFamily: fonts[700],
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-  },
-  searchButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  categoryCard: {
-    width: "47%",
-    aspectRatio: 0.9,
-    borderRadius: 24,
-    padding: 18,
-    justifyContent: "space-between",
-  },
-  categoryIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  categoryInfo: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  categoryName: {
-    fontSize: 20,
-    fontFamily: fonts[700],
-    color: "#1C1C1E",
-    marginBottom: 4,
-  },
-  categoryCount: {
-    fontSize: 13,
-    fontFamily: fonts[500],
-    color: "rgba(0, 0, 0, 0.5)",
-  },
-  categoryArrow: {
-    position: "absolute",
-    bottom: 18,
-    right: 18,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addCard: {
-    width: "47%",
-    aspectRatio: 0.9,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  // Detail view styles
-  detailHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 32,
-    gap: 12,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  detailTitle: {
-    flex: 1,
-    fontSize: 24,
-    fontFamily: fonts[700],
-  },
-  detailIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemsList: {
-    gap: 16,
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    paddingVertical: 8,
-  },
-  itemCheckbox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemName: {
-    flex: 1,
-    fontSize: 18,
-    fontFamily: fonts[600],
-  },
-  itemNameBought: {
-    textDecorationLine: "line-through",
-    opacity: 0.5,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 120,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  modalContent: {
-    flex: 1,
-  },
-  iconPreview: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  iconPreviewCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  colorPicker: {
-    marginBottom: 24,
-    gap: 12,
-  },
-  colorRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-  },
-  colorOption: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  colorOptionSelected: {
-    borderWidth: 3,
-    borderColor: "rgba(0, 0, 0, 0.3)",
-  },
-  iconPickerScroll: {
-    maxHeight: 220,
-  },
-  iconPicker: {
-    gap: 12,
-  },
-  iconRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-  },
-  iconOption: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    paddingTop: 16,
-  },
-  modalCancelButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalConfirmButton: {
-    flex: 1,
-    height: 56,
-    width: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalButton: {
-    marginTop: "auto",
-  },
-});

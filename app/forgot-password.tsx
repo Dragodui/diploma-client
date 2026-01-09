@@ -2,19 +2,16 @@ import { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import Colors from "@/constants/colors";
-import fonts from "@/constants/fonts";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 
@@ -49,25 +46,36 @@ export default function ForgotPasswordScreen() {
 
   if (emailSent) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <View
+        className="flex-1 bg-white"
+        style={{ paddingTop: insets.top }}
+      >
+        <TouchableOpacity
+          className="w-12 h-12 rounded-2xl bg-gray-50 justify-center items-center ml-8 mb-8"
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color={Colors.black} />
         </TouchableOpacity>
 
-        <View style={styles.successContainer}>
-          <View style={styles.successIcon}>
+        <View className="flex-1 justify-center items-center px-8">
+          <View
+            className="w-[120px] h-[120px] rounded-full justify-center items-center mb-8"
+            style={{ backgroundColor: Colors.accentPurple + "20" }}
+          >
             <CheckCircle size={64} color={Colors.accentPurple} />
           </View>
-          <Text style={styles.successTitle}>Check Your Email</Text>
-          <Text style={styles.successText}>
+          <Text className="text-[28px] font-manrope-bold text-black mb-4 text-center">
+            Check Your Email
+          </Text>
+          <Text className="text-base font-manrope text-gray-500 text-center leading-6 mb-8">
             We've sent a password reset link to{"\n"}
-            <Text style={styles.emailHighlight}>{email}</Text>
+            <Text className="font-manrope-bold text-black">{email}</Text>
           </Text>
           <Button
             title="Back to Login"
             onPress={() => router.replace("/login")}
             variant="purple"
-            style={styles.backToLoginButton}
+            className="w-full"
           />
         </View>
       </View>
@@ -76,29 +84,37 @@ export default function ForgotPasswordScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 16 }]}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 32, paddingTop: insets.top + 16 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          className="w-12 h-12 rounded-2xl bg-gray-50 justify-center items-center mb-8"
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color={Colors.black} />
         </TouchableOpacity>
 
-        <View style={styles.header}>
-          <View style={styles.iconContainer}>
+        <View className="mb-12">
+          <View
+            className="w-20 h-20 rounded-3xl justify-center items-center mb-6"
+            style={{ backgroundColor: Colors.accentYellow }}
+          >
             <Mail size={40} color={Colors.black} />
           </View>
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
+          <Text className="text-[32px] font-manrope-bold text-black mb-3">
+            Forgot Password?
+          </Text>
+          <Text className="text-base font-manrope text-gray-500 leading-6">
             No worries! Enter your email and we'll send you a reset link.
           </Text>
         </View>
 
-        <View style={styles.form}>
+        <View className="flex-1">
           <Input
             label="Email Address"
             placeholder="hello@home.app"
@@ -119,121 +135,24 @@ export default function ForgotPasswordScreen() {
             loading={isLoading}
             disabled={isLoading || !email}
             variant="purple"
-            style={styles.submitButton}
+            className="mt-4"
           />
         </View>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={styles.footerText}>Remember your password? </Text>
+        <View
+          className="flex-row justify-center items-center pt-6"
+          style={{ paddingBottom: insets.bottom + 24 }}
+        >
+          <Text className="text-sm font-manrope text-gray-400">
+            Remember your password?{" "}
+          </Text>
           <TouchableOpacity onPress={() => router.replace("/login")}>
-            <Text style={styles.link}>Sign In</Text>
+            <Text className="text-sm font-manrope-bold text-black underline">
+              Sign In
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 32,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: Colors.gray50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  header: {
-    marginBottom: 48,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 28,
-    backgroundColor: Colors.accentYellow,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-    color: Colors.gray500,
-    lineHeight: 24,
-  },
-  form: {
-    flex: 1,
-  },
-  submitButton: {
-    marginTop: 16,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-    color: Colors.gray400,
-    fontFamily: fonts[400],
-  },
-  link: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    textDecorationLine: "underline",
-  },
-  successContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  successIcon: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.accentPurple + "20",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  successTitle: {
-    fontSize: 28,
-    fontFamily: fonts[700],
-    color: Colors.black,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  successText: {
-    fontSize: 16,
-    fontFamily: fonts[400],
-    color: Colors.gray500,
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  emailHighlight: {
-    fontFamily: fonts[700],
-    color: Colors.black,
-  },
-  backToLoginButton: {
-    width: "100%",
-  },
-});

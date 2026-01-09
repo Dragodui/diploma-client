@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -10,13 +9,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Bell, Check, Trash2 } from "lucide-react-native";
+import { ArrowLeft, Bell, Check } from "lucide-react-native";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useHome } from "@/contexts/HomeContext";
 import { notificationApi } from "@/lib/api";
 import { Notification, HomeNotification } from "@/lib/types";
-import fonts from "@/constants/fonts";
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
@@ -98,76 +96,88 @@ export default function NotificationsScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, paddingTop: insets.top + 16 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.text} />
         }
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View className="flex-row items-center mb-8">
           <TouchableOpacity
-            style={[styles.backButton, { backgroundColor: theme.surface }]}
+            className="w-12 h-12 rounded-16 justify-center items-center"
+            style={{ backgroundColor: theme.surface }}
             onPress={() => router.back()}
           >
             <ArrowLeft size={22} color={theme.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.text }]}>
+          <Text className="flex-1 text-2xl font-manrope-bold text-center" style={{ color: theme.text }}>
             {t.profile.notifications}
           </Text>
-          <View style={styles.placeholder} />
+          <View className="w-12" />
         </View>
 
         {/* Notifications List */}
         {notifications.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <View style={[styles.emptyIcon, { backgroundColor: theme.surface }]}>
+          <View className="flex-1 justify-center items-center pt-20">
+            <View
+              className="w-25 h-25 rounded-full justify-center items-center mb-6"
+              style={{ backgroundColor: theme.surface }}
+            >
               <Bell size={48} color={theme.textSecondary} />
             </View>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+            <Text className="text-xl font-manrope-bold mb-2" style={{ color: theme.text }}>
               {t.notifications.noNotifications || "No notifications"}
             </Text>
-            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+            <Text className="text-15 font-manrope" style={{ color: theme.textSecondary }}>
               {t.notifications.noNotificationsText || "You're all caught up!"}
             </Text>
           </View>
         ) : (
-          <View style={styles.notificationsList}>
+          <View className="gap-3">
             {notifications.map((notification) => (
               <View
                 key={`${notification.id}-${'home_id' in notification ? 'home' : 'user'}`}
-                style={[
-                  styles.notificationItem,
-                  { backgroundColor: theme.surface },
-                  !notification.read && { borderLeftWidth: 3, borderLeftColor: theme.accent.purple },
-                ]}
+                className="p-4 rounded-16"
+                style={{
+                  backgroundColor: theme.surface,
+                  borderLeftWidth: !notification.read ? 3 : 0,
+                  borderLeftColor: !notification.read ? theme.accent.purple : undefined,
+                }}
               >
-                <View style={styles.notificationContent}>
-                  <View style={[styles.notificationIcon, { backgroundColor: theme.accent.purple }]}>
+                <View className="flex-row items-start gap-3">
+                  <View
+                    className="w-10 h-10 rounded-12 justify-center items-center"
+                    style={{ backgroundColor: theme.accent.purple }}
+                  >
                     <Bell size={18} color="#1C1C1E" />
                   </View>
-                  <View style={styles.notificationText}>
-                    <Text style={[styles.notificationMessage, { color: theme.text }]}>
+                  <View className="flex-1">
+                    <Text
+                      className="text-15 font-manrope-medium mb-1"
+                      style={{ color: theme.text, lineHeight: 22 }}
+                    >
                       {notification.description}
                     </Text>
-                    <Text style={[styles.notificationTime, { color: theme.textSecondary }]}>
+                    <Text className="text-13 font-manrope" style={{ color: theme.textSecondary }}>
                       {formatDate(notification.created_at)}
                     </Text>
                   </View>
                 </View>
                 {!notification.read && (
                   <TouchableOpacity
-                    style={[styles.markReadButton, { backgroundColor: theme.background }]}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-16 justify-center items-center"
+                    style={{ backgroundColor: theme.background }}
                     onPress={() => markAsRead(notification)}
                   >
                     <Check size={18} color={theme.accent.purple} />
@@ -181,107 +191,3 @@ export default function NotificationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    flex: 1,
-    fontSize: 24,
-    fontFamily: fonts[700],
-    textAlign: "center",
-  },
-  placeholder: {
-    width: 48,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 80,
-  },
-  emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontFamily: fonts[700],
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: fonts[400],
-  },
-  notificationsList: {
-    gap: 12,
-  },
-  notificationItem: {
-    padding: 16,
-    borderRadius: 16,
-  },
-  notificationContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  notificationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationText: {
-    flex: 1,
-  },
-  notificationMessage: {
-    fontSize: 15,
-    fontFamily: fonts[500],
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  notificationTime: {
-    fontSize: 13,
-    fontFamily: fonts[400],
-  },
-  markReadButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});

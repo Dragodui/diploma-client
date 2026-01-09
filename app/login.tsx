@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,7 +12,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import fonts from "@/constants/fonts";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 import { useGoogleAuth } from "@/lib/useGoogleAuth";
@@ -95,22 +93,33 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.background }]}
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 60 }]}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: insets.top + 60 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Brand Header - matches PDF exactly */}
-        <View style={styles.header}>
-          <Text style={[styles.brand, { color: theme.text }]}>{t.auth.brand}</Text>
-          <Text style={[styles.tagline, { color: theme.textSecondary }]}>{t.auth.tagline}</Text>
+        <View className="mb-12">
+          <Text
+            className="text-[64px] font-manrope-extrabold mb-2 tracking-tighter"
+            style={{ color: theme.text }}
+          >
+            {t.auth.brand}
+          </Text>
+          <Text
+            className="text-xl font-manrope"
+            style={{ color: theme.textSecondary }}
+          >
+            {t.auth.tagline}
+          </Text>
         </View>
 
         {/* Form */}
-        <View style={styles.form}>
+        <View className="flex-1 justify-center gap-2">
           <Input
             label={t.auth.email}
             placeholder={t.auth.emailPlaceholder}
@@ -143,109 +152,57 @@ export default function LoginScreen() {
             loading={isLoading}
             disabled={isLoading || isGoogleLoading}
             variant="purple"
-            style={styles.loginButton}
+            className="mt-6"
           />
 
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-            <Text style={[styles.dividerText, { color: theme.textSecondary }]}>{t.common.or}</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+          <View className="flex-row items-center my-5">
+            <View className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
+            <Text
+              className="mx-4 text-sm font-manrope"
+              style={{ color: theme.textSecondary }}
+            >
+              {t.common.or}
+            </Text>
+            <View className="flex-1 h-px" style={{ backgroundColor: theme.border }} />
           </View>
 
           <TouchableOpacity
-            style={[styles.googleButton, { borderColor: theme.border }]}
+            className="flex-row items-center justify-center py-3.5 px-6 rounded-xl border gap-3"
+            style={{ borderColor: theme.border }}
             onPress={handleGoogleSignIn}
             disabled={isLoading || isGoogleLoading || !isReady}
           >
             <Ionicons name="logo-google" size={20} color={theme.text} />
-            <Text style={[styles.googleButtonText, { color: theme.text }]}>
+            <Text
+              className="text-base font-manrope-semibold"
+              style={{ color: theme.text }}
+            >
               {isGoogleLoading ? t.auth.signingIn : t.auth.continueWithGoogle}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={[styles.footerText, { color: theme.textSecondary }]}>{t.auth.newHere} </Text>
+        <View
+          className="flex-row justify-center items-center pt-8"
+          style={{ paddingBottom: insets.bottom + 24 }}
+        >
+          <Text
+            className="text-sm font-manrope"
+            style={{ color: theme.textSecondary }}
+          >
+            {t.auth.newHere}{" "}
+          </Text>
           <TouchableOpacity onPress={() => router.push("/register")}>
-            <Text style={[styles.link, { color: theme.text }]}>{t.auth.createAccount}</Text>
+            <Text
+              className="text-sm font-manrope-bold underline"
+              style={{ color: theme.text }}
+            >
+              {t.auth.createAccount}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-  },
-  header: {
-    marginBottom: 48,
-  },
-  brand: {
-    fontSize: 64,
-    fontFamily: fonts[800],
-    marginBottom: 8,
-    letterSpacing: -2,
-  },
-  tagline: {
-    fontSize: 20,
-    fontFamily: fonts[400],
-  },
-  form: {
-    flex: 1,
-    justifyContent: "center",
-    gap: 8,
-  },
-  loginButton: {
-    marginTop: 24,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    fontFamily: fonts[400],
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    fontFamily: fonts[600],
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 32,
-  },
-  footerText: {
-    fontSize: 14,
-    fontFamily: fonts[400],
-  },
-  link: {
-    fontSize: 14,
-    fontFamily: fonts[700],
-    textDecorationLine: "underline",
-  },
-});
