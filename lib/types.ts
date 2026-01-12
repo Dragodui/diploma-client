@@ -284,3 +284,16 @@ export interface ControlDeviceRequest {
   service: string;
   data?: Record<string, any>;
 }
+
+export interface OCRResult {
+  total_amount: number;
+  date?: string;
+  invoice_number?: string;
+  vendor?: string;
+  items?: {
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }[];
+}

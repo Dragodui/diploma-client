@@ -25,6 +25,7 @@ import {
   AddDeviceRequest,
   UpdateDeviceRequest,
   ControlDeviceRequest,
+  OCRResult,
 } from "./types";
 
 const API_BASE_URL = "https://a73a04f8634e.ngrok-free.app";
@@ -533,6 +534,14 @@ export const imageApi = {
   },
 };
 
+// ============ OCR API ============
+export const ocrApi = {
+  process: async (imageUrl: string, language?: string): Promise<OCRResult> => {
+    const response = await api.post<OCRResult>("/ocr/process", { image_url: imageUrl, language });
+    return response.data;
+  },
+};
+
 // Re-export types for convenience
 export type {
   User,
@@ -554,4 +563,5 @@ export type {
   AddDeviceRequest,
   UpdateDeviceRequest,
   ControlDeviceRequest,
+  OCRResult,
 } from "./types";
