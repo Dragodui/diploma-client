@@ -20,6 +20,7 @@ import {
   Moon,
   Copy,
   Globe,
+  Zap,
 } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -150,6 +151,12 @@ export default function ProfileScreen() {
       label: t.profile.homeSettings,
       color: theme.accent.yellow,
       onPress: () => router.push("/rooms"),
+    },
+    {
+      icon: Zap,
+      label: "Smart Home",
+      color: theme.accent.cyan,
+      onPress: () => router.push("/smarthome"),
     },
     {
       icon: Settings,

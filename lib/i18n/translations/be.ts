@@ -16,6 +16,7 @@ export default {
     today: "Сёння",
     tomorrow: "Заўтра",
     copied: "Скапіявана!",
+    success: "Поспех",
   },
 
   // Auth

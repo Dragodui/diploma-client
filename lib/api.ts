@@ -19,9 +19,15 @@ import {
   CreatePollForm,
   CreateCategoryForm,
   CreateItemForm,
+  SmartDevice,
+  HomeAssistantConfig,
+  HAState,
+  AddDeviceRequest,
+  UpdateDeviceRequest,
+  ControlDeviceRequest,
 } from "./types";
 
-const API_BASE_URL = "http://192.168.0.47:8000";
+const API_BASE_URL = "https://a73a04f8634e.ngrok-free.app";
 
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -445,6 +451,76 @@ export const notificationApi = {
   },
 };
 
+// ============ Smart Home API ============
+export const smarthomeApi = {
+  connect: async (homeId: number, url: string, token: string): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/connect`, { url, token });
+    return { message: response.data.message };
+  },
+
+  disconnect: async (homeId: number): Promise<{ message: string }> => {
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/disconnect`);
+    return { message: response.data.message };
+  },
+
+  getStatus: async (homeId: number): Promise<{ connected: boolean; url?: string; is_active?: boolean; created_at?: string; error?: string }> => {
+    const response = await api.get<{ connected: boolean; url?: string; is_active?: boolean; created_at?: string; error?: string }>(
+      `/homes/${homeId}/smarthome/status`
+    );
+    return response.data;
+  },
+
+  discover: async (homeId: number): Promise<HAState[]> => {
+    const response = await api.get<{ status: boolean; devices: HAState[] }>(`/homes/${homeId}/smarthome/discover`);
+    return response.data.devices || [];
+  },
+
+  addDevice: async (homeId: number, data: AddDeviceRequest): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/devices`, data);
+    return { message: response.data.message };
+  },
+
+  getDevices: async (homeId: number): Promise<SmartDevice[]> => {
+    const response = await api.get<{ status: boolean; devices: SmartDevice[] }>(`/homes/${homeId}/smarthome/devices`);
+    return response.data.devices || [];
+  },
+
+  getDevice: async (homeId: number, deviceId: number): Promise<{ device: SmartDevice; state?: HAState; error?: string }> => {
+    const response = await api.get<{ status: boolean; device: SmartDevice; state?: HAState; error?: string }>(
+      `/homes/${homeId}/smarthome/devices/${deviceId}`
+    );
+    return { device: response.data.device, state: response.data.state, error: response.data.error };
+  },
+
+  updateDevice: async (homeId: number, deviceId: number, data: UpdateDeviceRequest): Promise<{ message: string }> => {
+    const response = await api.put<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/devices/${deviceId}`, data);
+    return { message: response.data.message };
+  },
+
+  deleteDevice: async (homeId: number, deviceId: number): Promise<{ message: string }> => {
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/devices/${deviceId}`);
+    return { message: response.data.message };
+  },
+
+  controlDevice: async (homeId: number, deviceId: number, service: string, data?: Record<string, any>): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/smarthome/devices/${deviceId}/control`, {
+      service,
+      data,
+    });
+    return { message: response.data.message };
+  },
+
+  getAllStates: async (homeId: number): Promise<HAState[]> => {
+    const response = await api.get<{ status: boolean; states: HAState[] }>(`/homes/${homeId}/smarthome/states`);
+    return response.data.states || [];
+  },
+
+  getDevicesByRoom: async (homeId: number, roomId: number): Promise<SmartDevice[]> => {
+    const response = await api.get<{ status: boolean; devices: SmartDevice[] }>(`/homes/${homeId}/rooms/${roomId}/devices`);
+    return response.data.devices || [];
+  },
+};
+
 // ============ Image Upload API ============
 export const imageApi = {
   upload: async (formData: FormData): Promise<{ url: string }> => {
@@ -472,4 +548,10 @@ export type {
   Vote,
   Notification,
   HomeNotification,
+  SmartDevice,
+  HomeAssistantConfig,
+  HAState,
+  AddDeviceRequest,
+  UpdateDeviceRequest,
+  ControlDeviceRequest,
 } from "./types";
