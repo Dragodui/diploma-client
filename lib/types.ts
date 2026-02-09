@@ -232,3 +232,68 @@ export interface CreateItemForm {
   image?: string;
   link?: string;
 }
+
+// Smart Home Types
+export interface SmartDevice {
+  id: number;
+  home_id: number;
+  room_id?: number;
+  entity_id: string;
+  name: string;
+  type: string;
+  icon?: string;
+  created_at: string;
+  room?: Room;
+}
+
+export interface HomeAssistantConfig {
+  id: number;
+  home_id: number;
+  url: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface HAState {
+  entity_id: string;
+  state: string;
+  attributes: Record<string, any>;
+  last_changed: string;
+  last_updated: string;
+}
+
+export interface ConnectHARequest {
+  url: string;
+  token: string;
+}
+
+export interface AddDeviceRequest {
+  entity_id: string;
+  name: string;
+  room_id?: number;
+  icon?: string;
+}
+
+export interface UpdateDeviceRequest {
+  name?: string;
+  room_id?: number;
+  icon?: string;
+}
+
+export interface ControlDeviceRequest {
+  service: string;
+  data?: Record<string, any>;
+}
+
+export interface OCRResult {
+  total_amount: number;
+  date?: string;
+  invoice_number?: string;
+  vendor?: string;
+  items?: {
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }[];
+}

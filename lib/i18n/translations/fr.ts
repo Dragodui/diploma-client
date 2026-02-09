@@ -16,6 +16,7 @@ export default {
     today: "Aujourd'hui",
     tomorrow: "Demain",
     copied: "Copié !",
+    success: "Succès",
   },
 
   // Auth
