@@ -16,6 +16,7 @@ export default {
     today: "Today",
     tomorrow: "Tomorrow",
     copied: "Copied!",
+    success: "Success",
   },
 
   // Auth
@@ -322,4 +323,4 @@ export default {
     polls: "Polls",
     profile: "Profile",
   },
-} as const;
+};

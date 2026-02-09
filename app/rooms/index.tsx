@@ -151,10 +151,11 @@ export default function RoomsScreen() {
               const finalTextColor = (backgroundColor === theme.surface || backgroundColor === theme.border) ? theme.text : "#1C1C1E";
 
               return (
-                <View
+                <TouchableOpacity
                   key={room.id}
                   className="rounded-28 p-6 relative"
                   style={{ backgroundColor, width: "47%", minHeight: 160 }}
+                  onPress={() => router.push({ pathname: "/rooms/[id]", params: { id: String(room.id), name: room.name } })}
                 >
                   <View className="w-14 h-14 rounded-20 justify-center items-center mb-4 bg-black/10">
                     <Home size={28} color={finalTextColor} />
@@ -174,7 +175,7 @@ export default function RoomsScreen() {
                       <Trash2 size={18} color={theme.accent.danger} />
                     </TouchableOpacity>
                   )}
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>

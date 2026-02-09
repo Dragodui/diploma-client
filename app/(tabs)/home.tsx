@@ -330,6 +330,32 @@ export default function HomeScreen() {
           </Card>
         </View>
 
+        {/* Smart Home Card */}
+        <Card
+            variant="surface"
+            borderRadius={28}
+            padding={20}
+            onPress={() => router.push("/smarthome")}
+            className="mb-4"
+        >
+            <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-4">
+                    <View className="w-11 h-11 rounded-22 bg-accent-cyan justify-center items-center">
+                         <Zap size={22} color="#FFFFFF" />
+                    </View>
+                    <View>
+                        <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
+                            Smart Home
+                        </Text>
+                        <Text className="text-sm font-manrope" style={{ color: theme.textSecondary }}>
+                            Manage devices
+                        </Text>
+                    </View>
+                </View>
+                <ArrowRight size={20} color={theme.text} />
+            </View>
+        </Card>
+
         {/* Budget Card */}
         <Card
           variant="white"
