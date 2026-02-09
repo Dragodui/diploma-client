@@ -47,6 +47,8 @@ export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
   const wsRef = useRef<WebSocket | null>(null);
   const subscribersRef = useRef<Map<string, Set<EventCallback>>>(new Map());
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAuthenticatedRef = useRef(isAuthenticated);
+  isAuthenticatedRef.current = isAuthenticated;
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
@@ -76,7 +78,7 @@ export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
         console.log("[WS] Disconnected");
         wsRef.current = null;
         reconnectTimeoutRef.current = setTimeout(() => {
-          if (isAuthenticated) {
+          if (isAuthenticatedRef.current) {
             connect();
           }
         }, 3000);
@@ -90,7 +92,7 @@ export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
     } catch (err) {
       console.error("[WS] Connection failed:", err);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
