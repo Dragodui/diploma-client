@@ -18,11 +18,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { billApi, billCategoryApi, imageApi, ocrApi } from "@/lib/api";
 import { Bill, BillCategory } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
-
 
 const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data: { value: number; color: string }[]; size?: number; strokeWidth?: number; total: number; theme: any }) => {
   const center = size / 2;
@@ -80,23 +80,19 @@ export default function BudgetScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Create bill modal
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [newBillAmount, setNewBillAmount] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Create category modal
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedColor, setSelectedColor] = useState(theme.accent.yellow);
   const [creatingCategory, setCreatingCategory] = useState(false);
-  
-  // OCR
+
   const [scanning, setScanning] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("eng");
 
-  // Color options for categories
   const COLOR_OPTIONS = [
     "#FF7476", "#FF9F7A", "#FBEB9E", "#A8E6CF", "#7DD3E8", "#D8D4FC", "#F5A3D3",
     "#22C55E", "#F472B6", "#C4B5FD", "#94A3B8", "#FDE68A", "#6EE7B7",
@@ -132,6 +128,8 @@ export default function BudgetScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useRealtimeRefresh(["BILL", "BILL_CATEGORY"], loadData);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -195,7 +193,7 @@ export default function BudgetScreen() {
       const category = categories.find(c => c.id === selectedCategoryId);
 
       await billApi.create(home.id, {
-        type: category?.name || "Expense", // Fallback type
+        type: category?.name || "Expense",
         bill_category_id: selectedCategoryId,
         total_amount: parseFloat(newBillAmount),
         period_start: now.toISOString(),
@@ -246,7 +244,6 @@ export default function BudgetScreen() {
         if (!result.canceled && result.assets[0].uri) {
             setScanning(true);
             
-            // Upload
             const formData = new FormData();
             // @ts-ignore
             formData.append("image", {
@@ -256,8 +253,6 @@ export default function BudgetScreen() {
             });
 
             const uploadRes = await imageApi.upload(formData);
-            
-            // OCR with selected language
             const ocrRes = await ocrApi.process(uploadRes.url, selectedLanguage);
             
             if (ocrRes.total_amount) {
@@ -342,14 +337,12 @@ export default function BudgetScreen() {
           </View>
         </View>
 
-        {/* Chart */}
         {totalSpend > 0 && (
           <View className="items-center mb-8">
             <DonutChart data={chartData} total={totalSpend} theme={theme} />
           </View>
         )}
 
-        {/* Categories List (Horizontal) */}
         <View className="mb-6">
           <Text className="text-sm font-manrope-bold uppercase mb-3" style={{ color: theme.textSecondary }}>{t.budget.categories}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
@@ -370,39 +363,31 @@ export default function BudgetScreen() {
           </ScrollView>
         </View>
 
-        {/* Bills List */}
         <View className="gap-3">
           {bills.map((bill) => (
             <View key={bill.id} className="p-4 rounded-2xl" style={{ backgroundColor: theme.surface }}>
-
               <View className="flex-row items-center gap-3">
-
                 <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: getCategoryColor(bill.bill_category_id) }}>
                   <DollarSign size={20} color="#1C1C1E" />
                 </View>
-
                 <View className="flex-1">
                   <Text className="text-base font-manrope-semibold mb-0.5" style={{ color: theme.text }}>{getCategoryName(bill)}</Text>
                   <Text className="text-xs" style={{ color: theme.textSecondary }}>
                     {new Date(bill.created_at).toLocaleDateString("pl-PL")} {new Date(bill.created_at).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
                   </Text>
                 </View>
-
                 <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
                   ${bill.total_amount.toFixed(2)}
                 </Text>
-
                 <TouchableOpacity
                   onPress={() => handleDeleteBill(bill.id)}
                   className="p-0.5"
                 >
                   <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
                 </TouchableOpacity>
-
               </View>
             </View>
           ))}
-
           {bills.length === 0 && (
             <Text className="text-center mt-10" style={{ color: theme.textSecondary }}>
               {t.budget.noExpenses}
@@ -411,7 +396,6 @@ export default function BudgetScreen() {
         </View>
       </ScrollView>
 
-      {/* Create Bill Modal */}
       <Modal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -419,7 +403,6 @@ export default function BudgetScreen() {
         height="full"
       >
         <View className="pt-2.5">
-          {/* Scan Section */}
           <View className="mb-6">
             <Text className="text-xs font-manrope-bold uppercase mb-2" style={{ color: theme.textSecondary }}>Scan Receipt</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 8 }}>
@@ -427,7 +410,7 @@ export default function BudgetScreen() {
                     <TouchableOpacity
                         key={lang.code}
                         onPress={() => setSelectedLanguage(lang.code)}
-                        className={`px-3 py-1.5 rounded-full border ${selectedLanguage === lang.code ? 'bg-black border-black' : 'bg-transparent border-gray-300'}`}
+                        className="px-3 py-1.5 rounded-full border"
                         style={{ 
                             backgroundColor: selectedLanguage === lang.code ? theme.text : 'transparent',
                             borderColor: selectedLanguage === lang.code ? theme.text : theme.border 
@@ -499,7 +482,6 @@ export default function BudgetScreen() {
         </View>
       </Modal>
 
-      {/* Create Category Modal */}
       <Modal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}

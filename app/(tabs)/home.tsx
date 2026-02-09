@@ -23,6 +23,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { taskApi, pollApi, billApi } from "@/lib/api";
 import { TaskAssignment, Poll } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Card from "@/components/ui/card";
 
 export default function HomeScreen() {
@@ -96,6 +97,8 @@ export default function HomeScreen() {
 
     loadDashboardData();
   }, [authLoading, isAuthenticated, home, user, loadDashboardData, router]);
+
+  useRealtimeRefresh(["TASK", "POLL", "BILL", "BILL_CATEGORY"], loadDashboardData);
 
   const onRefresh = async () => {
     setRefreshing(true);

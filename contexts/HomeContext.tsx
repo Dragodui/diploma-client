@@ -3,6 +3,7 @@ import createContextHook from "@nkzw/create-context-hook";
 import { homeApi, roomApi } from "@/lib/api";
 import { Home, Room, HomeMembership } from "@/lib/types";
 import { useAuth } from "./AuthContext";
+import { useWebSocket, EventModule } from "./WebSocketContext";
 
 interface HomeResult {
   success: boolean;
@@ -11,6 +12,7 @@ interface HomeResult {
 
 export const [HomeProvider, useHome] = createContextHook(() => {
   const { isAuthenticated, user } = useAuth();
+  const { subscribe } = useWebSocket();
   const [home, setHome] = useState<Home | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -64,6 +66,13 @@ export const [HomeProvider, useHome] = createContextHook(() => {
       setIsLoading(false);
     }
   }, [isAuthenticated, loadHome]);
+
+  useEffect(() => {
+    const modules: EventModule[] = ["HOME", "ROOM"];
+    return subscribe(modules, () => {
+      loadHome();
+    });
+  }, [subscribe, loadHome]);
 
   const createHome = useCallback(
     async (name: string): Promise<HomeResult> => {

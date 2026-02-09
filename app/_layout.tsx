@@ -20,6 +20,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HomeProvider } from "@/contexts/HomeContext";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { I18nProvider } from "@/contexts/I18nContext";
 
@@ -59,9 +60,11 @@ function AppContent() {
       className={`flex-1 ${theme.isDark ? "bg-background-dark" : "bg-background"}`}
     >
       <AuthProvider>
-        <HomeProvider>
-          <RootLayoutNav />
-        </HomeProvider>
+        <WebSocketProvider>
+          <HomeProvider>
+            <RootLayoutNav />
+          </HomeProvider>
+        </WebSocketProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

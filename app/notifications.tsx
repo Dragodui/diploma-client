@@ -15,6 +15,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useHome } from "@/contexts/HomeContext";
 import { notificationApi } from "@/lib/api";
 import { Notification, HomeNotification } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
@@ -57,6 +58,8 @@ export default function NotificationsScreen() {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  useRealtimeRefresh(["NOTIFICATION", "HOME_NOTIFICATION"], loadNotifications);
 
   const onRefresh = async () => {
     setRefreshing(true);

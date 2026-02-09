@@ -20,6 +20,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { shoppingApi } from "@/lib/api";
 import { ShoppingCategory, ShoppingItem } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -143,6 +144,8 @@ export default function ShoppingScreen() {
   useEffect(() => {
     loadShoppingData();
   }, [loadShoppingData]);
+
+  useRealtimeRefresh(["SHOPPING_CATEGORY", "SHOPPING_ITEM"], loadShoppingData);
 
   const onRefresh = async () => {
     setRefreshing(true);

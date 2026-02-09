@@ -20,6 +20,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { pollApi } from "@/lib/api";
 import { Poll, PollOption } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -67,6 +68,8 @@ export default function PollsScreen() {
   useEffect(() => {
     loadPolls();
   }, [loadPolls]);
+
+  useRealtimeRefresh(["POLL"], loadPolls);
 
   const onRefresh = async () => {
     setRefreshing(true);
