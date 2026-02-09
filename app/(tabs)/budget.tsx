@@ -9,13 +9,14 @@ import {
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DollarSign, Plus, Trash } from "lucide-react-native";
+import { DollarSign, Plus, Trash, ScanLine } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
+import * as ImagePicker from "expo-image-picker";
 import { useHome } from "@/contexts/HomeContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { billApi, billCategoryApi } from "@/lib/api";
+import { billApi, billCategoryApi, imageApi, ocrApi } from "@/lib/api";
 import { Bill, BillCategory } from "@/lib/types";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
@@ -90,11 +91,22 @@ export default function BudgetScreen() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedColor, setSelectedColor] = useState(theme.accent.yellow);
   const [creatingCategory, setCreatingCategory] = useState(false);
+  
+  // OCR
+  const [scanning, setScanning] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("eng");
 
   // Color options for categories
   const COLOR_OPTIONS = [
     "#FF7476", "#FF9F7A", "#FBEB9E", "#A8E6CF", "#7DD3E8", "#D8D4FC", "#F5A3D3",
     "#22C55E", "#F472B6", "#C4B5FD", "#94A3B8", "#FDE68A", "#6EE7B7",
+  ];
+
+  const LANGUAGES = [
+    { code: "eng", label: "English" },
+    { code: "pol", label: "Polski" },
+    { code: "ukr", label: "Українська" },
+    { code: "bel", label: "Беларуская" },
   ];
 
   const loadData = useCallback(async () => {
@@ -221,6 +233,46 @@ export default function BudgetScreen() {
         },
       },
     ]);
+  };
+
+  const handleScan = async () => {
+    try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0].uri) {
+            setScanning(true);
+            
+            // Upload
+            const formData = new FormData();
+            // @ts-ignore
+            formData.append("image", {
+                uri: result.assets[0].uri,
+                name: "receipt.jpg",
+                type: "image/jpeg",
+            });
+
+            const uploadRes = await imageApi.upload(formData);
+            
+            // OCR with selected language
+            const ocrRes = await ocrApi.process(uploadRes.url, selectedLanguage);
+            
+            if (ocrRes.total_amount) {
+                setNewBillAmount(ocrRes.total_amount.toString());
+                Alert.alert(t.common.success || "Success", `Scanned amount: ${ocrRes.total_amount}`);
+            } else {
+                Alert.alert("OCR", "Could not detect total amount");
+            }
+        }
+    } catch (error) {
+        console.error("Scan error:", error);
+        Alert.alert(t.common.error, "Failed to scan receipt");
+    } finally {
+        setScanning(false);
+    }
   };
 
   const getCategoryColor = (categoryId?: number) => {
@@ -367,6 +419,48 @@ export default function BudgetScreen() {
         height="full"
       >
         <View className="pt-2.5">
+          {/* Scan Section */}
+          <View className="mb-6">
+            <Text className="text-xs font-manrope-bold uppercase mb-2" style={{ color: theme.textSecondary }}>Scan Receipt</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 8 }}>
+                {LANGUAGES.map((lang) => (
+                    <TouchableOpacity
+                        key={lang.code}
+                        onPress={() => setSelectedLanguage(lang.code)}
+                        className={`px-3 py-1.5 rounded-full border ${selectedLanguage === lang.code ? 'bg-black border-black' : 'bg-transparent border-gray-300'}`}
+                        style={{ 
+                            backgroundColor: selectedLanguage === lang.code ? theme.text : 'transparent',
+                            borderColor: selectedLanguage === lang.code ? theme.text : theme.border 
+                        }}
+                    >
+                        <Text style={{ 
+                            color: selectedLanguage === lang.code ? theme.background : theme.textSecondary,
+                            fontSize: 12,
+                            fontWeight: '600'
+                        }}>
+                            {lang.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+            
+            <TouchableOpacity
+              className="w-full py-3 rounded-xl flex-row justify-center items-center gap-2 mb-2"
+              style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
+              onPress={handleScan}
+              disabled={scanning}
+            >
+              {scanning ? (
+                  <ActivityIndicator size="small" color={theme.text} />
+              ) : (
+                  <ScanLine size={20} color={theme.text} />
+              )}
+              <Text className="font-manrope-semibold" style={{ color: theme.text }}>
+                  {scanning ? "Scanning..." : "Scan from Gallery"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <Text className="text-xs font-manrope-bold uppercase mb-2" style={{ color: theme.textSecondary }}>{t.budget.category}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
             <View className="flex-row gap-2.5">
