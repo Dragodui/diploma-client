@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n, interpolate } from "@/contexts/I18nContext";
 import { taskApi } from "@/lib/api";
 import { Task, TaskAssignment } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -70,6 +71,8 @@ export default function TasksScreen() {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  useRealtimeRefresh(["TASK"], loadTasks);
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { billApi, billCategoryApi } from "@/lib/api";
 import { Bill, BillCategory } from "@/lib/types";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import fonts from "@/constants/fonts";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
@@ -120,6 +121,8 @@ export default function BudgetScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useRealtimeRefresh(["BILL", "BILL_CATEGORY"], loadData);
 
   const onRefresh = async () => {
     setRefreshing(true);
