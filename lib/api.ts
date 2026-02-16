@@ -28,7 +28,7 @@ import {
   OCRResult,
 } from "./types";
 
-const API_BASE_URL = "https://a73a04f8634e.ngrok-free.app";
+const API_BASE_URL = "https://205b-83-11-8-149.ngrok-free.app";
 
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
