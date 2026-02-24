@@ -2,8 +2,7 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import createContextHook from "@nkzw/create-context-hook";
 import { useAuth } from "./AuthContext";
 
-const API_BASE_URL = "192.168.0.47:8000";
-const WS_URL = `ws://${API_BASE_URL}/ws`;
+const WS_URL = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/^https?/, "ws") + "/ws";
 
 export type EventModule =
   | "BILL_CATEGORY"
