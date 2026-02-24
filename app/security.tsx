@@ -19,6 +19,7 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/lib/api";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
@@ -54,8 +55,7 @@ export default function SecurityScreen() {
 
     setIsChangingPassword(true);
     try {
-      // TODO: Implement password change API call
-      // await authApi.changePassword({ currentPassword, newPassword });
+      await authApi.changePassword(currentPassword, newPassword);
 
       Alert.alert(
         t.common.success || "Success",
@@ -65,8 +65,9 @@ export default function SecurityScreen() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error) {
-      Alert.alert(t.common.error, t.security.passwordChangeFailed || "Failed to change password");
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || t.security.passwordChangeFailed || "Failed to change password";
+      Alert.alert(t.common.error, msg);
     } finally {
       setIsChangingPassword(false);
     }
