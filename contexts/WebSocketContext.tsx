@@ -42,7 +42,7 @@ export interface RealTimeEvent {
 type EventCallback = (event: RealTimeEvent) => void;
 
 export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const wsRef = useRef<WebSocket | null>(null);
   const subscribersRef = useRef<Map<string, Set<EventCallback>>>(new Map());
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,8 +52,12 @@ export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
       return;
     }
 
+    if (!token) {
+      return;
+    }
+
     try {
-      const ws = new WebSocket(WS_URL);
+      const ws = new WebSocket(WS_URL + "?token=" + encodeURIComponent(token));
 
       ws.onopen = () => {
         console.log("[WS] Connected");
@@ -89,7 +93,7 @@ export const [WebSocketProvider, useWebSocket] = createContextHook(() => {
     } catch (err) {
       console.error("[WS] Connection failed:", err);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

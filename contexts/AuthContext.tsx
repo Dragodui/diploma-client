@@ -192,9 +192,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, []);
 
-  const googleSignIn = useCallback(async (email: string, name: string, avatar: string): Promise<AuthResult> => {
+  const googleSignIn = useCallback(async (accessToken: string): Promise<AuthResult> => {
     try {
-      const response = await authApi.googleSignIn(email, name, avatar);
+      const response = await authApi.googleSignIn(accessToken);
       const user = response.user;
 
       setAuthState({

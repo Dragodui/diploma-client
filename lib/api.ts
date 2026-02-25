@@ -88,12 +88,21 @@ export const authApi = {
   },
 
   forgotPassword: async (email: string) => {
-    const response = await api.post("/auth/forgot", null, { params: { email } });
+    const params = new URLSearchParams();
+    params.append("email", email);
+    const response = await api.post("/auth/forgot", params, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
     return response.data;
   },
 
   resetPassword: async (token: string, password: string) => {
-    const response = await api.post("/auth/reset", null, { params: { token, password } });
+    const params = new URLSearchParams();
+    params.append("token", token);
+    params.append("password", password);
+    const response = await api.post("/auth/reset", params, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
     return response.data;
   },
 
@@ -106,12 +115,17 @@ export const authApi = {
   },
 
   logout: async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Proceed with local cleanup even if server call fails
+    }
     await AsyncStorage.removeItem("auth_token");
     await AsyncStorage.removeItem("user");
   },
 
-  googleSignIn: async (email: string, name: string, avatar: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>("/auth/google/mobile", { email, name, avatar });
+  googleSignIn: async (accessToken: string): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>("/auth/google/mobile", { access_token: accessToken });
     if (response.data.token) {
       await AsyncStorage.setItem("auth_token", response.data.token);
       await AsyncStorage.setItem("user", JSON.stringify(response.data.user));

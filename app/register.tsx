@@ -31,7 +31,7 @@ export default function RegisterScreen() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { request, response, promptAsync, getUserInfo, isReady } = useGoogleAuth();
+  const { response, promptAsync, isReady } = useGoogleAuth();
 
   useEffect(() => {
     handleGoogleResponse();
@@ -44,18 +44,12 @@ export default function RegisterScreen() {
 
       const { authentication } = response;
       if (authentication?.accessToken) {
-        const userInfo = await getUserInfo(authentication.accessToken);
+        const result = await googleSignIn(authentication.accessToken);
 
-        if (userInfo) {
-          const result = await googleSignIn(userInfo.email, userInfo.name, userInfo.picture);
-
-          if (result.success) {
-            router.replace("/(tabs)/home");
-          } else {
-            setError(result.error || t.auth.googleSignInFailed);
-          }
+        if (result.success) {
+          router.replace("/(tabs)/home");
         } else {
-          setError(t.auth.failedToGetUserInfo);
+          setError(result.error || t.auth.googleSignInFailed);
         }
       }
       setIsGoogleLoading(false);
@@ -78,7 +72,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(t.auth.passwordMinLength);
       return;
     }
