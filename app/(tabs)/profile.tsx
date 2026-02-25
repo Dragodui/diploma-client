@@ -425,7 +425,7 @@ export default function ProfileScreen() {
       </Modal>
 
       {/* Join Home Modal */}
-      <Modal visible={showJoinModal} onClose={() => setShowJoinModal(false)} title={t.profile.joinHome}>
+      <Modal height="full" visible={showJoinModal} onClose={() => setShowJoinModal(false)} title={t.profile.joinHome}>
         <View className="flex-1">
           <Input
             label={t.profile.inviteCode}

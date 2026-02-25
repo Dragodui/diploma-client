@@ -6,7 +6,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 // You need to replace these with your actual Google OAuth credentials
 // Get them from https://console.cloud.google.com/apis/credentials
-const GOOGLE_CLIENT_ID = "YOUR_WEB_CLIENT_ID"; // Web client ID
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID; // Web client ID
 const GOOGLE_ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID"; // Android client ID (optional)
 const GOOGLE_IOS_CLIENT_ID = "YOUR_IOS_CLIENT_ID"; // iOS client ID (optional)
 

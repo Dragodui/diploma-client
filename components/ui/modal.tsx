@@ -26,7 +26,7 @@ const Modal: FC<ModalProps> = ({
   onClose,
   title,
   children,
-  height = "auto",
+  height = "full",
 }) => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
