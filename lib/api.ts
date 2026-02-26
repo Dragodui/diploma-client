@@ -50,12 +50,17 @@ api.interceptors.request.use(
 );
 
 // Response interceptor - handle 401
+// Only clear stored credentials when the token is definitively invalid or revoked.
+// Do NOT clear on every 401 — transient failures (CORS, network) would wipe auth state.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem("auth_token");
-      await AsyncStorage.removeItem("user");
+      const message = error.response?.data?.error ?? "";
+      if (message === "token revoked" || message === "invalid token") {
+        await AsyncStorage.removeItem("auth_token");
+        await AsyncStorage.removeItem("user");
+      }
     }
     return Promise.reject(error);
   }
