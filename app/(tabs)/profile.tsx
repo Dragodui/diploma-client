@@ -385,6 +385,19 @@ export default function ProfileScreen() {
           </View>
         )}
 
+         {/* Logout Button */}
+        <TouchableOpacity
+          className="flex-row items-center justify-center gap-2.5 mb-3 py-[18px] rounded-[20px]"
+          style={{ backgroundColor: theme.accent.dangerLight }}
+          onPress={leaveHome}
+          activeOpacity={0.8}
+        >
+          <Text className="text-[16px] font-manrope-bold text-white">
+            {t.auth.leaveHome}
+          </Text>
+          <LogOut size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
         {/* Logout Button */}
         <TouchableOpacity
           className="flex-row items-center justify-center gap-2.5 py-[18px] rounded-[20px]"

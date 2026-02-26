@@ -286,7 +286,7 @@ export interface ControlDeviceRequest {
 }
 
 export interface OCRResult {
-  total_amount: number;
+  total: number;
   date?: string;
   invoice_number?: string;
   vendor?: string;

@@ -39,6 +39,7 @@ export default {
     alreadyMember: "Already a member?",
     logIn: "Log In",
     logOut: "Log Out",
+    leaveHome: "Leave Home",
     logOutConfirm: "Are you sure you want to log out?",
     joinHome: "Join HŌME",
     // Errors

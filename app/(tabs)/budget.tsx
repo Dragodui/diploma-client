@@ -254,10 +254,10 @@ export default function BudgetScreen() {
 
             const uploadRes = await imageApi.upload(formData);
             const ocrRes = await ocrApi.process(uploadRes.url, selectedLanguage);
-            
-            if (ocrRes.total_amount) {
-                setNewBillAmount(ocrRes.total_amount.toString());
-                Alert.alert(t.common.success || "Success", `Scanned amount: ${ocrRes.total_amount}`);
+            console.log(ocrRes)
+            if (ocrRes.total) {
+                setNewBillAmount(ocrRes.total.toString());
+                Alert.alert(t.common.success || "Success", `Scanned amount: ${ocrRes.total}`);
             } else {
                 Alert.alert("OCR", "Could not detect total amount");
             }
