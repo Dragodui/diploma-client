@@ -202,6 +202,7 @@ export interface CreateTaskForm {
   due_date?: string;
   home_id: number;
   room_id?: number;
+  assign_user_id?: number;
 }
 
 export interface CreateBillForm {

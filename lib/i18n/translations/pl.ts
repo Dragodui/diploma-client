@@ -115,6 +115,7 @@ export default {
     unassigned: "Nieprzypisane",
     assigned: "Przypisane",
     noDueDate: "Bez terminu",
+    assignTo: "Przypisz do (Opcjonalnie)",
     filters: {
       all: "Wszystkie",
       my: "Moje",

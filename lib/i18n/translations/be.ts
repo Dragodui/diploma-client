@@ -115,6 +115,7 @@ export default {
     unassigned: "Не прызначана",
     assigned: "Прызначана",
     noDueDate: "Без тэрміну",
+    assignTo: "Прызначыць (Неабавязкова)",
     filters: {
       all: "Усе",
       my: "Мае",

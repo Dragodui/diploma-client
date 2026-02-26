@@ -115,6 +115,7 @@ export default {
     unassigned: "Не призначено",
     assigned: "Призначено",
     noDueDate: "Без терміну",
+    assignTo: "Призначити (Необов'язково)",
     filters: {
       all: "Усі",
       my: "Мої",

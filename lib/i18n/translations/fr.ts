@@ -115,6 +115,7 @@ export default {
     unassigned: "Non assignée",
     assigned: "Assignée",
     noDueDate: "Pas de date limite",
+    assignTo: "Assigner à (Optionnel)",
     filters: {
       all: "Toutes",
       my: "Mes",

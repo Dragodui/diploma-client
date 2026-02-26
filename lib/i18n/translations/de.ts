@@ -115,6 +115,7 @@ export default {
     unassigned: "Nicht zugewiesen",
     assigned: "Zugewiesen",
     noDueDate: "Kein Fälligkeitsdatum",
+    assignTo: "Zuweisen an (Optional)",
     filters: {
       all: "Alle",
       my: "Meine",

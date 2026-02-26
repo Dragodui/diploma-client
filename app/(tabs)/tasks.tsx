@@ -45,6 +45,7 @@ export default function TasksScreen() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
 
   const loadTasks = useCallback(async () => {
@@ -160,12 +161,14 @@ export default function TasksScreen() {
         due_date: selectedDate ? selectedDate.toISOString() : undefined,
         home_id: home.id,
         room_id: selectedRoomId || undefined,
+        assign_user_id: selectedUserId || undefined,
       });
 
       setNewTaskName("");
       setNewTaskDescription("");
       setSelectedDate(null);
       setSelectedRoomId(null);
+      setSelectedUserId(null);
       setShowCreateModal(false);
       await loadTasks();
     } catch (error) {
@@ -491,6 +494,60 @@ export default function TasksScreen() {
                         ]}
                       >
                         {room.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+
+          {home?.memberships && home.memberships.length > 0 && (
+            <View className="mb-6">
+              <Text
+                className="text-xs font-manrope-bold uppercase tracking-wide mb-3 ml-1"
+                style={{ color: theme.textSecondary }}
+              >
+                {t.tasks.assignTo}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row gap-2.5">
+                  <TouchableOpacity
+                    className="px-4.5 py-3 rounded-[12px]"
+                    style={[
+                      { backgroundColor: theme.surface },
+                      !selectedUserId && { backgroundColor: theme.text },
+                    ]}
+                    onPress={() => setSelectedUserId(null)}
+                  >
+                    <Text
+                      className="text-sm font-manrope-semibold"
+                      style={[
+                        { color: theme.textSecondary },
+                        !selectedUserId && { color: theme.background },
+                      ]}
+                    >
+                      {t.common.none}
+                    </Text>
+                  </TouchableOpacity>
+                  {home.memberships.map((membership) => (
+                    <TouchableOpacity
+                      key={membership.user_id}
+                      className="px-4.5 py-3 rounded-[12px]"
+                      style={[
+                        { backgroundColor: theme.surface },
+                        selectedUserId === membership.user_id && { backgroundColor: theme.text },
+                      ]}
+                      onPress={() => setSelectedUserId(membership.user_id)}
+                    >
+                      <Text
+                        className="text-sm font-manrope-semibold"
+                        style={[
+                          { color: theme.textSecondary },
+                          selectedUserId === membership.user_id && { color: theme.background },
+                        ]}
+                      >
+                        {membership.user?.name || `User ${membership.user_id}`}
                       </Text>
                     </TouchableOpacity>
                   ))}
