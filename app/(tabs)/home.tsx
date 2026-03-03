@@ -52,7 +52,6 @@ export default function HomeScreen() {
 
   const loadDashboardData = useCallback(async () => {
     if (!home || !user) {
-      setIsLoading(false);
       return;
     }
 
