@@ -586,8 +586,14 @@ export const imageApi = {
 
 // ============ OCR API ============
 export const ocrApi = {
-  process: async (imageUrl: string, language?: string): Promise<OCRResult> => {
-    const response = await api.post<OCRResult>("/ocr/process", { image_url: imageUrl, language });
+  process: async (fileUri: string, fileName: string, mimeType: string, language?: string): Promise<OCRResult> => {
+    const formData = new FormData();
+    // @ts-ignore - React Native FormData accepts object with uri/name/type
+    formData.append("file", { uri: fileUri, name: fileName, type: mimeType });
+    if (language) formData.append("language", language);
+    const response = await api.post<OCRResult>("/ocr/process", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 };

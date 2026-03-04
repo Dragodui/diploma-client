@@ -9,14 +9,15 @@ import {
   Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DollarSign, Plus, Trash, ScanLine, Camera, ChevronDown, ChevronUp, Receipt, Check, Pencil, Users } from "lucide-react-native";
+import { DollarSign, Plus, Trash, ScanLine, Camera, ChevronDown, ChevronUp, Receipt, Check, Pencil, Users, FileText, File } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
+import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useHome } from "@/stores/homeStore";
 import { useTheme } from "@/stores/themeStore";
 import { useAuth } from "@/stores/authStore";
 import { useI18n } from "@/stores/i18nStore";
-import { billApi, billCategoryApi, imageApi, ocrApi } from "@/lib/api";
+import { billApi, billCategoryApi, ocrApi } from "@/lib/api";
 import { Bill, BillCategory, BillSplit, OCRResult, HomeMembership } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
@@ -97,6 +98,8 @@ export default function BudgetScreen() {
 
   // Scan flow state
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<"image" | "pdf" | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState("eng");
   const [scanning, setScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
@@ -168,6 +171,8 @@ export default function BudgetScreen() {
 
   const resetScanState = () => {
     setSelectedImageUri(null);
+    setSelectedFileType(null);
+    setSelectedFileName(null);
     setOcrResult(null);
     setScanning(false);
   };
@@ -346,21 +351,45 @@ export default function BudgetScreen() {
     }
   };
 
-  // Step 1: Pick image from gallery
-  const handlePickImage = async () => {
+  // Step 1a: Take photo with camera
+  const handleTakePhoto = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") return;
+
+      const result = await ImagePicker.launchCameraAsync({
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0].uri) {
+      if (!result.canceled && result.assets[0]?.uri) {
         setSelectedImageUri(result.assets[0].uri);
+        setSelectedFileType("image");
+        setSelectedFileName("receipt.jpg");
         setOcrResult(null);
       }
     } catch (error) {
-      console.error("Image picker error:", error);
+      console.error("Camera error:", error);
+    }
+  };
+
+  // Step 1b: Pick file from device
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "application/pdf"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const isPdf = asset.mimeType === "application/pdf" || asset.name?.toLowerCase().endsWith(".pdf");
+        setSelectedImageUri(asset.uri);
+        setSelectedFileType(isPdf ? "pdf" : "image");
+        setSelectedFileName(asset.name);
+        setOcrResult(null);
+      }
+    } catch (error) {
+      console.error("File picker error:", error);
     }
   };
 
@@ -370,16 +399,22 @@ export default function BudgetScreen() {
 
     setScanning(true);
     try {
-      const formData = new FormData();
-      // @ts-ignore
-      formData.append("image", {
-        uri: selectedImageUri,
-        name: "receipt.jpg",
-        type: "image/jpeg",
-      });
+      let result: OCRResult;
 
-      const uploadRes = await imageApi.upload(formData);
-      const result = await ocrApi.process(uploadRes.url, selectedLanguage);
+      const fileName = selectedFileName || (selectedFileType === "pdf" ? "receipt.pdf" : "receipt.jpg");
+      const ext = fileName.split(".").pop()?.toLowerCase();
+      const mimeMap: Record<string, string> = {
+        pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg",
+        png: "image/png", gif: "image/gif", webp: "image/webp", bmp: "image/bmp",
+      };
+      const mimeType = mimeMap[ext || ""] || "image/jpeg";
+
+      result = await ocrApi.process(
+        selectedImageUri,
+        fileName,
+        mimeType,
+        selectedLanguage
+      );
 
       setOcrResult(result);
 
@@ -830,32 +865,56 @@ export default function BudgetScreen() {
               {t.budget.scanReceipt}
             </Text>
 
-            {/* Step 1: Pick image */}
+            {/* Step 1: Pick image or PDF */}
             {!selectedImageUri ? (
-              <TouchableOpacity
-                className="w-full py-6 rounded-xl justify-center items-center gap-2"
-                style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
-                onPress={handlePickImage}
-              >
-                <Camera size={28} color={theme.textSecondary} />
-                <Text className="font-manrope-semibold" style={{ color: theme.textSecondary }}>
-                  {t.budget.uploadReceipt}
-                </Text>
-              </TouchableOpacity>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  className="flex-1 py-6 rounded-xl justify-center items-center gap-2"
+                  style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
+                  onPress={handleTakePhoto}
+                >
+                  <Camera size={28} color={theme.textSecondary} />
+                  <Text className="font-manrope-semibold text-center" style={{ color: theme.textSecondary }}>
+                    {t.budget.takePhoto}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 py-6 rounded-xl justify-center items-center gap-2"
+                  style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
+                  onPress={handlePickFile}
+                >
+                  <File size={28} color={theme.textSecondary} />
+                  <Text className="font-manrope-semibold text-center" style={{ color: theme.textSecondary }}>
+                    {t.budget.uploadReceipt}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <View>
-                {/* Image preview */}
-                <View className="rounded-xl overflow-hidden mb-3" style={{ borderWidth: 1, borderColor: theme.border }}>
-                  <Image
-                    source={{ uri: selectedImageUri }}
-                    style={{ width: '100%', height: 160 }}
-                    resizeMode="cover"
-                  />
-                </View>
+                {/* File preview */}
+                {selectedFileType === "pdf" ? (
+                  <View className="rounded-xl p-4 mb-3 flex-row items-center gap-3" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
+                    <FileText size={32} color={theme.accent.pink} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-manrope-semibold" style={{ color: theme.text }} numberOfLines={1}>
+                        {selectedFileName || "document.pdf"}
+                      </Text>
+                      <Text className="text-xs" style={{ color: theme.textSecondary }}>PDF</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View className="rounded-xl overflow-hidden mb-3" style={{ borderWidth: 1, borderColor: theme.border }}>
+                    <Image
+                      source={{ uri: selectedImageUri }}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
 
                 <TouchableOpacity
                   className="mb-3"
-                  onPress={handlePickImage}
+                  onPress={() => { resetScanState(); }}
                 >
                   <Text className="text-sm font-manrope-semibold text-center" style={{ color: theme.accent.pink }}>
                     {t.budget.changePhoto}
