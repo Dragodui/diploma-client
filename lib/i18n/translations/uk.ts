@@ -298,6 +298,17 @@ export default {
     failedToLoad: "Не вдалося завантажити учасників",
     noMembers: "Учасників не знайдено",
     joined: "Приєднався {date}",
+    pendingRequests: "Очікують підтвердження",
+    noPendingRequests: "Немає запитів на приєднання",
+    approve: "Прийняти",
+    reject: "Відхилити",
+    approveConfirm: "Ви впевнені, що хочете прийняти цього учасника?",
+    rejectConfirm: "Ви впевнені, що хочете відхилити цей запит?",
+    approveMember: "Прийняти учасника?",
+    rejectMember: "Відхилити учасника?",
+    failedToApprove: "Не вдалося прийняти учасника",
+    failedToReject: "Не вдалося відхилити запит",
+    pending: "Очікує",
   },
 
   // Notifications

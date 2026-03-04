@@ -298,6 +298,17 @@ export default {
     failedToLoad: "Не атрымалася загрузіць удзельнікаў",
     noMembers: "Удзельнікаў не знойдзена",
     joined: "Далучыўся {date}",
+    pendingRequests: "Чакаюць пацвярджэння",
+    noPendingRequests: "Няма запытаў на далучэнне",
+    approve: "Прыняць",
+    reject: "Адхіліць",
+    approveConfirm: "Вы ўпэўнены, што хочаце прыняць гэтага ўдзельніка?",
+    rejectConfirm: "Вы ўпэўнены, що хочаце адхіліць гэты запыт?",
+    approveMember: "Прыняць удзельніка?",
+    rejectMember: "Адхіліць удзельніка?",
+    failedToApprove: "Не ўдалося прыняць удзельніка",
+    failedToReject: "Не ўдалося адхіліць запыт",
+    pending: "Чакае",
   },
 
   // Notifications

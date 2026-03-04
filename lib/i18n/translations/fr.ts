@@ -299,6 +299,17 @@ export default {
     failedToLoad: "Échec du chargement des membres",
     noMembers: "Aucun membre trouvé",
     joined: "Rejoint {date}",
+    pendingRequests: "Demandes en attente",
+    noPendingRequests: "Aucune demande en attente",
+    approve: "Approuver",
+    reject: "Rejeter",
+    approveConfirm: "Êtes-vous sûr de vouloir approuver ce membre ?",
+    rejectConfirm: "Êtes-vous sûr de vouloir rejeter cette demande ?",
+    approveMember: "Approuver le membre ?",
+    rejectMember: "Rejeter le membre ?",
+    failedToApprove: "Impossible d'approuver le membre",
+    failedToReject: "Impossible de rejeter la demande",
+    pending: "En attente",
   },
 
   // Notifications

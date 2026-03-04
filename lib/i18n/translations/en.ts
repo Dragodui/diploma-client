@@ -297,6 +297,17 @@ export default {
     failedToLoad: "Failed to load members",
     noMembers: "No members found",
     joined: "Joined {date}",
+    pendingRequests: "Pending Requests",
+    noPendingRequests: "No pending requests",
+    approve: "Approve",
+    reject: "Reject",
+    approveConfirm: "Are you sure you want to approve this member?",
+    rejectConfirm: "Are you sure you want to reject this request?",
+    approveMember: "Approve Member?",
+    rejectMember: "Reject Member?",
+    failedToApprove: "Failed to approve member",
+    failedToReject: "Failed to reject member",
+    pending: "Pending",
   },
 
   // Notifications

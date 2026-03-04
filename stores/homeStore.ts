@@ -188,24 +188,8 @@ export const useHomeStore = create<HomeState>((set, get) => {
 
     joinHome: async (code: string): Promise<HomeResult> => {
       try {
-        await homeApi.join(code);
-        const homesData = await homeApi.getUserHomes();
-        const newHome = homesData[homesData.length - 1];
-        const userId = useAuthStore.getState().user?.id;
-
-        set({
-          homes: homesData,
-          currentHomeId: newHome?.id ?? null,
-          home: newHome ?? null,
-          isAdmin: computeAdmin(newHome ?? null, userId),
-        });
-
-        if (newHome) {
-          await AsyncStorage.setItem(CURRENT_HOME_KEY, String(newHome.id));
-          await loadRooms(newHome.id);
-        }
-
-        return { success: true };
+        const result = await homeApi.join(code);
+        return { success: true, error: result.message };
       } catch (error: any) {
         console.error("Error joining home:", error);
         return { success: false, error: error.response?.data?.error || "Failed to join home" };

@@ -22,6 +22,7 @@ export interface HomeMembership {
   homeId: number;
   userId: number;
   role: "admin" | "member";
+  status: "pending" | "approved";
   joinedAt: string;
   createdAt: string;
   user?: User;

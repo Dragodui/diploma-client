@@ -298,6 +298,17 @@ export default {
     failedToLoad: "Nie udało się załadować członków",
     noMembers: "Nie znaleziono członków",
     joined: "Dołączył {date}",
+    pendingRequests: "Oczekujące prośby",
+    noPendingRequests: "Brak oczekujących próśb",
+    approve: "Zatwierdź",
+    reject: "Odrzuć",
+    approveConfirm: "Czy na pewno chcesz zatwierdzić tego członka?",
+    rejectConfirm: "Czy na pewno chcesz odrzucić tę prośbę?",
+    approveMember: "Zatwierdzić członka?",
+    rejectMember: "Odrzucić członka?",
+    failedToApprove: "Nie udało się zatwierdzić członka",
+    failedToReject: "Nie udało się odrzucić prośby",
+    pending: "Oczekuje",
   },
 
   // Notifications

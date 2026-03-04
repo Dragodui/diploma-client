@@ -250,6 +250,21 @@ export const homeApi = {
     const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/regenerate_code`);
     return { message: response.data.message };
   },
+
+  getPendingMembers: async (homeId: number): Promise<HomeMembership[]> => {
+    const response = await api.get<{ members: HomeMembership[] }>(`/homes/${homeId}/pending-members`);
+    return response.data.members || [];
+  },
+
+  approveMember: async (homeId: number, userId: number): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/members/${userId}/approve`);
+    return { message: response.data.message };
+  },
+
+  rejectMember: async (homeId: number, userId: number): Promise<{ message: string }> => {
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/members/${userId}/reject`);
+    return { message: response.data.message };
+  },
 };
 
 // ============ Room API ============

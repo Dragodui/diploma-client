@@ -298,6 +298,17 @@ export default {
     failedToLoad: "Mitglieder konnten nicht geladen werden",
     noMembers: "Keine Mitglieder gefunden",
     joined: "Beigetreten {date}",
+    pendingRequests: "Ausstehende Anfragen",
+    noPendingRequests: "Keine ausstehenden Anfragen",
+    approve: "Genehmigen",
+    reject: "Ablehnen",
+    approveConfirm: "Möchten Sie dieses Mitglied wirklich genehmigen?",
+    rejectConfirm: "Möchten Sie diese Anfrage wirklich ablehnen?",
+    approveMember: "Mitglied genehmigen?",
+    rejectMember: "Mitglied ablehnen?",
+    failedToApprove: "Mitglied konnte nicht genehmigt werden",
+    failedToReject: "Anfrage konnte nicht abgelehnt werden",
+    pending: "Ausstehend",
   },
 
   // Notifications
