@@ -10,12 +10,13 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Bell, Check } from "lucide-react-native";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n } from "@/contexts/I18nContext";
-import { useHome } from "@/contexts/HomeContext";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n } from "@/stores/i18nStore";
+import { useHome } from "@/stores/homeStore";
 import { notificationApi } from "@/lib/api";
 import { Notification, HomeNotification } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
+import { NotificationsSkeleton } from "@/components/skeletons";
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
@@ -98,11 +99,7 @@ export default function NotificationsScreen() {
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
+    return <NotificationsSkeleton />;
   }
 
   return (

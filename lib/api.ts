@@ -1,8 +1,9 @@
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "./secureStorage";
 import {
   User,
   Home,
+  HomeMembership,
   Room,
   Task,
   TaskAssignment,
@@ -41,7 +42,7 @@ export const api = axios.create({
 // Request interceptor - add auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("auth_token");
+    const token = await secureStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -52,15 +53,15 @@ api.interceptors.request.use(
 
 // Response interceptor - handle 401
 // Only clear stored credentials when the token is definitively invalid or revoked.
-// Do NOT clear on every 401 — transient failures (CORS, network) would wipe auth state.
+// Do NOT clear on every 401 - transient failures (CORS, network) would wipe auth state.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
       const message = error.response?.data?.error ?? "";
       if (message === "token revoked" || message === "invalid token") {
-        await AsyncStorage.removeItem("auth_token");
-        await AsyncStorage.removeItem("user");
+        await secureStorage.removeItem("auth_token");
+        await secureStorage.removeItem("user");
       }
     }
     return Promise.reject(error);
@@ -77,8 +78,8 @@ export const authApi = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/auth/login", { email, password });
     if (response.data.token) {
-      await AsyncStorage.setItem("auth_token", response.data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+      await secureStorage.setItem("auth_token", response.data.token);
+      await secureStorage.setItem("user", JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -126,15 +127,15 @@ export const authApi = {
     } catch {
       // Proceed with local cleanup even if server call fails
     }
-    await AsyncStorage.removeItem("auth_token");
-    await AsyncStorage.removeItem("user");
+    await secureStorage.removeItem("auth_token");
+    await secureStorage.removeItem("user");
   },
 
   googleSignIn: async (accessToken: string): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/auth/google/mobile", { access_token: accessToken });
     if (response.data.token) {
-      await AsyncStorage.setItem("auth_token", response.data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+      await secureStorage.setItem("auth_token", response.data.token);
+      await secureStorage.setItem("user", JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -168,6 +169,11 @@ export const homeApi = {
     return { message: response.data.message };
   },
 
+  getUserHomes: async (): Promise<Home[]> => {
+    const response = await api.get<{ homes: Home[] }>("/homes/list");
+    return response.data.homes ?? [];
+  },
+
   getUserHome: async (): Promise<Home> => {
     const response = await api.get<{ home: Home }>("/homes/my");
     return response.data.home;
@@ -196,6 +202,11 @@ export const homeApi = {
   removeMember: async (homeId: number, userId: number): Promise<{ message: string }> => {
     const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/members/${userId}`);
     return { message: response.data.message };
+  },
+
+  getMembers: async (homeId: number): Promise<HomeMembership[]> => {
+    const response = await api.get<{ members: HomeMembership[] }>(`/homes/${homeId}/members`);
+    return response.data.members || [];
   },
 
   regenerateInviteCode: async (homeId: number): Promise<{ message: string }> => {
@@ -312,8 +323,9 @@ export const billApi = {
     return { message: response.data.message };
   },
 
-  getByHomeId: async (homeId: number): Promise<Bill[]> => {
-    const response = await api.get<{ status: boolean; bills: Bill[] }>(`/homes/${homeId}/bills`);
+  getByHomeId: async (homeId: number, categoryId?: number): Promise<Bill[]> => {
+    const params = categoryId != null ? { category_id: categoryId } : undefined;
+    const response = await api.get<{ status: boolean; bills: Bill[] }>(`/homes/${homeId}/bills`, { params });
     return response.data.bills || [];
   },
 
@@ -331,21 +343,31 @@ export const billApi = {
     const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}`);
     return { message: response.data.message };
   },
+
+  updateSplits: async (homeId: number, billId: number, splits: { user_id: number; amount: number }[]): Promise<{ message: string }> => {
+    const response = await api.put<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}/splits`, { splits });
+    return { message: response.data.message };
+  },
+
+  markSplitPaid: async (homeId: number, billId: number, splitId: number): Promise<{ message: string }> => {
+    const response = await api.patch<{ status: boolean; message: string }>(`/homes/${homeId}/bills/${billId}/splits/${splitId}/paid`);
+    return { message: response.data.message };
+  },
 };
 
 export const billCategoryApi = {
   create: async (homeId: number, data: { name: string; color?: string }): Promise<{ message: string }> => {
-    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/bill-categories`, data);
+    const response = await api.post<{ status: boolean; message: string }>(`/homes/${homeId}/bill_categories`, data);
     return { message: response.data.message };
   },
 
   getAll: async (homeId: number): Promise<BillCategory[]> => {
-    const response = await api.get<{ status: boolean; categories: BillCategory[] }>(`/homes/${homeId}/bill-categories`);
+    const response = await api.get<{ status: boolean; categories: BillCategory[] }>(`/homes/${homeId}/bill_categories`);
     return response.data.categories || [];
   },
 
   delete: async (homeId: number, categoryId: number): Promise<{ message: string }> => {
-    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/bill-categories/${categoryId}`);
+    const response = await api.delete<{ status: boolean; message: string }>(`/homes/${homeId}/bill_categories/${categoryId}`);
     return { message: response.data.message };
   },
 };
@@ -564,8 +586,14 @@ export const imageApi = {
 
 // ============ OCR API ============
 export const ocrApi = {
-  process: async (imageUrl: string, language?: string): Promise<OCRResult> => {
-    const response = await api.post<OCRResult>("/ocr/process", { image_url: imageUrl, language });
+  process: async (fileUri: string, fileName: string, mimeType: string, language?: string): Promise<OCRResult> => {
+    const formData = new FormData();
+    // @ts-ignore - React Native FormData accepts object with uri/name/type
+    formData.append("file", { uri: fileUri, name: fileName, type: mimeType });
+    if (language) formData.append("language", language);
+    const response = await api.post<OCRResult>("/ocr/process", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
 };
@@ -574,10 +602,12 @@ export const ocrApi = {
 export type {
   User,
   Home,
+  HomeMembership,
   Room,
   Task,
   TaskAssignment,
   Bill,
+  BillSplit,
   ShoppingCategory,
   ShoppingItem,
   Poll,

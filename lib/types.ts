@@ -64,6 +64,15 @@ export interface TaskAssignment {
 }
 
 // Bill types
+export interface BillSplit {
+  id: number;
+  bill_id: number;
+  user_id: number;
+  amount: number;
+  paid: boolean;
+  user?: User;
+}
+
 export interface Bill {
   id: number;
   home_id: number;
@@ -76,9 +85,11 @@ export interface Bill {
   period_start: string;
   period_end: string;
   uploaded_by: number;
+  description?: string;
   ocr_data?: Record<string, any>;
   created_at: string;
   user?: User;
+  splits?: BillSplit[];
 }
 
 // Shopping types
@@ -202,15 +213,17 @@ export interface CreateTaskForm {
   due_date?: string;
   home_id: number;
   room_id?: number;
-  assign_user_id?: number;
+  assign_user_ids?: number[];
 }
 
 export interface CreateBillForm {
   type: string;
+  description?: string;
   total_amount: number;
   period_start: string;
   period_end: string;
   ocr_data?: Record<string, any>;
+  splits?: { user_id: number; amount: number }[];
 }
 
 export interface CreatePollForm {

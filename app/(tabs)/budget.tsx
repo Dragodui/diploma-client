@@ -6,23 +6,25 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DollarSign, Plus, Trash, ScanLine, Camera, ChevronDown, ChevronUp, Receipt } from "lucide-react-native";
+import { DollarSign, Plus, Trash, ScanLine, Camera, ChevronDown, ChevronUp, Receipt, Check, Pencil, Users, FileText, File } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
+import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useI18n } from "@/contexts/I18nContext";
-import { billApi, billCategoryApi, imageApi, ocrApi } from "@/lib/api";
-import { Bill, BillCategory, OCRResult } from "@/lib/types";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useAuth } from "@/stores/authStore";
+import { useI18n } from "@/stores/i18nStore";
+import { billApi, billCategoryApi, ocrApi } from "@/lib/api";
+import { Bill, BillCategory, BillSplit, OCRResult, HomeMembership } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import { useAlert } from "@/components/ui/alert";
+import { BudgetSkeleton } from "@/components/skeletons";
 
 const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data: { value: number; color: string }[]; size?: number; strokeWidth?: number; total: number; theme: any }) => {
   const center = size / 2;
@@ -70,18 +72,22 @@ const DonutChart = ({ data, size = 180, strokeWidth = 20, total, theme }: { data
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
-  const { home } = useHome();
+  const { home, isAdmin } = useHome();
   const { theme } = useTheme();
   const { user } = useAuth();
   const { t } = useI18n();
+  const { alert } = useAlert();
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [categories, setCategories] = useState<BillCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [newBillDescription, setNewBillDescription] = useState("");
   const [newBillAmount, setNewBillAmount] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -92,12 +98,32 @@ export default function BudgetScreen() {
 
   // Scan flow state
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<"image" | "pdf" | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState("eng");
   const [scanning, setScanning] = useState(false);
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
 
   // Receipt history state
   const [expandedReceiptId, setExpandedReceiptId] = useState<number | null>(null);
+
+  // Split state for create modal
+  const [splitUserIds, setSplitUserIds] = useState<number[]>([]);
+  const [splitMode, setSplitMode] = useState<"equal" | "manual">("equal");
+  const [manualAmounts, setManualAmounts] = useState<Record<number, string>>({});
+
+  // Edit splits modal
+  const [showEditSplitsModal, setShowEditSplitsModal] = useState(false);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [editSplitUserIds, setEditSplitUserIds] = useState<number[]>([]);
+  const [editSplitMode, setEditSplitMode] = useState<"equal" | "manual">("equal");
+  const [editManualAmounts, setEditManualAmounts] = useState<Record<number, string>>({});
+  const [savingSplits, setSavingSplits] = useState(false);
+
+  // Expanded bill card
+  const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
+
+  const members: HomeMembership[] = home?.memberships ?? [];
 
   const COLOR_OPTIONS = [
     "#FF7476", "#FF9F7A", "#FBEB9E", "#A8E6CF", "#7DD3E8", "#D8D4FC", "#F5A3D3",
@@ -119,7 +145,7 @@ export default function BudgetScreen() {
 
     try {
       const [billsData, categoriesData] = await Promise.all([
-        billApi.getByHomeId(home.id).catch(() => []),
+        billApi.getByHomeId(home.id, filterCategoryId ?? undefined).catch(() => []),
         billCategoryApi.getAll(home.id).catch(() => []),
       ]);
       setBills(billsData || []);
@@ -129,7 +155,7 @@ export default function BudgetScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [home]);
+  }, [home, filterCategoryId]);
 
   useEffect(() => {
     loadData();
@@ -145,6 +171,8 @@ export default function BudgetScreen() {
 
   const resetScanState = () => {
     setSelectedImageUri(null);
+    setSelectedFileType(null);
+    setSelectedFileName(null);
     setOcrResult(null);
     setScanning(false);
   };
@@ -152,7 +180,11 @@ export default function BudgetScreen() {
   const handleOpenCreateModal = () => {
     resetScanState();
     setNewBillAmount("");
+    setNewBillDescription("");
     setSelectedCategoryId(null);
+    setSplitUserIds([]);
+    setSplitMode("equal");
+    setManualAmounts({});
     setShowCreateModal(true);
   };
 
@@ -175,7 +207,7 @@ export default function BudgetScreen() {
       await loadData();
     } catch (error) {
       console.error("Error creating category:", error);
-      Alert.alert(t.common.error, t.budget.failedToCreate);
+      alert(t.common.error, t.budget.failedToCreate);
     } finally {
       setCreatingCategory(false);
     }
@@ -183,7 +215,7 @@ export default function BudgetScreen() {
 
   const handleDeleteCategory = async (categoryId: number) => {
     if (!home) return;
-    Alert.alert(
+    alert(
       t.budget.deleteCategory,
       t.budget.deleteCategoryConfirm,
       [
@@ -197,12 +229,21 @@ export default function BudgetScreen() {
               await loadData();
             } catch (error) {
               console.error(error);
-              Alert.alert(t.common.error, t.budget.failedToDelete);
+              alert(t.common.error, t.budget.failedToDelete);
             }
           },
         },
       ]
     );
+  };
+
+  const buildSplits = (userIds: number[], mode: "equal" | "manual", amounts: Record<number, string>, totalAmount: number) => {
+    if (userIds.length === 0) return undefined;
+    if (mode === "equal") {
+      const perPerson = totalAmount / userIds.length;
+      return userIds.map(uid => ({ user_id: uid, amount: Math.round(perPerson * 100) / 100 }));
+    }
+    return userIds.map(uid => ({ user_id: uid, amount: parseFloat(amounts[uid] || "0") }));
   };
 
   const handleCreateBill = async () => {
@@ -215,14 +256,18 @@ export default function BudgetScreen() {
       endDate.setMonth(endDate.getMonth() + 1);
 
       const category = categories.find(c => c.id === selectedCategoryId);
+      const totalAmount = parseFloat(newBillAmount);
+      const splits = buildSplits(splitUserIds, splitMode, manualAmounts, totalAmount);
 
       await billApi.create(home.id, {
         type: category?.name || "Expense",
         bill_category_id: selectedCategoryId,
-        total_amount: parseFloat(newBillAmount),
+        description: newBillDescription || undefined,
+        total_amount: totalAmount,
         period_start: now.toISOString(),
         period_end: endDate.toISOString(),
         ocr_data: ocrResult || {},
+        splits,
       });
 
       setNewBillAmount("");
@@ -232,7 +277,7 @@ export default function BudgetScreen() {
       await loadData();
     } catch (error) {
       console.error("Error creating bill:", error);
-      Alert.alert(t.common.error, t.budget.failedToCreate);
+      alert(t.common.error, t.budget.failedToCreate);
     } finally {
       setCreating(false);
     }
@@ -240,7 +285,7 @@ export default function BudgetScreen() {
 
   const handleDeleteBill = async (billId: number) => {
     if (!home) return;
-    Alert.alert(t.budget.deleteBill, t.budget.deleteBillConfirm, [
+    alert(t.budget.deleteBill, t.budget.deleteBillConfirm, [
       { text: t.common.cancel, style: "cancel" },
       {
         text: t.common.delete,
@@ -251,28 +296,100 @@ export default function BudgetScreen() {
             await loadData();
           } catch (error) {
             console.error(error);
-            Alert.alert(t.common.error, t.budget.failedToDelete);
+            alert(t.common.error, t.budget.failedToDelete);
           }
         },
       },
     ]);
   };
 
-  // Step 1: Pick image from gallery
-  const handlePickImage = async () => {
+  const handleOpenEditSplits = (bill: Bill) => {
+    setEditingBill(bill);
+    const existingSplits = bill.splits ?? [];
+    const userIds = existingSplits.map(s => s.user_id);
+    setEditSplitUserIds(userIds);
+
+    // Detect if existing splits are equal
+    if (existingSplits.length > 0) {
+      const firstAmount = existingSplits[0].amount;
+      const allEqual = existingSplits.every(s => Math.abs(s.amount - firstAmount) < 0.01);
+      setEditSplitMode(allEqual ? "equal" : "manual");
+    } else {
+      setEditSplitMode("equal");
+    }
+
+    const amounts: Record<number, string> = {};
+    existingSplits.forEach(s => { amounts[s.user_id] = s.amount.toString(); });
+    setEditManualAmounts(amounts);
+    setShowEditSplitsModal(true);
+  };
+
+  const handleSaveEditSplits = async () => {
+    if (!home || !editingBill) return;
+    setSavingSplits(true);
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+      const splits = buildSplits(editSplitUserIds, editSplitMode, editManualAmounts, editingBill.total_amount) ?? [];
+      await billApi.updateSplits(home.id, editingBill.id, splits);
+      setShowEditSplitsModal(false);
+      setEditingBill(null);
+      await loadData();
+    } catch (error) {
+      console.error("Error updating splits:", error);
+      alert(t.common.error, t.budget.failedToCreate);
+    } finally {
+      setSavingSplits(false);
+    }
+  };
+
+  const handleMarkSplitPaid = async (bill: Bill, split: BillSplit) => {
+    if (!home) return;
+    try {
+      await billApi.markSplitPaid(home.id, bill.id, split.id);
+      await loadData();
+    } catch (error) {
+      console.error("Error marking split paid:", error);
+    }
+  };
+
+  // Step 1a: Take photo with camera
+  const handleTakePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") return;
+
+      const result = await ImagePicker.launchCameraAsync({
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0].uri) {
+      if (!result.canceled && result.assets[0]?.uri) {
         setSelectedImageUri(result.assets[0].uri);
+        setSelectedFileType("image");
+        setSelectedFileName("receipt.jpg");
         setOcrResult(null);
       }
     } catch (error) {
-      console.error("Image picker error:", error);
+      console.error("Camera error:", error);
+    }
+  };
+
+  // Step 1b: Pick file from device
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "application/pdf"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const isPdf = asset.mimeType === "application/pdf" || asset.name?.toLowerCase().endsWith(".pdf");
+        setSelectedImageUri(asset.uri);
+        setSelectedFileType(isPdf ? "pdf" : "image");
+        setSelectedFileName(asset.name);
+        setOcrResult(null);
+      }
+    } catch (error) {
+      console.error("File picker error:", error);
     }
   };
 
@@ -282,27 +399,33 @@ export default function BudgetScreen() {
 
     setScanning(true);
     try {
-      const formData = new FormData();
-      // @ts-ignore
-      formData.append("image", {
-        uri: selectedImageUri,
-        name: "receipt.jpg",
-        type: "image/jpeg",
-      });
+      let result: OCRResult;
 
-      const uploadRes = await imageApi.upload(formData);
-      const result = await ocrApi.process(uploadRes.url, selectedLanguage);
+      const fileName = selectedFileName || (selectedFileType === "pdf" ? "receipt.pdf" : "receipt.jpg");
+      const ext = fileName.split(".").pop()?.toLowerCase();
+      const mimeMap: Record<string, string> = {
+        pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg",
+        png: "image/png", gif: "image/gif", webp: "image/webp", bmp: "image/bmp",
+      };
+      const mimeType = mimeMap[ext || ""] || "image/jpeg";
+
+      result = await ocrApi.process(
+        selectedImageUri,
+        fileName,
+        mimeType,
+        selectedLanguage
+      );
 
       setOcrResult(result);
 
       if (result.total) {
         setNewBillAmount(result.total.toString());
       } else {
-        Alert.alert("OCR", t.budget.noTotalDetected);
+        alert("OCR", t.budget.noTotalDetected);
       }
     } catch (error) {
       console.error("Scan error:", error);
-      Alert.alert(t.common.error, t.budget.scanFailed);
+      alert(t.common.error, t.budget.scanFailed);
     } finally {
       setScanning(false);
     }
@@ -317,6 +440,23 @@ export default function BudgetScreen() {
     if (bill.bill_category) return bill.bill_category.name;
     const category = categories.find(c => c.id === bill.bill_category_id);
     return category?.name || bill.type;
+  };
+
+  const getMemberName = (userId: number) => {
+    const m = members.find(m => m.user_id === userId);
+    return m?.user?.name ?? `User #${userId}`;
+  };
+
+  const toggleSplitUser = (userId: number, ids: number[], setIds: (v: number[]) => void) => {
+    if (ids.includes(userId)) {
+      setIds(ids.filter(id => id !== userId));
+    } else {
+      setIds([...ids, userId]);
+    }
+  };
+
+  const canEditBill = (bill: Bill) => {
+    return isAdmin || bill.uploaded_by === user?.id;
   };
 
   const chartData = categories.map(cat => {
@@ -348,12 +488,110 @@ export default function BudgetScreen() {
     return data.vendor || data.total || (data.items && data.items.length > 0);
   });
 
+  // Render split user picker (reused in create and edit modals)
+  const renderSplitPicker = (
+    selectedIds: number[],
+    setSelectedIds: (v: number[]) => void,
+    mode: "equal" | "manual",
+    setMode: (v: "equal" | "manual") => void,
+    amounts: Record<number, string>,
+    setAmounts: (v: Record<number, string>) => void,
+    totalAmount: number,
+  ) => (
+    <View className="mb-5">
+      <Text className="text-xs font-manrope-bold uppercase mb-2" style={{ color: theme.textSecondary }}>
+        {t.budget.splitBetween}
+      </Text>
+
+      {/* Member chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3" contentContainerStyle={{ gap: 8 }}>
+        {members.map(m => {
+          const isSelected = selectedIds.includes(m.user_id);
+          return (
+            <TouchableOpacity
+              key={m.user_id}
+              className="px-3 py-2 rounded-xl border flex-row items-center gap-1.5"
+              style={{
+                backgroundColor: isSelected ? theme.accent.pinkLight : theme.surface,
+                borderColor: isSelected ? theme.accent.pink : theme.border,
+              }}
+              onPress={() => toggleSplitUser(m.user_id, selectedIds, setSelectedIds)}
+            >
+              {isSelected && <Check size={14} color={theme.accent.pink} />}
+              <Text className="text-sm font-manrope-semibold" style={{ color: theme.text }}>
+                {m.user?.name ?? `User #${m.user_id}`}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Split mode toggle */}
+      {selectedIds.length > 0 && (
+        <View>
+          <View className="flex-row gap-2 mb-3">
+            <TouchableOpacity
+              className="flex-1 py-2 rounded-xl items-center border"
+              style={{
+                backgroundColor: mode === "equal" ? theme.text : "transparent",
+                borderColor: mode === "equal" ? theme.text : theme.border,
+              }}
+              onPress={() => setMode("equal")}
+            >
+              <Text className="text-sm font-manrope-semibold" style={{ color: mode === "equal" ? theme.background : theme.textSecondary }}>
+                {t.budget.equalSplit}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 py-2 rounded-xl items-center border"
+              style={{
+                backgroundColor: mode === "manual" ? theme.text : "transparent",
+                borderColor: mode === "manual" ? theme.text : theme.border,
+              }}
+              onPress={() => setMode("manual")}
+            >
+              <Text className="text-sm font-manrope-semibold" style={{ color: mode === "manual" ? theme.background : theme.textSecondary }}>
+                {t.budget.manualSplit}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {mode === "equal" && totalAmount > 0 && (
+            <View className="p-3 rounded-xl" style={{ backgroundColor: theme.background }}>
+              {selectedIds.map(uid => (
+                <View key={uid} className="flex-row justify-between py-1">
+                  <Text className="text-sm" style={{ color: theme.text }}>{getMemberName(uid)}</Text>
+                  <Text className="text-sm font-manrope-semibold" style={{ color: theme.text }}>
+                    {(totalAmount / selectedIds.length).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {mode === "manual" && (
+            <View className="gap-2">
+              {selectedIds.map(uid => (
+                <View key={uid} className="flex-row items-center gap-3">
+                  <Text className="text-sm flex-1" style={{ color: theme.text }}>{getMemberName(uid)}</Text>
+                  <Input
+                    placeholder="0.00"
+                    value={amounts[uid] || ""}
+                    onChangeText={(v) => setAmounts({ ...amounts, [uid]: v })}
+                    keyboardType="numeric"
+                    style={{ width: 100 }}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+
   if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
+    return <BudgetSkeleton />;
   }
 
   return (
@@ -391,15 +629,31 @@ export default function BudgetScreen() {
         <View className="mb-6">
           <Text className="text-sm font-manrope-bold uppercase mb-3" style={{ color: theme.textSecondary }}>{t.budget.categories}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            <TouchableOpacity
+              className="flex-row items-center px-3 py-2 rounded-2xl border gap-2"
+              style={{
+                backgroundColor: filterCategoryId === null ? theme.text : theme.surface,
+                borderColor: filterCategoryId === null ? theme.text : theme.border,
+              }}
+              onPress={() => setFilterCategoryId(null)}
+            >
+              <Text className="font-manrope-semibold text-sm" style={{ color: filterCategoryId === null ? theme.background : theme.text }}>
+                {t.common.all}
+              </Text>
+            </TouchableOpacity>
             {categories.map(cat => (
               <TouchableOpacity
                 key={cat.id}
                 className="flex-row items-center px-3 py-2 rounded-2xl border gap-2"
-                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                style={{
+                  backgroundColor: filterCategoryId === cat.id ? theme.text : theme.surface,
+                  borderColor: filterCategoryId === cat.id ? theme.text : theme.border,
+                }}
+                onPress={() => setFilterCategoryId(filterCategoryId === cat.id ? null : cat.id)}
                 onLongPress={() => handleDeleteCategory(cat.id)}
               >
                 <View className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color || theme.accent.yellow }} />
-                <Text className="font-manrope-semibold text-sm" style={{ color: theme.text }}>{cat.name}</Text>
+                <Text className="font-manrope-semibold text-sm" style={{ color: filterCategoryId === cat.id ? theme.background : theme.text }}>{cat.name}</Text>
               </TouchableOpacity>
             ))}
             {categories.length === 0 && (
@@ -410,30 +664,118 @@ export default function BudgetScreen() {
 
         {/* Bills list */}
         <View className="gap-3">
-          {bills.map((bill) => (
-            <View key={bill.id} className="p-4 rounded-2xl" style={{ backgroundColor: theme.surface }}>
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: getCategoryColor(bill.bill_category_id) }}>
-                  <DollarSign size={20} color="#1C1C1E" />
+          {bills.map((bill) => {
+            const isExpanded = expandedBillId === bill.id;
+            const splits = bill.splits ?? [];
+            const userSplit = splits.find(s => s.user_id === user?.id);
+            const uploaderName = bill.user?.name ?? getMemberName(bill.uploaded_by);
+
+            return (
+              <TouchableOpacity
+                key={bill.id}
+                className="p-4 rounded-2xl"
+                style={{ backgroundColor: theme.surface }}
+                onPress={() => setExpandedBillId(isExpanded ? null : bill.id)}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: getCategoryColor(bill.bill_category_id) }}>
+                    <DollarSign size={20} color="#1C1C1E" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-manrope-semibold mb-0.5" style={{ color: theme.text }}>{getCategoryName(bill)}</Text>
+                    <Text className="text-xs" style={{ color: theme.textSecondary }}>
+                      {uploaderName} · {new Date(bill.created_at).toLocaleDateString("pl-PL")}
+                    </Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
+                      {bill.total_amount.toFixed(2)}
+                    </Text>
+                    {userSplit && (
+                      <Text className="text-xs" style={{ color: userSplit.paid ? "#22C55E" : theme.accent.pink }}>
+                        {t.budget.yourShare}: {userSplit.amount.toFixed(2)}
+                      </Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteBill(bill.id)}
+                    className="p-0.5"
+                  >
+                    <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
+                  </TouchableOpacity>
                 </View>
-                <View className="flex-1">
-                  <Text className="text-base font-manrope-semibold mb-0.5" style={{ color: theme.text }}>{getCategoryName(bill)}</Text>
-                  <Text className="text-xs" style={{ color: theme.textSecondary }}>
-                    {new Date(bill.created_at).toLocaleDateString("pl-PL")} {new Date(bill.created_at).toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                </View>
-                <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
-                  {bill.total_amount.toFixed(2)}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => handleDeleteBill(bill.id)}
-                  className="p-0.5"
-                >
-                  <Trash size={18} color={theme.accent.pink || "#FF3B30"} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+
+                {/* Expanded: splits details */}
+                {isExpanded && splits.length > 0 && (
+                  <View className="mt-3 pt-3" style={{ borderTopWidth: 1, borderTopColor: theme.border }}>
+                    <View className="flex-row items-center justify-between mb-2">
+                      <View className="flex-row items-center gap-1.5">
+                        <Users size={14} color={theme.textSecondary} />
+                        <Text className="text-xs font-manrope-bold uppercase" style={{ color: theme.textSecondary }}>
+                          {t.budget.splitBetween}
+                        </Text>
+                      </View>
+                      {canEditBill(bill) && (
+                        <TouchableOpacity
+                          className="flex-row items-center gap-1 px-2 py-1 rounded-lg"
+                          style={{ backgroundColor: theme.background }}
+                          onPress={() => handleOpenEditSplits(bill)}
+                        >
+                          <Pencil size={12} color={theme.textSecondary} />
+                          <Text className="text-xs font-manrope-semibold" style={{ color: theme.textSecondary }}>
+                            {t.budget.editSplits}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    {splits.map(split => (
+                      <View key={split.id} className="flex-row items-center justify-between py-1.5">
+                        <View className="flex-row items-center gap-2 flex-1">
+                          <View
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: split.paid ? "#22C55E" : theme.accent.pink }}
+                          />
+                          <Text className="text-sm" style={{ color: theme.text }}>
+                            {split.user?.name ?? getMemberName(split.user_id)}
+                          </Text>
+                        </View>
+                        <Text className="text-sm font-manrope-semibold mr-2" style={{ color: theme.text }}>
+                          {split.amount.toFixed(2)}
+                        </Text>
+                        {!split.paid && canEditBill(bill) && (
+                          <TouchableOpacity
+                            className="px-2 py-1 rounded-lg"
+                            style={{ backgroundColor: "#22C55E20" }}
+                            onPress={() => handleMarkSplitPaid(bill, split)}
+                          >
+                            <Text className="text-xs font-manrope-semibold" style={{ color: "#22C55E" }}>
+                              {t.budget.markAsPaid}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        {split.paid && (
+                          <Text className="text-xs font-manrope-semibold" style={{ color: "#22C55E" }}>
+                            {t.budget.paid}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Show split indicator when collapsed */}
+                {!isExpanded && splits.length > 0 && (
+                  <View className="flex-row items-center mt-2 gap-1">
+                    <Users size={12} color={theme.textSecondary} />
+                    <Text className="text-xs" style={{ color: theme.textSecondary }}>
+                      {splits.length} {splits.length === 1 ? "split" : "splits"} · {splits.filter(s => s.paid).length} {t.budget.paid.toLowerCase()}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
           {bills.length === 0 && (
             <Text className="text-center mt-10" style={{ color: theme.textSecondary }}>
               {t.budget.noExpenses}
@@ -523,32 +865,56 @@ export default function BudgetScreen() {
               {t.budget.scanReceipt}
             </Text>
 
-            {/* Step 1: Pick image */}
+            {/* Step 1: Pick image or PDF */}
             {!selectedImageUri ? (
-              <TouchableOpacity
-                className="w-full py-6 rounded-xl justify-center items-center gap-2"
-                style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
-                onPress={handlePickImage}
-              >
-                <Camera size={28} color={theme.textSecondary} />
-                <Text className="font-manrope-semibold" style={{ color: theme.textSecondary }}>
-                  {t.budget.uploadReceipt}
-                </Text>
-              </TouchableOpacity>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  className="flex-1 py-6 rounded-xl justify-center items-center gap-2"
+                  style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
+                  onPress={handleTakePhoto}
+                >
+                  <Camera size={28} color={theme.textSecondary} />
+                  <Text className="font-manrope-semibold text-center" style={{ color: theme.textSecondary }}>
+                    {t.budget.takePhoto}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 py-6 rounded-xl justify-center items-center gap-2"
+                  style={{ backgroundColor: theme.surface, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.border }}
+                  onPress={handlePickFile}
+                >
+                  <File size={28} color={theme.textSecondary} />
+                  <Text className="font-manrope-semibold text-center" style={{ color: theme.textSecondary }}>
+                    {t.budget.uploadReceipt}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <View>
-                {/* Image preview */}
-                <View className="rounded-xl overflow-hidden mb-3" style={{ borderWidth: 1, borderColor: theme.border }}>
-                  <Image
-                    source={{ uri: selectedImageUri }}
-                    style={{ width: '100%', height: 160 }}
-                    resizeMode="cover"
-                  />
-                </View>
+                {/* File preview */}
+                {selectedFileType === "pdf" ? (
+                  <View className="rounded-xl p-4 mb-3 flex-row items-center gap-3" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
+                    <FileText size={32} color={theme.accent.pink} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-manrope-semibold" style={{ color: theme.text }} numberOfLines={1}>
+                        {selectedFileName || "document.pdf"}
+                      </Text>
+                      <Text className="text-xs" style={{ color: theme.textSecondary }}>PDF</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View className="rounded-xl overflow-hidden mb-3" style={{ borderWidth: 1, borderColor: theme.border }}>
+                    <Image
+                      source={{ uri: selectedImageUri }}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
 
                 <TouchableOpacity
                   className="mb-3"
-                  onPress={handlePickImage}
+                  onPress={() => { resetScanState(); }}
                 >
                   <Text className="text-sm font-manrope-semibold text-center" style={{ color: theme.accent.pink }}>
                     {t.budget.changePhoto}
@@ -673,6 +1039,25 @@ export default function BudgetScreen() {
             keyboardType="numeric"
           />
 
+          <View className="mt-4">
+            <Input
+              label={t.budget.description}
+              placeholder={t.budget.descriptionPlaceholder}
+              value={newBillDescription}
+              onChangeText={setNewBillDescription}
+            />
+          </View>
+
+          {/* Split Between section */}
+          <View className="mt-5">
+            {renderSplitPicker(
+              splitUserIds, setSplitUserIds,
+              splitMode, setSplitMode,
+              manualAmounts, setManualAmounts,
+              parseFloat(newBillAmount) || 0,
+            )}
+          </View>
+
           <Button
             title={t.budget.addExpense}
             onPress={handleCreateBill}
@@ -681,6 +1066,44 @@ export default function BudgetScreen() {
             variant="pink"
             style={{ marginTop: 20 }}
           />
+        </View>
+      </Modal>
+
+      {/* Edit Splits Modal */}
+      <Modal
+        visible={showEditSplitsModal}
+        onClose={() => { setShowEditSplitsModal(false); setEditingBill(null); }}
+        title={t.budget.editSplits}
+        height="full"
+      >
+        <View className="pt-2.5">
+          {editingBill && (
+            <>
+              <View className="p-3 rounded-xl mb-4" style={{ backgroundColor: theme.background }}>
+                <Text className="text-base font-manrope-semibold" style={{ color: theme.text }}>
+                  {getCategoryName(editingBill)}
+                </Text>
+                <Text className="text-lg font-manrope-bold" style={{ color: theme.text }}>
+                  {editingBill.total_amount.toFixed(2)}
+                </Text>
+              </View>
+
+              {renderSplitPicker(
+                editSplitUserIds, setEditSplitUserIds,
+                editSplitMode, setEditSplitMode,
+                editManualAmounts, setEditManualAmounts,
+                editingBill.total_amount,
+              )}
+
+              <Button
+                title={t.common.save}
+                onPress={handleSaveEditSplits}
+                loading={savingSplits}
+                variant="pink"
+                style={{ marginTop: 20 }}
+              />
+            </>
+          )}
         </View>
       </Modal>
 

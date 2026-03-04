@@ -17,6 +17,7 @@ export default {
     tomorrow: "Завтра",
     copied: "Скопійовано!",
     success: "Успіх",
+    all: "Усі",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "Вхід через Google ще не готовий",
     googleSignInCancelled: "Вхід через Google було скасовано або він не вдався",
     failedToGetUserInfo: "Не вдалося отримати інформацію про користувача з Google",
+    leaveHome: "Покинути дім",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Категорії",
     uncategorized: "Без категорії",
     scanReceipt: "Сканувати чек",
-    uploadReceipt: "Завантажити фото чека",
+    uploadReceipt: "Завантажити файл",
+    takePhoto: "Зробити фото",
     changePhoto: "Змінити фото",
     processReceipt: "Обробити чек",
     processing: "Обробка...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Не вдалося сканувати чек",
     noTotalDetected: "Не вдалося визначити суму",
     manualEntry: "Ручне введення",
+    splitBetween: "Розділити між",
+    equalSplit: "Порівну",
+    manualSplit: "Вручну",
+    yourShare: "Ваша частка",
+    uploadedBy: "Завантажив",
+    editSplits: "Редагувати поділ",
+    splitUpdated: "Поділ оновлено",
+    markAsPaid: "Позначити як сплачено",
+    paid: "Сплачено",
+    unpaid: "Несплачено",
+    description: "Опис (Необов'язково)",
+    descriptionPlaceholder: "Додайте деталі...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Без обмеження",
     ended: "Завершено",
     removeVote: "Скасувати голос",
+    noVotesYet: "Ще немає голосів",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Ви більше не матимете доступу до цього дому.",
     leave: "Покинути",
     leaveHomeFailed: "Не вдалося покинути дім",
+  },
+
+  // Members
+  members: {
+    title: "Учасники",
+    admin: "Адмін",
+    member: "Учасник",
+    removeMember: "Видалити учасника?",
+    removeMemberConfirm: "Ви впевнені, що хочете видалити цього учасника з дому?",
+    remove: "Видалити",
+    cannotRemoveSelf: "Ви не можете видалити себе",
+    failedToRemove: "Не вдалося видалити учасника",
+    failedToLoad: "Не вдалося завантажити учасників",
+    noMembers: "Учасників не знайдено",
+    joined: "Приєднався {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Не вдалося приєднатися до дому",
     failedToUpload: "Не вдалося завантажити зображення",
     failedToPick: "Не вдалося вибрати зображення",
+    myHomes: "МОЇ ДОМІВКИ",
+    switchHome: "Змінити дім",
   },
 
   // Rooms

@@ -4,17 +4,17 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Plus, Home, Trash2, DoorOpen } from "lucide-react-native";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n, interpolate } from "@/contexts/I18nContext";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n, interpolate } from "@/stores/i18nStore";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import { useAlert } from "@/components/ui/alert";
 
 export default function RoomsScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +22,7 @@ export default function RoomsScreen() {
   const { home, rooms, isAdmin, createRoom, deleteRoom } = useHome();
   const { theme } = useTheme();
   const { t } = useI18n();
+  const { alert } = useAlert();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomName, setRoomName] = useState("");
@@ -38,12 +39,12 @@ export default function RoomsScreen() {
       setShowCreateModal(false);
       setRoomName("");
     } else {
-      Alert.alert(t.common.error, result.error || t.rooms.failedToCreate);
+      alert(t.common.error, result.error || t.rooms.failedToCreate);
     }
   };
 
   const handleDeleteRoom = (roomId: number, roomName: string) => {
-    Alert.alert(t.rooms.deleteRoom, interpolate(t.rooms.deleteRoomConfirm, { name: roomName }), [
+    alert(t.rooms.deleteRoom, interpolate(t.rooms.deleteRoomConfirm, { name: roomName }), [
       { text: t.common.cancel, style: "cancel" },
       {
         text: t.common.delete,
@@ -51,7 +52,7 @@ export default function RoomsScreen() {
         onPress: async () => {
           const result = await deleteRoom(roomId);
           if (!result.success) {
-            Alert.alert(t.common.error, result.error || t.rooms.failedToDelete);
+            alert(t.common.error, result.error || t.rooms.failedToDelete);
           }
         },
       },

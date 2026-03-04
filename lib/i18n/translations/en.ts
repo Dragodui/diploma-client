@@ -17,6 +17,7 @@ export default {
     tomorrow: "Tomorrow",
     copied: "Copied!",
     success: "Success",
+    all: "All",
   },
 
   // Auth
@@ -184,7 +185,8 @@ export default {
     categories: "Categories",
     uncategorized: "Uncategorized",
     scanReceipt: "Scan Receipt",
-    uploadReceipt: "Upload receipt photo",
+    uploadReceipt: "Upload file",
+    takePhoto: "Take photo",
     changePhoto: "Change photo",
     processReceipt: "Process Receipt",
     processing: "Processing...",
@@ -197,6 +199,18 @@ export default {
     scanFailed: "Failed to scan receipt",
     noTotalDetected: "Could not detect total amount",
     manualEntry: "Manual Entry",
+    splitBetween: "Split Between",
+    equalSplit: "Equal",
+    manualSplit: "Manual",
+    yourShare: "Your share",
+    uploadedBy: "Uploaded by",
+    editSplits: "Edit Splits",
+    splitUpdated: "Splits updated",
+    markAsPaid: "Mark as paid",
+    paid: "Paid",
+    unpaid: "Unpaid",
+    description: "Description (Optional)",
+    descriptionPlaceholder: "Add details...",
   },
 
   // Polls
@@ -227,6 +241,7 @@ export default {
     noEndDate: "No end date",
     ended: "Ended",
     removeVote: "Remove Vote",
+    noVotesYet: "No votes yet",
   },
 
   // Settings
@@ -245,6 +260,21 @@ export default {
     leaveHomeConfirmText: "You will no longer have access to this home.",
     leave: "Leave",
     leaveHomeFailed: "Failed to leave home",
+  },
+
+  // Members
+  members: {
+    title: "Members",
+    admin: "Admin",
+    member: "Member",
+    removeMember: "Remove Member?",
+    removeMemberConfirm: "Are you sure you want to remove this member from the home?",
+    remove: "Remove",
+    cannotRemoveSelf: "You cannot remove yourself",
+    failedToRemove: "Failed to remove member",
+    failedToLoad: "Failed to load members",
+    noMembers: "No members found",
+    joined: "Joined {date}",
   },
 
   // Notifications
@@ -303,6 +333,8 @@ export default {
     failedToJoin: "Failed to join home",
     failedToUpload: "Failed to upload image",
     failedToPick: "Failed to pick image",
+    myHomes: "MY HOMES",
+    switchHome: "Switch Home",
   },
 
   // Rooms

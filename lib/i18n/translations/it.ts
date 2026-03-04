@@ -17,6 +17,7 @@ export default {
     tomorrow: "Domani",
     copied: "Copiato!",
     success: "Successo",
+    all: "Tutti",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "L'accesso con Google non è ancora pronto",
     googleSignInCancelled: "L'accesso con Google è stato annullato o è fallito",
     failedToGetUserInfo: "Impossibile ottenere le informazioni utente da Google",
+    leaveHome: "Lascia casa",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Categorie",
     uncategorized: "Senza categoria",
     scanReceipt: "Scansiona scontrino",
-    uploadReceipt: "Carica foto dello scontrino",
+    uploadReceipt: "Carica file",
+    takePhoto: "Scatta foto",
     changePhoto: "Cambia foto",
     processReceipt: "Elabora scontrino",
     processing: "Elaborazione...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Scansione scontrino fallita",
     noTotalDetected: "Importo non rilevato",
     manualEntry: "Inserimento manuale",
+    splitBetween: "Dividi tra",
+    equalSplit: "Uguale",
+    manualSplit: "Manuale",
+    yourShare: "La tua quota",
+    uploadedBy: "Caricato da",
+    editSplits: "Modifica divisione",
+    splitUpdated: "Divisione aggiornata",
+    markAsPaid: "Segna come pagato",
+    paid: "Pagato",
+    unpaid: "Non pagato",
+    description: "Descrizione (Facoltativo)",
+    descriptionPlaceholder: "Aggiungi dettagli...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Senza limite",
     ended: "Terminato",
     removeVote: "Rimuovi voto",
+    noVotesYet: "Nessun voto ancora",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Non avrai più accesso a questa casa.",
     leave: "Lascia",
     leaveHomeFailed: "Impossibile lasciare la casa",
+  },
+
+  // Members
+  members: {
+    title: "Membri",
+    admin: "Admin",
+    member: "Membro",
+    removeMember: "Rimuovere il membro?",
+    removeMemberConfirm: "Sei sicuro di voler rimuovere questo membro dalla casa?",
+    remove: "Rimuovi",
+    cannotRemoveSelf: "Non puoi rimuovere te stesso",
+    failedToRemove: "Impossibile rimuovere il membro",
+    failedToLoad: "Impossibile caricare i membri",
+    noMembers: "Nessun membro trovato",
+    joined: "Iscritto {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Impossibile unirsi alla casa",
     failedToUpload: "Impossibile caricare l'immagine",
     failedToPick: "Impossibile selezionare l'immagine",
+    myHomes: "LE MIE CASE",
+    switchHome: "Cambia casa",
   },
 
   // Rooms

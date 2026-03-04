@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Image,
 } from "react-native";
@@ -17,14 +16,15 @@ import {
   BarChart2,
   User,
 } from "lucide-react-native";
-import { useAuth } from "@/contexts/AuthContext";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n, interpolate } from "@/contexts/I18nContext";
+import { useAuth } from "@/stores/authStore";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n, interpolate } from "@/stores/i18nStore";
 import { taskApi, pollApi, billApi } from "@/lib/api";
 import { TaskAssignment, Poll } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Card from "@/components/ui/card";
+import { HomeSkeleton } from "@/components/skeletons";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -49,10 +49,17 @@ export default function HomeScreen() {
     return t.home.goodEvening;
   };
 
-  const loadDashboardData = useCallback(async () => {
+
+  const loadDashboardData = useCallback(async (isRefresh = false) => {
     if (!home || !user) {
-      setIsLoading(false);
+      if (!homeLoading) {
+        setIsLoading(false);
+      }
       return;
+    }
+
+    if (!isRefresh) {
+      setIsLoading(true);
     }
 
     try {
@@ -85,7 +92,26 @@ export default function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [home, user]);
+  }, [home, user, homeLoading]);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!isAuthenticated) {
+      router.replace("/login");
+      return;
+    }
+
+    loadDashboardData(false);
+  }, [authLoading, isAuthenticated, home, user, loadDashboardData, router]);
+
+  useRealtimeRefresh(["TASK", "POLL", "BILL", "BILL_CATEGORY"], () => loadDashboardData(true));
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData(true);
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -100,21 +126,8 @@ export default function HomeScreen() {
 
   useRealtimeRefresh(["TASK", "POLL", "BILL", "BILL_CATEGORY"], loadDashboardData);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadDashboardData();
-    setRefreshing(false);
-  };
-
   if (authLoading || homeLoading || isLoading) {
-    return (
-      <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: theme.background }}
-      >
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
+    return <HomeSkeleton />;
   }
 
   // No home state

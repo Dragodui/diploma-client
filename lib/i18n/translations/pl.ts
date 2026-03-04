@@ -17,6 +17,7 @@ export default {
     tomorrow: "Jutro",
     copied: "Skopiowano!",
     success: "Sukces",
+    all: "Wszystko",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "Logowanie przez Google nie jest jeszcze gotowe",
     googleSignInCancelled: "Logowanie przez Google zostało anulowane lub nie powiodło się",
     failedToGetUserInfo: "Nie udało się pobrać informacji o użytkowniku z Google",
+    leaveHome: "Opuść dom",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Kategorie",
     uncategorized: "Bez kategorii",
     scanReceipt: "Skanuj paragon",
-    uploadReceipt: "Wgraj zdjęcie paragonu",
+    uploadReceipt: "Wgraj plik",
+    takePhoto: "Zrób zdjęcie",
     changePhoto: "Zmień zdjęcie",
     processReceipt: "Przetwórz paragon",
     processing: "Przetwarzanie...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Nie udało się zeskanować paragonu",
     noTotalDetected: "Nie wykryto kwoty",
     manualEntry: "Wpis ręczny",
+    splitBetween: "Podziel między",
+    equalSplit: "Równo",
+    manualSplit: "Ręcznie",
+    yourShare: "Twój udział",
+    uploadedBy: "Dodane przez",
+    editSplits: "Edytuj podział",
+    splitUpdated: "Podział zaktualizowany",
+    markAsPaid: "Oznacz jako opłacone",
+    paid: "Opłacone",
+    unpaid: "Nieopłacone",
+    description: "Opis (Opcjonalny)",
+    descriptionPlaceholder: "Dodaj szczegóły...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Bez ograniczenia",
     ended: "Zakończona",
     removeVote: "Cofnij głos",
+    noVotesYet: "Brak głosów",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Nie będziesz mieć już dostępu do tego domu.",
     leave: "Opuść",
     leaveHomeFailed: "Nie udało się opuścić domu",
+  },
+
+  // Members
+  members: {
+    title: "Członkowie",
+    admin: "Admin",
+    member: "Członek",
+    removeMember: "Usunąć członka?",
+    removeMemberConfirm: "Czy na pewno chcesz usunąć tego członka z domu?",
+    remove: "Usuń",
+    cannotRemoveSelf: "Nie możesz usunąć siebie",
+    failedToRemove: "Nie udało się usunąć członka",
+    failedToLoad: "Nie udało się załadować członków",
+    noMembers: "Nie znaleziono członków",
+    joined: "Dołączył {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Nie udało się dołączyć do domu",
     failedToUpload: "Nie udało się przesłać obrazu",
     failedToPick: "Nie udało się wybrać obrazu",
+    myHomes: "MOJE DOMY",
+    switchHome: "Zmień dom",
   },
 
   // Rooms

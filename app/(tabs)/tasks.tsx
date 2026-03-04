@@ -6,23 +6,24 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, Plus, Calendar, Trash } from "lucide-react-native";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DatePicker from "@/components/ui/date-picker";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n, interpolate } from "@/contexts/I18nContext";
+import { useAuth } from "@/stores/authStore";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n, interpolate } from "@/stores/i18nStore";
 import { taskApi } from "@/lib/api";
 import { Task, TaskAssignment } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
+import { useAlert } from "@/components/ui/alert";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 import { userColors } from "@/constants/colors";
+import { TasksSkeleton } from "@/components/skeletons";
 
 type FilterType = "All" | "My" | "By Room";
 
@@ -32,6 +33,7 @@ export default function TasksScreen() {
   const { home, rooms } = useHome();
   const { theme } = useTheme();
   const { t } = useI18n();
+  const { alert } = useAlert();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [assignments, setAssignments] = useState<TaskAssignment[]>([]);
@@ -45,7 +47,7 @@ export default function TasksScreen() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [creating, setCreating] = useState(false);
 
   const loadTasks = useCallback(async () => {
@@ -92,7 +94,7 @@ export default function TasksScreen() {
   const handleDelete = (taskId: number) => {
     if (!home) return;
 
-    Alert.alert(t.tasks.deleteTask, t.tasks.deleteTaskConfirm, [
+    alert(t.tasks.deleteTask, t.tasks.deleteTaskConfirm, [
       { text: t.common.cancel, style: "cancel" },
       {
         text: t.common.delete,
@@ -103,7 +105,7 @@ export default function TasksScreen() {
             await loadTasks();
           } catch (error) {
             console.error(error);
-            Alert.alert(t.common.error, t.tasks.failedToDelete);
+            alert(t.common.error, t.tasks.failedToDelete);
           }
         },
       },
@@ -127,11 +129,11 @@ export default function TasksScreen() {
           await loadTasks();
         } catch (error) {
           console.error("Error uncompleting task:", error);
-          Alert.alert(t.common.error, t.tasks.failedToUncomplete);
+          alert(t.common.error, t.tasks.failedToUncomplete);
         }
       }
     } else {
-      Alert.alert(t.tasks.completeTask, t.tasks.completeTaskConfirm, [
+      alert(t.tasks.completeTask, t.tasks.completeTaskConfirm, [
         { text: t.common.cancel, style: "cancel" },
         {
           text: t.tasks.complete,
@@ -141,7 +143,7 @@ export default function TasksScreen() {
               await loadTasks();
             } catch (error) {
               console.error("Error completing task:", error);
-              Alert.alert(t.common.error, t.tasks.failedToComplete);
+              alert(t.common.error, t.tasks.failedToComplete);
             }
           },
         },
@@ -161,19 +163,19 @@ export default function TasksScreen() {
         due_date: selectedDate ? selectedDate.toISOString() : undefined,
         home_id: home.id,
         room_id: selectedRoomId || undefined,
-        assign_user_id: selectedUserId || undefined,
+        assign_user_ids: selectedUserIds.length > 0 ? selectedUserIds : undefined,
       });
 
       setNewTaskName("");
       setNewTaskDescription("");
       setSelectedDate(null);
       setSelectedRoomId(null);
-      setSelectedUserId(null);
+      setSelectedUserIds([]);
       setShowCreateModal(false);
       await loadTasks();
     } catch (error) {
       console.error("Error creating task:", error);
-      Alert.alert(t.common.error, t.tasks.couldNotCreate);
+      alert(t.common.error, t.tasks.couldNotCreate);
     } finally {
       setCreating(false);
     }
@@ -309,11 +311,7 @@ export default function TasksScreen() {
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
+    return <TasksSkeleton />;
   }
 
   return (
@@ -438,13 +436,14 @@ export default function TasksScreen() {
               </Text>
             </TouchableOpacity>
 
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="datetime"
+            <DatePicker
+              visible={isDatePickerVisible}
+              onClose={hideDatePicker}
               onConfirm={handleConfirmDate}
-              onCancel={hideDatePicker}
-              is24Hour={true}
-              themeVariant={theme.mode === "dark" ? "dark" : "light"}
+              value={selectedDate ?? undefined}
+              mode="datetime"
+              minimumDate={new Date()}
+              title={t.tasks.selectDateTime}
             />
           </View>
 
@@ -512,45 +511,36 @@ export default function TasksScreen() {
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-2.5">
-                  <TouchableOpacity
-                    className="px-4.5 py-3 rounded-[12px]"
-                    style={[
-                      { backgroundColor: theme.surface },
-                      !selectedUserId && { backgroundColor: theme.text },
-                    ]}
-                    onPress={() => setSelectedUserId(null)}
-                  >
-                    <Text
-                      className="text-sm font-manrope-semibold"
-                      style={[
-                        { color: theme.textSecondary },
-                        !selectedUserId && { color: theme.background },
-                      ]}
-                    >
-                      {t.common.none}
-                    </Text>
-                  </TouchableOpacity>
-                  {home.memberships.map((membership) => (
-                    <TouchableOpacity
-                      key={membership.user_id}
-                      className="px-4.5 py-3 rounded-[12px]"
-                      style={[
-                        { backgroundColor: theme.surface },
-                        selectedUserId === membership.user_id && { backgroundColor: theme.text },
-                      ]}
-                      onPress={() => setSelectedUserId(membership.user_id)}
-                    >
-                      <Text
-                        className="text-sm font-manrope-semibold"
+                  {home.memberships.map((membership) => {
+                    const isSelected = selectedUserIds.includes(membership.user_id);
+                    return (
+                      <TouchableOpacity
+                        key={membership.user_id}
+                        className="px-4.5 py-3 rounded-[12px]"
                         style={[
-                          { color: theme.textSecondary },
-                          selectedUserId === membership.user_id && { color: theme.background },
+                          { backgroundColor: theme.surface },
+                          isSelected && { backgroundColor: theme.text },
                         ]}
+                        onPress={() =>
+                          setSelectedUserIds((prev) =>
+                            isSelected
+                              ? prev.filter((id) => id !== membership.user_id)
+                              : [...prev, membership.user_id]
+                          )
+                        }
                       >
-                        {membership.user?.name || `User ${membership.user_id}`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          className="text-sm font-manrope-semibold"
+                          style={[
+                            { color: theme.textSecondary },
+                            isSelected && { color: theme.background },
+                          ]}
+                        >
+                          {membership.user?.name || `User ${membership.user_id}`}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </ScrollView>
             </View>

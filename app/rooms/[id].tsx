@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Switch,
   ActivityIndicator,
   FlatList,
@@ -12,13 +11,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Plus, Trash2, Power, Lightbulb, Fan, Tv } from "lucide-react-native";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n, interpolate } from "@/contexts/I18nContext";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n, interpolate } from "@/stores/i18nStore";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
 import { smarthomeApi, SmartDevice, HAState } from "@/lib/api";
+import { useAlert } from "@/components/ui/alert";
 
 export default function RoomDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -27,6 +27,7 @@ export default function RoomDetailScreen() {
   const { home, isAdmin } = useHome();
   const { theme } = useTheme();
   const { t } = useI18n();
+  const { alert } = useAlert();
 
   const [devices, setDevices] = useState<SmartDevice[]>([]);
   const [deviceStates, setDeviceStates] = useState<Record<string, HAState>>({});
@@ -71,7 +72,7 @@ export default function RoomDetailScreen() {
       const results = await smarthomeApi.discover(home.id);
       setDiscoveredDevices(results);
     } catch (error) {
-      Alert.alert(t.common.error, "Failed to discover devices");
+      alert(t.common.error, "Failed to discover devices");
     } finally {
       setDiscovering(false);
     }
@@ -93,7 +94,7 @@ export default function RoomDetailScreen() {
       fetchDevices();
     } catch (error) {
         // @ts-ignore
-      Alert.alert(t.common.error, error.response?.data?.error || "Failed to add device");
+      alert(t.common.error, error.response?.data?.error || "Failed to add device");
     } finally {
       setAddingDevice(false);
     }
@@ -101,7 +102,7 @@ export default function RoomDetailScreen() {
 
   const handleDeleteDevice = (deviceId: number, deviceName: string) => {
     if (!home) return;
-    Alert.alert("Delete Device", `Are you sure you want to remove ${deviceName}?`, [
+    alert("Delete Device", `Are you sure you want to remove ${deviceName}?`, [
       { text: t.common.cancel, style: "cancel" },
       {
         text: t.common.delete,
@@ -111,7 +112,7 @@ export default function RoomDetailScreen() {
             await smarthomeApi.deleteDevice(home.id, deviceId);
             fetchDevices();
           } catch (error) {
-            Alert.alert(t.common.error, "Failed to delete device");
+            alert(t.common.error, "Failed to delete device");
           }
         },
       },

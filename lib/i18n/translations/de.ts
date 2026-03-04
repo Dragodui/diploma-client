@@ -17,6 +17,7 @@ export default {
     tomorrow: "Morgen",
     copied: "Kopiert!",
     success: "Erfolg",
+    all: "Alle",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "Google-Anmeldung ist noch nicht bereit",
     googleSignInCancelled: "Google-Anmeldung wurde abgebrochen oder ist fehlgeschlagen",
     failedToGetUserInfo: "Benutzerinformationen von Google konnten nicht abgerufen werden",
+    leaveHome: "Heim verlassen",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Kategorien",
     uncategorized: "Ohne Kategorie",
     scanReceipt: "Beleg scannen",
-    uploadReceipt: "Belegfoto hochladen",
+    uploadReceipt: "Datei hochladen",
+    takePhoto: "Foto aufnehmen",
     changePhoto: "Foto ändern",
     processReceipt: "Beleg verarbeiten",
     processing: "Verarbeitung...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Beleg konnte nicht gescannt werden",
     noTotalDetected: "Betrag konnte nicht erkannt werden",
     manualEntry: "Manuelle Eingabe",
+    splitBetween: "Aufteilen zwischen",
+    equalSplit: "Gleichmäßig",
+    manualSplit: "Manuell",
+    yourShare: "Dein Anteil",
+    uploadedBy: "Hochgeladen von",
+    editSplits: "Aufteilung bearbeiten",
+    splitUpdated: "Aufteilung aktualisiert",
+    markAsPaid: "Als bezahlt markieren",
+    paid: "Bezahlt",
+    unpaid: "Unbezahlt",
+    description: "Beschreibung (Optional)",
+    descriptionPlaceholder: "Details hinzufügen...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Kein Enddatum",
     ended: "Beendet",
     removeVote: "Stimme entfernen",
+    noVotesYet: "Noch keine Stimmen",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Sie haben keinen Zugriff mehr auf dieses Heim.",
     leave: "Verlassen",
     leaveHomeFailed: "Heim verlassen fehlgeschlagen",
+  },
+
+  // Members
+  members: {
+    title: "Mitglieder",
+    admin: "Admin",
+    member: "Mitglied",
+    removeMember: "Mitglied entfernen?",
+    removeMemberConfirm: "Sind Sie sicher, dass Sie dieses Mitglied aus dem Zuhause entfernen möchten?",
+    remove: "Entfernen",
+    cannotRemoveSelf: "Sie können sich nicht selbst entfernen",
+    failedToRemove: "Mitglied konnte nicht entfernt werden",
+    failedToLoad: "Mitglieder konnten nicht geladen werden",
+    noMembers: "Keine Mitglieder gefunden",
+    joined: "Beigetreten {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Beitritt zum Zuhause fehlgeschlagen",
     failedToUpload: "Bild konnte nicht hochgeladen werden",
     failedToPick: "Bild konnte nicht ausgewählt werden",
+    myHomes: "MEINE HÄUSER",
+    switchHome: "Zuhause wechseln",
   },
 
   // Rooms

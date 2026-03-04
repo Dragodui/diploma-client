@@ -17,6 +17,7 @@ export default {
     tomorrow: "Demain",
     copied: "Copié !",
     success: "Succès",
+    all: "Tous",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "La connexion Google n'est pas encore prête",
     googleSignInCancelled: "La connexion Google a été annulée ou a échoué",
     failedToGetUserInfo: "Impossible de récupérer les informations utilisateur de Google",
+    leaveHome: "Quitter le foyer",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Catégories",
     uncategorized: "Sans catégorie",
     scanReceipt: "Scanner le reçu",
-    uploadReceipt: "Télécharger la photo du reçu",
+    uploadReceipt: "Télécharger un fichier",
+    takePhoto: "Prendre une photo",
     changePhoto: "Changer la photo",
     processReceipt: "Traiter le reçu",
     processing: "Traitement...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Échec du scan du reçu",
     noTotalDetected: "Montant non détecté",
     manualEntry: "Saisie manuelle",
+    splitBetween: "Partager entre",
+    equalSplit: "Égal",
+    manualSplit: "Manuel",
+    yourShare: "Votre part",
+    uploadedBy: "Ajouté par",
+    editSplits: "Modifier le partage",
+    splitUpdated: "Partage mis à jour",
+    markAsPaid: "Marquer comme payé",
+    paid: "Payé",
+    unpaid: "Impayé",
+    description: "Description (Facultatif)",
+    descriptionPlaceholder: "Ajouter des détails...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Sans limite",
     ended: "Terminé",
     removeVote: "Retirer le vote",
+    noVotesYet: "Pas encore de votes",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Vous n'aurez plus accès à ce foyer.",
     leave: "Quitter",
     leaveHomeFailed: "Impossible de quitter le foyer",
+  },
+
+  // Members
+  members: {
+    title: "Membres",
+    admin: "Admin",
+    member: "Membre",
+    removeMember: "Retirer le membre ?",
+    removeMemberConfirm: "Êtes-vous sûr de vouloir retirer ce membre du foyer ?",
+    remove: "Retirer",
+    cannotRemoveSelf: "Vous ne pouvez pas vous retirer vous-même",
+    failedToRemove: "Échec de la suppression du membre",
+    failedToLoad: "Échec du chargement des membres",
+    noMembers: "Aucun membre trouvé",
+    joined: "Rejoint {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Impossible de rejoindre le foyer",
     failedToUpload: "Impossible de télécharger l'image",
     failedToPick: "Impossible de sélectionner l'image",
+    myHomes: "MES FOYERS",
+    switchHome: "Changer de foyer",
   },
 
   // Rooms

@@ -15,15 +15,16 @@ import {
   Pill, Baby, Dog, Shirt, Sparkles, Scissors,
   Home, Lightbulb, Wrench, Car, Book, Gift
 } from "lucide-react-native";
-import { useHome } from "@/contexts/HomeContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useI18n } from "@/contexts/I18nContext";
+import { useHome } from "@/stores/homeStore";
+import { useTheme } from "@/stores/themeStore";
+import { useI18n } from "@/stores/i18nStore";
 import { shoppingApi } from "@/lib/api";
 import { ShoppingCategory, ShoppingItem } from "@/lib/types";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Modal from "@/components/ui/modal";
 import Input from "@/components/ui/input";
 import Button from "@/components/ui/button";
+import { ShoppingSkeleton } from "@/components/skeletons";
 
 // Category colors matching PDF
 const CATEGORY_COLORS = ["#D8D4FC", "#FBEB9E", "#FF7476", "#A8E6CF", "#7DD3E8", "#F5A3D3"];
@@ -236,11 +237,7 @@ export default function ShoppingScreen() {
   };
 
   if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme.background }}>
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
+    return <ShoppingSkeleton />;
   }
 
   // List detail view

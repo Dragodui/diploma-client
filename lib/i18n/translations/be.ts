@@ -17,6 +17,7 @@ export default {
     tomorrow: "Заўтра",
     copied: "Скапіявана!",
     success: "Поспех",
+    all: "Усе",
   },
 
   // Auth
@@ -50,6 +51,7 @@ export default {
     googleSignInNotReady: "Уваход праз Google яшчэ не гатовы",
     googleSignInCancelled: "Уваход праз Google быў скасаваны або не атрымаўся",
     failedToGetUserInfo: "Не атрымалася атрымаць інфармацыю пра карыстальніка з Google",
+    leaveHome: "Пакінуць дом",
   },
 
   // Verification
@@ -183,7 +185,8 @@ export default {
     categories: "Катэгорыі",
     uncategorized: "Без катэгорыі",
     scanReceipt: "Сканаваць чэк",
-    uploadReceipt: "Загрузіць фота чэка",
+    uploadReceipt: "Загрузіць файл",
+    takePhoto: "Зрабіць фота",
     changePhoto: "Змяніць фота",
     processReceipt: "Апрацаваць чэк",
     processing: "Апрацоўка...",
@@ -196,6 +199,18 @@ export default {
     scanFailed: "Не атрымалася сканаваць чэк",
     noTotalDetected: "Не атрымалася вызначыць суму",
     manualEntry: "Ручны ўвод",
+    splitBetween: "Падзяліць паміж",
+    equalSplit: "Пароўну",
+    manualSplit: "Уручную",
+    yourShare: "Ваша доля",
+    uploadedBy: "Загрузіў",
+    editSplits: "Рэдагаваць падзел",
+    splitUpdated: "Падзел абноўлены",
+    markAsPaid: "Пазначыць як аплачана",
+    paid: "Аплачана",
+    unpaid: "Неаплачана",
+    description: "Апісанне (Неабавязкова)",
+    descriptionPlaceholder: "Дадаць дэталі...",
   },
 
   // Polls
@@ -226,6 +241,7 @@ export default {
     noEndDate: "Без абмежавання",
     ended: "Скончана",
     removeVote: "Скасаваць голас",
+    noVotesYet: "Яшчэ няма галасоў",
   },
 
   // Settings
@@ -244,6 +260,21 @@ export default {
     leaveHomeConfirmText: "Вы больш не будзеце мець доступ да гэтага дома.",
     leave: "Пакінуць",
     leaveHomeFailed: "Не атрымалася пакінуць дом",
+  },
+
+  // Members
+  members: {
+    title: "Удзельнікі",
+    admin: "Адмін",
+    member: "Удзельнік",
+    removeMember: "Выдаліць удзельніка?",
+    removeMemberConfirm: "Вы ўпэўнены, што хочаце выдаліць гэтага ўдзельніка з дому?",
+    remove: "Выдаліць",
+    cannotRemoveSelf: "Вы не можаце выдаліць сябе",
+    failedToRemove: "Не атрымалася выдаліць удзельніка",
+    failedToLoad: "Не атрымалася загрузіць удзельнікаў",
+    noMembers: "Удзельнікаў не знойдзена",
+    joined: "Далучыўся {date}",
   },
 
   // Notifications
@@ -302,6 +333,8 @@ export default {
     failedToJoin: "Не атрымалася далучыцца да дома",
     failedToUpload: "Не атрымалася загрузіць выяву",
     failedToPick: "Не атрымалася выбраць выяву",
+    myHomes: "МАЕ ДАМЫ",
+    switchHome: "Змяніць дом",
   },
 
   // Rooms
