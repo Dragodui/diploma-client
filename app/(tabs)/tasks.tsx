@@ -493,7 +493,7 @@ export default function TasksScreen() {
         </View>
 
         {/* Tasks List */}
-        {tasks.length === 0 ? (
+        {getFilteredTasks().length === 0 ? (
           <View className="flex-1 justify-center items-center py-15">
             <Text className="text-xl font-manrope-bold mb-2" style={{ color: theme.textSecondary }}>
               {t.tasks.noTasks}

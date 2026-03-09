@@ -17,13 +17,13 @@ interface AuthState {
   isAuthenticated: boolean;
   init: () => Promise<void>;
   login: (email: string, password: string) => Promise<AuthResult>;
-  register: (email: string, password: string, name: string) => Promise<AuthResult>;
+  register: (email: string, password: string, name: string, username: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
   verifyEmail: (token: string) => Promise<AuthResult>;
   resendVerification: (email: string) => Promise<AuthResult>;
   forgotPassword: (email: string) => Promise<AuthResult>;
   resetPassword: (token: string, password: string) => Promise<AuthResult>;
-  updateUser: (data: { name?: string; avatar?: string }) => Promise<AuthResult>;
+  updateUser: (data: { name?: string; username?: string; avatar?: string }) => Promise<AuthResult>;
   refreshUser: () => Promise<void>;
   googleSignIn: (accessToken: string) => Promise<AuthResult>;
 }
@@ -72,9 +72,9 @@ export const useAuthStore = create<AuthState>()(
       }
     },
 
-    register: async (email: string, password: string, name: string): Promise<AuthResult> => {
+    register: async (email: string, password: string, name: string, username: string): Promise<AuthResult> => {
       try {
-        await authApi.register(email, password, name);
+        await authApi.register(email, password, name, username);
         return { success: true, needsVerification: true };
       } catch (error: any) {
         console.error("Register error:", error);
@@ -85,9 +85,10 @@ export const useAuthStore = create<AuthState>()(
     logout: async () => {
       try {
         await authApi.logout();
-        set({ user: null, token: null, isLoading: false, isAuthenticated: false });
       } catch (error) {
         console.error("Logout error:", error);
+      } finally {
+        set({ user: null, token: null, isLoading: false, isAuthenticated: false });
       }
     },
 
@@ -131,7 +132,7 @@ export const useAuthStore = create<AuthState>()(
       }
     },
 
-    updateUser: async (data: { name?: string; avatar?: string }): Promise<AuthResult> => {
+    updateUser: async (data: { name?: string; username?: string; avatar?: string }): Promise<AuthResult> => {
       try {
         await userApi.update(data);
         const updatedUser = await userApi.getMe();

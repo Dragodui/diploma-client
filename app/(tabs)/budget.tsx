@@ -56,7 +56,7 @@ const DonutChart = ({
   return (
     <View className="justify-center items-center" style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        {data.map((item, index) => {
+        {total > 0 && data.map((item, index) => {
           const percentage = item.value / total;
           const strokeLength = circumference * percentage;
           const angle = percentage * 360;

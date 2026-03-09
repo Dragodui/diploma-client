@@ -15,8 +15,8 @@ import {
   Users,
   Zap,
 } from "lucide-react-native";
-import { useState } from "react";
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAlert } from "@/components/ui/alert";
 import Button from "@/components/ui/button";
@@ -43,6 +43,11 @@ export default function ProfileScreen() {
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState(user?.username || "");
+  const [usernameError, setUsernameError] = useState("");
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
+  const usernameInputRef = useRef<TextInput>(null);
 
   const pickImage = async () => {
     try {
@@ -129,12 +134,35 @@ export default function ProfileScreen() {
     }
   };
 
-  const getUsername = () => {
-    if (user?.name) {
-      const names = user.name.split(" ");
-      return `@${names[0].toLowerCase()}_${names[names.length - 1]?.toLowerCase() || "user"}`;
+  const displayUsername = user?.username
+    ? `@${user.username}`
+    : user?.name
+      ? `@${user.name.trim().toLowerCase().split(/\s+/).join("_")}`
+      : "@user";
+
+  const saveUsername = async () => {
+    const trimmed = usernameInput.trim().toLowerCase();
+    if (!trimmed) {
+      setIsEditingUsername(false);
+      return;
     }
-    return "@user";
+    if (trimmed === user?.username) {
+      setIsEditingUsername(false);
+      return;
+    }
+    if (!/^[a-z][a-z0-9_]{2,31}$/.test(trimmed)) {
+      setUsernameError(t.profile.usernameInvalid || "3-32 chars, starts with letter, only a-z, 0-9, _");
+      return;
+    }
+    setIsSavingUsername(true);
+    setUsernameError("");
+    const result = await updateUser({ username: trimmed });
+    setIsSavingUsername(false);
+    if (result.success) {
+      setIsEditingUsername(false);
+    } else {
+      setUsernameError(result.error || "Failed to update username");
+    }
   };
 
   const MENU_ITEMS = [
@@ -213,9 +241,49 @@ export default function ProfileScreen() {
           <Text className="text-[28px] font-manrope-bold mb-1" style={{ color: theme.text }}>
             {user?.name || "User"}
           </Text>
-          <Text className="text-[16px] font-manrope mb-4" style={{ color: theme.textSecondary }}>
-            {getUsername()}
-          </Text>
+          {isEditingUsername ? (
+            <View className="mb-4 items-center">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-[16px] font-manrope" style={{ color: theme.textSecondary }}>@</Text>
+                <TextInput
+                  ref={usernameInputRef}
+                  className="text-[16px] font-manrope px-3 py-1.5 rounded-xl min-w-[150px]"
+                  style={{ color: theme.text, backgroundColor: theme.surface }}
+                  value={usernameInput}
+                  onChangeText={(text) => {
+                    setUsernameInput(text.toLowerCase().replace(/[^a-z0-9_]/g, ""));
+                    setUsernameError("");
+                  }}
+                  onSubmitEditing={saveUsername}
+                  onBlur={saveUsername}
+                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={32}
+                  editable={!isSavingUsername}
+                />
+                {isSavingUsername && <ActivityIndicator size="small" color={theme.accent.purple} />}
+              </View>
+              {usernameError ? (
+                <Text className="text-[12px] font-manrope mt-1" style={{ color: theme.accent.pink }}>
+                  {usernameError}
+                </Text>
+              ) : null}
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={() => {
+                setUsernameInput(user?.username || "");
+                setUsernameError("");
+                setIsEditingUsername(true);
+              }}
+              className="mb-4"
+            >
+              <Text className="text-[16px] font-manrope" style={{ color: theme.textSecondary }}>
+                {displayUsername}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {home && (
             <View className="px-4 py-2 rounded-xl" style={{ backgroundColor: theme.surface }}>

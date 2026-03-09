@@ -186,11 +186,15 @@ export default function ShoppingScreen() {
       setCategories(categoriesData || []);
 
       if (categoriesData && categoriesData.length > 0) {
+        const results = await Promise.all(
+          categoriesData.map((category) =>
+            shoppingApi.getCategoryItems(home.id, category.id).catch(() => []),
+          ),
+        );
         const itemsData: Record<number, ShoppingItem[]> = {};
-        for (const category of categoriesData) {
-          const categoryItems = await shoppingApi.getCategoryItems(home.id, category.id).catch(() => []);
-          itemsData[category.id] = categoryItems || [];
-        }
+        categoriesData.forEach((category, i) => {
+          itemsData[category.id] = results[i] || [];
+        });
         setItems(itemsData);
       }
     } catch (error) {

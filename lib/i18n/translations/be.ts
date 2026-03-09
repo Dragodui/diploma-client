@@ -32,6 +32,9 @@ export default {
     createPassword: "Стварыце пароль",
     fullName: "ПОЎНАЕ ІМЯ",
     fullNamePlaceholder: "Іван Іваноў",
+    username: "НІКНЕЙМ",
+    usernamePlaceholder: "ваш_нікнейм",
+    usernameInvalid: "3-32 сімвалы, пачынаецца з літары, толькі a-z, 0-9, _",
     getStarted: "Пачаць",
     createAccount: "Стварыць акаўнт",
     continueWithGoogle: "Працягнуць з Google",
@@ -358,6 +361,7 @@ export default {
   profile: {
     homeAdmin: "Адміністратар дома",
     member: "Удзельнік",
+    usernameInvalid: "3-32 сімвалы, пачынаецца з літары, толькі a-z, 0-9, _",
     homeCode: "Код дома",
     inviteCodeCopied: "Код запрашэння скапіяваны ў буфер абмену",
     homeSettings: "Налады дома",

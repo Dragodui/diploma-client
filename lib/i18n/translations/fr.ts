@@ -32,6 +32,9 @@ export default {
     createPassword: "Créer un mot de passe",
     fullName: "NOM COMPLET",
     fullNamePlaceholder: "Jean Dupont",
+    username: "NOM D'UTILISATEUR",
+    usernamePlaceholder: "votre_pseudo",
+    usernameInvalid: "3-32 caractères, commence par une lettre, uniquement a-z, 0-9, _",
     getStarted: "Commencer",
     createAccount: "Créer un compte",
     continueWithGoogle: "Continuer avec Google",
@@ -359,6 +362,7 @@ export default {
   profile: {
     homeAdmin: "Administrateur du foyer",
     member: "Membre",
+    usernameInvalid: "3-32 caractères, commence par une lettre, uniquement a-z, 0-9, _",
     homeCode: "Code du foyer",
     inviteCodeCopied: "Code d'invitation copié dans le presse-papiers",
     homeSettings: "Paramètres du foyer",

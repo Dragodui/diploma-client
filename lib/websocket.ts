@@ -43,10 +43,16 @@ class WebSocketManager {
   private ws: WebSocket | null = null;
   private subscribers = new Map<string, Set<EventCallback>>();
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private initialized = false;
+  private disconnecting = false;
+  private authUnsubscribe: (() => void) | null = null;
 
   init() {
+    if (this.initialized) return;
+    this.initialized = true;
+
     // React to auth state changes
-    useAuthStore.subscribe(
+    this.authUnsubscribe = useAuthStore.subscribe(
       (state) => ({ isAuthenticated: state.isAuthenticated, token: state.token }),
       ({ isAuthenticated, token }) => {
         if (isAuthenticated && token) {
@@ -70,11 +76,13 @@ class WebSocketManager {
       return;
     }
 
+    this.disconnecting = false;
+
     try {
       const ws = new WebSocket(`${WS_URL}?token=${encodeURIComponent(token)}`);
 
       ws.onopen = () => {
-        console.log("[WS] Connected");
+        if (__DEV__) console.log("[WS] Connected");
       };
 
       ws.onmessage = (e) => {
@@ -90,8 +98,10 @@ class WebSocketManager {
       };
 
       ws.onclose = () => {
-        console.log("[WS] Disconnected");
+        if (__DEV__) console.log("[WS] Disconnected");
         this.ws = null;
+        // Don't reconnect if disconnect was intentional
+        if (this.disconnecting) return;
         this.reconnectTimeout = setTimeout(() => {
           const { isAuthenticated, token } = useAuthStore.getState();
           if (isAuthenticated && token) {
@@ -111,6 +121,7 @@ class WebSocketManager {
   }
 
   private disconnect() {
+    this.disconnecting = true;
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;

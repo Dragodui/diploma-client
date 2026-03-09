@@ -18,6 +18,7 @@ export default function RegisterScreen() {
   const { t } = useI18n();
 
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -60,8 +61,13 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!name || !username || !email || !password) {
       setError(t.auth.fillAllFields);
+      return;
+    }
+
+    if (!/^[a-z][a-z0-9_]{2,31}$/.test(username)) {
+      setError(t.auth.usernameInvalid || "Username: 3-32 chars, starts with letter, only a-z, 0-9, _");
       return;
     }
 
@@ -73,7 +79,7 @@ export default function RegisterScreen() {
     setIsLoading(true);
     setError("");
 
-    const result = await register(email, password, name);
+    const result = await register(email, password, name, username);
     setIsLoading(false);
 
     if (result.success) {
@@ -116,6 +122,19 @@ export default function RegisterScreen() {
             }}
             autoCapitalize="words"
             autoComplete="name"
+          />
+
+          <Input
+            label={t.auth.username || "Username"}
+            placeholder={t.auth.usernamePlaceholder || "your_username"}
+            value={username}
+            onChangeText={(text: string) => {
+              setUsername(text.toLowerCase().replace(/[^a-z0-9_]/g, ""));
+              setError("");
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={32}
           />
 
           <Input

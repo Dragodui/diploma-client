@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Appearance } from "react-native";
+import { type ColorSchemeName, Appearance } from "react-native";
 import { create } from "zustand";
 import { accentColors, categoryColors, darkTheme, lightTheme, statusColors, userColors } from "@/constants/colors";
 
@@ -56,6 +56,8 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
+let appearanceSubscription: { remove: () => void } | null = null;
+
 export const useThemeStore = create<ThemeState>((set, get) => ({
   themeMode: "dark",
   theme: buildTheme("dark", Appearance.getColorScheme()),
@@ -76,8 +78,13 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
       set({ isLoaded: true });
     }
 
+    // Remove previous listener if init is called again
+    if (appearanceSubscription) {
+      appearanceSubscription.remove();
+    }
+
     // Listen for system theme changes
-    Appearance.addChangeListener(({ colorScheme }) => {
+    appearanceSubscription = Appearance.addChangeListener(({ colorScheme }: { colorScheme: ColorSchemeName }) => {
       const { themeMode } = get();
       if (themeMode === "system") {
         set({ theme: buildTheme("system", colorScheme) });

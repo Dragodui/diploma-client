@@ -32,7 +32,6 @@ import type {
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-console.log(API_BASE_URL);
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
   headers: {
@@ -106,14 +105,13 @@ api.interceptors.response.use(
 
 // ============ Auth API ============
 export const authApi = {
-  register: async (email: string, password: string, name: string) => {
-    const response = await api.post("/auth/register", { email, password, name });
+  register: async (email: string, password: string, name: string, username: string) => {
+    const response = await api.post("/auth/register", { email, password, name, username });
     return response.data;
   },
 
   login: async (email: string, password: string): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/auth/login", { email, password });
-    console.log(response.data);
     if (response.data.token) {
       await secureStorage.setItem("auth_token", response.data.token);
       await secureStorage.setItem("user", JSON.stringify(response.data.user));
@@ -185,9 +183,10 @@ export const userApi = {
     return response.data.user;
   },
 
-  update: async (data: { name?: string; avatar?: string }): Promise<{ message: string }> => {
+  update: async (data: { name?: string; username?: string; avatar?: string }): Promise<{ message: string }> => {
     const formData = new FormData();
     if (data.name) formData.append("name", data.name);
+    if (data.username) formData.append("username", data.username);
     if (data.avatar) formData.append("avatar", data.avatar);
 
     const response = await api.patch<{ status: boolean; message: string }>("/user", formData, {

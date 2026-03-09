@@ -32,6 +32,9 @@ export default {
     createPassword: "Create a password",
     fullName: "FULL NAME",
     fullNamePlaceholder: "Alex Doe",
+    username: "USERNAME",
+    usernamePlaceholder: "your_username",
+    usernameInvalid: "3-32 chars, starts with letter, only a-z, 0-9, _",
     getStarted: "Get Started",
     createAccount: "Create Account",
     continueWithGoogle: "Continue with Google",
@@ -357,6 +360,7 @@ export default {
   profile: {
     homeAdmin: "Home Admin",
     member: "Member",
+    usernameInvalid: "3-32 chars, starts with letter, only a-z, 0-9, _",
     homeCode: "Home Code",
     inviteCodeCopied: "Invite code copied to clipboard",
     homeSettings: "Home Settings",

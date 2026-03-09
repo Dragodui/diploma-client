@@ -62,10 +62,8 @@ export default function SmartHomeDashboard() {
       let status = { connected: false };
       try {
         status = await smarthomeApi.getStatus(home.id);
-      } catch (_err) {
-        // If config doesn't exist, backend might return 404 or 500 with "record not found"
-        // We treat this as not connected
-        console.log("No existing HA config found or failed to fetch status");
+      } catch (_) {
+
       }
       setHaStatus(status);
 
@@ -80,7 +78,7 @@ export default function SmartHomeDashboard() {
         statesData.forEach((s) => (stateMap[s.entityId] = s));
         setDeviceStates(stateMap);
       } catch (_err) {
-        console.log("Failed to fetch devices/states (likely not connected)");
+        console.error("Failed to fetch devices/states (likely not connected)");
         setDevices([]);
       }
     } catch (error) {

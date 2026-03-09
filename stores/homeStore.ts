@@ -18,11 +18,6 @@ function computeAdmin(selectedHome: Home | null, userId: number | undefined): bo
   return membership?.role === "admin";
 }
 
-function _deriveHome(homes: Home[], currentHomeId: number | null): Home | null {
-  if (!currentHomeId) return null;
-  return homes.find((h) => h.id === currentHomeId) ?? null;
-}
-
 interface HomeState {
   homes: Home[];
   currentHomeId: number | null;
@@ -46,6 +41,8 @@ interface HomeState {
   loadHome: () => Promise<void>;
 }
 
+let homeStoreInitialized = false;
+
 export const useHomeStore = create<HomeState>((set, get) => {
   const loadRooms = async (homeId: number) => {
     try {
@@ -66,6 +63,9 @@ export const useHomeStore = create<HomeState>((set, get) => {
     home: null,
 
     init: () => {
+      if (homeStoreInitialized) return;
+      homeStoreInitialized = true;
+
       // Subscribe to auth changes
       useAuthStore.subscribe(
         (state) => state.isAuthenticated,
@@ -129,9 +129,6 @@ export const useHomeStore = create<HomeState>((set, get) => {
         }
       } catch (error: any) {
         console.error("Error loading homes:", error);
-        if (error.response?.status !== 404) {
-          console.error("Unexpected error:", error);
-        }
         set({
           homes: [],
           currentHomeId: null,
@@ -163,22 +160,7 @@ export const useHomeStore = create<HomeState>((set, get) => {
     createHome: async (name: string): Promise<HomeResult> => {
       try {
         await homeApi.create(name);
-        const homesData = await homeApi.getUserHomes();
-        const newHome = homesData[homesData.length - 1];
-        const userId = useAuthStore.getState().user?.id;
-
-        set({
-          homes: homesData,
-          currentHomeId: newHome?.id ?? null,
-          home: newHome ?? null,
-          isAdmin: computeAdmin(newHome ?? null, userId),
-        });
-
-        if (newHome) {
-          await AsyncStorage.setItem(CURRENT_HOME_KEY, String(newHome.id));
-          await loadRooms(newHome.id);
-        }
-
+        await get().loadHomes();
         return { success: true };
       } catch (error: any) {
         console.error("Error creating home:", error);
